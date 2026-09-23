@@ -115,6 +115,13 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
   const [reportUploadError, setReportUploadError] = useState<string | null>(null);
   const [reportUploadSuccess, setReportUploadSuccess] = useState<string | null>(null);
 
+  // Visual Inputs State
+  const [visualInputsList, setVisualInputsList] = useState<any[]>([]);
+  const [isFetchingVisualInputs, setIsFetchingVisualInputs] = useState<boolean>(false);
+  const [isUploadingVisualInput, setIsUploadingVisualInput] = useState<boolean>(false);
+  const [visualInputUploadError, setVisualInputUploadError] = useState<string | null>(null);
+  const [visualInputUploadSuccess, setVisualInputUploadSuccess] = useState<string | null>(null);
+
   // Assignment Action State
   const [targetReviewerIdInput, setTargetReviewerIdInput] = useState<string>('');
   const [assignmentLoading, setAssignmentLoading] = useState<boolean>(false);
@@ -307,6 +314,97 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
       setReportUploadError(err.message || 'Report upload failed.');
     } finally {
       setIsUploadingReport(false);
+    }
+  };
+
+  const fetchVisualInputs = useCallback(async () => {
+    setIsFetchingVisualInputs(true);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${apiBaseUrl}/cases/${caseId}/visual-inputs`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      const result = await response.json();
+      if (response.ok && result.data?.visualInputs) {
+        setVisualInputsList(result.data.visualInputs);
+      }
+    } catch {
+      // Fallback
+    } finally {
+      setIsFetchingVisualInputs(false);
+    }
+  }, [caseId]);
+
+  useEffect(() => {
+    fetchCaseDetails();
+    fetchTimeline();
+    fetchMissingInformation();
+    fetchReports();
+    fetchVisualInputs();
+  }, [fetchCaseDetails, fetchTimeline, fetchMissingInformation, fetchReports, fetchVisualInputs]);
+
+  const handleVerifyVisualInput = async (visualInputId: string) => {
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${apiBaseUrl}/visual-inputs/${visualInputId}/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      if (response.ok) {
+        fetchVisualInputs();
+      }
+    } catch {
+      // Fallback
+    }
+  };
+
+  const handleVisualInputUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingVisualInput(true);
+    setVisualInputUploadError(null);
+    setVisualInputUploadSuccess(null);
+
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('caseId', caseId);
+
+      const response = await fetch(`${apiBaseUrl}/cases/${caseId}/visual-inputs`, {
+        method: 'POST',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error?.message || 'Visual input upload failed.');
+      }
+
+      setVisualInputUploadSuccess('Image uploaded and analyzed successfully.');
+      fetchVisualInputs();
+    } catch (err: any) {
+      setVisualInputUploadError(err.message || 'Visual input upload failed.');
+    } finally {
+      setIsUploadingVisualInput(false);
     }
   };
 
@@ -1120,6 +1218,201 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
 
                 <div className="p-2 bg-slate-100 border border-slate-200 text-slate-700 text-[11px] rounded">
                   <span className="font-semibold">Storage & Retention Policy:</span> The original report is preserved according to the current prototype storage/retention policy and remains available for authorized reviewer verification.
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Visual Inputs & Observations Card */}
+            <Card className="bg-white border-purple-200 shadow-sm">
+              <CardHeader className="bg-purple-50/70 border-b border-purple-100 py-3 px-4 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-sm font-bold text-purple-950 flex items-center space-x-2">
+                    <HeartPulse className="w-4 h-4 text-purple-600" />
+                    <span>Visual Inputs & Observations</span>
+                    <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-300 text-[10px] ml-2">
+                      {visualInputsList.length} Uploaded
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription className="text-xs text-purple-800">
+                    Patient-provided clinical images (JPEG/PNG) and structured non-diagnostic visual observations.
+                  </CardDescription>
+                </div>
+                <div>
+                  <label className="cursor-pointer inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-purple-600 hover:bg-purple-700 text-white h-8 px-3 py-1">
+                    {isUploadingVisualInput ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <UserPlus className="w-3.5 h-3.5 mr-1" />}
+                    Upload Image
+                    <input
+                      type="file"
+                      accept=".jpg,.jpeg,.png"
+                      onChange={handleVisualInputUpload}
+                      disabled={isUploadingVisualInput}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 space-y-4">
+                {visualInputUploadError && (
+                  <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 rounded text-xs flex items-center space-x-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{visualInputUploadError}</span>
+                  </div>
+                )}
+                {visualInputUploadSuccess && (
+                  <div className="p-2.5 bg-green-50 border border-green-200 text-green-700 rounded text-xs flex items-center space-x-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    <span>{visualInputUploadSuccess}</span>
+                  </div>
+                )}
+
+                {isFetchingVisualInputs && (
+                  <div className="flex items-center space-x-2 text-xs text-slate-500 p-2">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-600" />
+                    <span>Loading visual input records...</span>
+                  </div>
+                )}
+
+                {visualInputsList.length === 0 && !isFetchingVisualInputs && (
+                  <p className="text-xs text-slate-500 italic">
+                    No visual images attached to this case.
+                  </p>
+                )}
+
+                {visualInputsList.length > 0 && (
+                  <div className="space-y-4">
+                    {visualInputsList.map((input: any) => {
+                      const inputId = input.id || input._id;
+                      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+                      const downloadUrl = `${apiBaseUrl}/visual-inputs/${inputId}/file`;
+                      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+
+                      return (
+                        <div key={inputId} className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-2">
+                          <div className="flex justify-between items-center border-b border-slate-200 pb-2">
+                            <div>
+                              <span className="font-bold text-slate-900 block">{input.originalFilename}</span>
+                              <span className="text-[10px] text-slate-500 font-mono">
+                                {(input.fileSize / 1024).toFixed(1)} KB • {input.mimeType} • Uploaded {new Date(input.uploadedAt || input.createdAt).toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Badge
+                                variant="outline"
+                                className={
+                                  input.processingStatus === 'PROCESSED'
+                                    ? 'bg-green-50 text-green-700 border-green-200 text-[10px]'
+                                    : input.processingStatus === 'FAILED'
+                                    ? 'bg-red-50 text-red-700 border-red-200 text-[10px]'
+                                    : 'bg-amber-50 text-amber-700 border-amber-200 text-[10px]'
+                                }
+                              >
+                                {input.processingStatus}
+                              </Badge>
+                              <Badge
+                                variant="outline"
+                                className={
+                                  input.verificationStatus === 'VERIFIED'
+                                    ? 'bg-purple-100 text-purple-800 border-purple-300 text-[10px]'
+                                    : 'bg-amber-100 text-amber-800 border-amber-300 text-[10px]'
+                                }
+                              >
+                                {input.verificationStatus === 'VERIFIED' ? 'VERIFIED' : 'VERIFICATION REQUIRED'}
+                              </Badge>
+                            </div>
+                          </div>
+
+                          {/* Image Link & Action */}
+                          <div className="flex items-center justify-between pt-1">
+                            <a
+                              href={downloadUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={(e) => {
+                                if (token) {
+                                  e.preventDefault();
+                                  fetch(downloadUrl, {
+                                    headers: { Authorization: `Bearer ${token}` },
+                                  })
+                                    .then((res) => res.blob())
+                                    .then((blob) => {
+                                      const url = window.URL.createObjectURL(blob);
+                                      const a = document.createElement('a');
+                                      a.href = url;
+                                      a.download = input.originalFilename;
+                                      a.click();
+                                    });
+                                }
+                              }}
+                              className="text-purple-600 hover:text-purple-800 underline font-medium text-[11px] inline-flex items-center"
+                            >
+                              View Original Image
+                            </a>
+
+                            {input.verificationStatus !== 'VERIFIED' && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleVerifyVisualInput(inputId)}
+                                className="h-7 text-[11px] border-purple-300 text-purple-700 hover:bg-purple-50"
+                              >
+                                <CheckCircle2 className="w-3 h-3 mr-1" /> Mark Observations as Verified
+                              </Button>
+                            )}
+                          </div>
+
+                          {/* Image Quality Failure Banner */}
+                          {(input.qualityStatus === 'INSUFFICIENT' || input.processingStatus === 'FAILED') && (
+                            <div className="p-2 bg-red-50 border border-red-200 text-red-700 text-[11px] rounded flex items-center space-x-2">
+                              <AlertCircle className="w-4 h-4 shrink-0" />
+                              <span>Image quality is insufficient for reliable visual observation. ({input.processingError || input.qualityNotes || 'Unreadable image'})</span>
+                            </div>
+                          )}
+
+                          {/* Empty Success State */}
+                          {input.processingStatus === 'PROCESSED' && input.qualityStatus === 'SUFFICIENT' && (!input.observations || input.observations.length === 0) && (
+                            <div className="p-2 bg-purple-50 border border-purple-200 text-purple-900 text-[11px] rounded flex items-center space-x-2">
+                              <AlertCircle className="w-4 h-4 text-purple-600 shrink-0" />
+                              <span>No configured visual observations were identified.</span>
+                            </div>
+                          )}
+
+                          {/* Observations Display */}
+                          {input.processingStatus === 'PROCESSED' && input.observations && input.observations.length > 0 && (
+                            <div className="space-y-2 pt-1">
+                              <span className="text-[10px] font-semibold text-purple-900 uppercase tracking-wider block">AI Visual Observations ({input.observations.length})</span>
+                              <div className="grid grid-cols-1 gap-2">
+                                {input.observations.map((obs: any, idx: number) => (
+                                  <div key={idx} className="p-2.5 bg-white border border-purple-100 rounded text-xs space-y-1 shadow-2xs">
+                                    <div className="flex justify-between items-center">
+                                      <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200 text-[9px] font-bold">
+                                        {obs.type}
+                                      </Badge>
+                                      <div className="flex items-center space-x-1.5">
+                                        <Badge variant="outline" className="bg-slate-100 text-slate-700 border-slate-200 text-[9px]">
+                                          Certainty: {obs.certainty}
+                                        </Badge>
+                                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-[9px]">
+                                          {obs.provenance}
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                    <p className="text-slate-800 font-medium pt-0.5">{obs.description}</p>
+                                    {obs.location && (
+                                      <p className="text-[10px] text-slate-500"><span className="font-semibold text-slate-600">Location:</span> {obs.location}</p>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <div className="p-2 bg-purple-50 border border-purple-200 text-purple-900 text-[11px] rounded">
+                  <span className="font-semibold">Safety Disclaimer:</span> AI-generated visual observations for qualified staff review. These observations are descriptive and do not constitute a diagnosis or treatment recommendation.
                 </div>
               </CardContent>
             </Card>

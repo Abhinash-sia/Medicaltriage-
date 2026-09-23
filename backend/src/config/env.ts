@@ -25,6 +25,9 @@ const envSchema = z.object({
   // Phase 11 Reports & OCR Configuration
   REPORT_STORAGE_DIR: z.string().default('./uploads/reports'),
   OCR_PROVIDER: z.enum(['mock', 'google_vision']).default('mock'),
+
+  // Phase 12 Visual Inputs Configuration
+  VISION_PROVIDER: z.enum(['mock', 'gemini_vision']).default('mock'),
 });
 
 const parseEnv = () => {

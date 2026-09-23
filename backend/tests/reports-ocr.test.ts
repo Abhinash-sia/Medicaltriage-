@@ -82,24 +82,24 @@ describe('Phase 11 — Reports & OCR Implementation Suite', () => {
     facilityBId = new mongoose.Types.ObjectId();
 
     patientAUser = await User.create({
-      name: 'Patient A',
-      email: 'patientA@example.com',
+      name: 'Patient A OCR',
+      email: `patientA_ocr_${Date.now()}_${Math.random()}@example.com`,
       passwordHash: 'hash123',
       role: UserRole.PATIENT,
       isActive: true,
     });
 
     patientBUser = await User.create({
-      name: 'Patient B',
-      email: 'patientB@example.com',
+      name: 'Patient B OCR',
+      email: `patientB_ocr_${Date.now()}_${Math.random()}@example.com`,
       passwordHash: 'hash123',
       role: UserRole.PATIENT,
       isActive: true,
     });
 
     reviewerFacilityA = await User.create({
-      name: 'Reviewer Facility A',
-      email: 'reviewerA@facilityA.org',
+      name: 'Reviewer Facility A OCR',
+      email: `reviewerA_ocr_${Date.now()}_${Math.random()}@facilityA.org`,
       passwordHash: 'hash123',
       role: UserRole.DOCTOR,
       facilityId: facilityAId.toString(),
@@ -107,8 +107,8 @@ describe('Phase 11 — Reports & OCR Implementation Suite', () => {
     });
 
     reviewerFacilityB = await User.create({
-      name: 'Reviewer Facility B',
-      email: 'reviewerB@facilityB.org',
+      name: 'Reviewer Facility B OCR',
+      email: `reviewerB_ocr_${Date.now()}_${Math.random()}@facilityB.org`,
       passwordHash: 'hash123',
       role: UserRole.DOCTOR,
       facilityId: facilityBId.toString(),
@@ -146,7 +146,7 @@ describe('Phase 11 — Reports & OCR Implementation Suite', () => {
     });
 
     caseFacilityA = await Case.create({
-      caseNumber: 'CASE-FAC-A-001',
+      caseNumber: `CASE-OCR-A-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       patientId: patientAUser._id,
       facilityId: facilityAId.toString(),
       chiefComplaint: 'Chest pain and cough',
@@ -157,7 +157,7 @@ describe('Phase 11 — Reports & OCR Implementation Suite', () => {
     });
 
     caseFacilityB = await Case.create({
-      caseNumber: 'CASE-FAC-B-002',
+      caseNumber: `CASE-OCR-B-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       patientId: patientBUser._id,
       facilityId: facilityBId.toString(),
       chiefComplaint: 'Abdominal cramping',
