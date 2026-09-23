@@ -25,12 +25,21 @@ medicalTriage/
 ├── backend/                      # Express + TypeScript Backend API Service
 │   ├── src/
 │   │   ├── config/               # Environment (Zod) and database (Mongoose) modules
+│   │   ├── modules/              # Mongoose Data Models & TypeScript Types (Phase 2)
+│   │   │   ├── users/            # User model & types (PATIENT, DOCTOR, NURSE, ADMIN)
+│   │   │   ├── cases/            # Case model & types (OPEN, IN_REVIEW, URGENT, ROUTINE)
+│   │   │   ├── symptoms/         # Symptom model & types (PATIENT vs AI extraction)
+│   │   │   ├── reports/          # Report upload metadata & OCR verification model
+│   │   │   ├── triage/           # TriageNote model & types (AI_GENERATED vs HUMAN_VERIFIED)
+│   │   │   ├── reviews/          # Review decision & notes model
+│   │   │   ├── consent/          # Patient consent records model
+│   │   │   └── audit/            # AuditLog immutable append-only event log model
 │   │   ├── middleware/           # Security, request logger, error, and request-id middleware
 │   │   ├── routes/               # Express API routes (health router)
 │   │   ├── lib/                  # Structured Pino logger
 │   │   ├── app.ts                # Express application factory
 │   │   └── server.ts             # Server bootstrap & graceful shutdown handler
-│   ├── tests/                    # Vitest test suite (health.test.ts)
+│   ├── tests/                    # Vitest test suite (health.test.ts, models.test.ts)
 │   ├── package.json              # Backend dependencies and scripts
 │   ├── tsconfig.json             # Backend TypeScript configuration
 │   └── vitest.config.ts          # Vitest testing configuration
@@ -39,7 +48,8 @@ medicalTriage/
 │   ├── product-requirements.md   # Phase 0 Product Requirements Document
 │   ├── safety.md                 # Phase 0 Safety Contract & Fail-Safe Specification
 │   ├── architecture.md           # Phase 0 System Architecture & Pipeline Diagrams
-│   └── development.md            # Phase 1 Developer Setup & Operational Guide
+│   ├── database.md               # Phase 2 Database Schema & ER Topology
+│   └── development.md            # Developer Setup & Operational Guide
 │
 ├── docker/                       # Docker & Compose Configurations
 │   └── docker-compose.yml        # Development MongoDB service setup
