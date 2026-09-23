@@ -94,6 +94,11 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // AI Extraction State
+  const [aiExtractionData, setAiExtractionData] = useState<any | null>(null);
+  const [isExtracting, setIsExtracting] = useState<boolean>(false);
+  const [aiExtractionError, setAiExtractionError] = useState<string | null>(null);
+
   // Assignment Action State
   const [targetReviewerIdInput, setTargetReviewerIdInput] = useState<string>('');
   const [assignmentLoading, setAssignmentLoading] = useState<boolean>(false);
@@ -249,6 +254,37 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
       setAssignmentError(msg);
     } finally {
       setAssignmentLoading(false);
+    }
+  };
+
+  const handleExtractInformation = async (forceReextract = false) => {
+    setIsExtracting(true);
+    setAiExtractionError(null);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${apiBaseUrl}/reviewer/cases/${caseId}/extraction`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ forceReextract }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error?.message || 'AI Information Extraction failed.');
+      }
+
+      setAiExtractionData(result.data);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Extraction request failed.';
+      setAiExtractionError(msg);
+    } finally {
+      setIsExtracting(false);
     }
   };
 
@@ -409,6 +445,126 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* AI Information Extraction Card */}
+            <Card className="bg-white border-purple-200 shadow-sm">
+              <CardHeader className="bg-purple-50 border-b border-purple-100 py-3 px-4 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-sm font-bold text-purple-950 flex items-center space-x-2">
+                    <HeartPulse className="w-4 h-4 text-purple-600" />
+                    <span>AI Information Extraction</span>
+                    <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-300 text-[10px] ml-2">
+                      AI-assisted
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription className="text-xs text-purple-700">
+                    Extract structured observations from narrative for human review.
+                  </CardDescription>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => handleExtractInformation(!!aiExtractionData)}
+                  disabled={isExtracting}
+                  className="bg-purple-600 hover:bg-purple-700 text-white text-xs"
+                >
+                  {isExtracting ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Extracting...
+                    </>
+                  ) : (
+                    <>{aiExtractionData ? 'Re-extract Information' : 'Extract Information'}</>
+                  )}
+                </Button>
+              </CardHeader>
+
+              <CardContent className="p-4 space-y-4">
+                {aiExtractionError && (
+                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded text-xs flex items-center space-x-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{aiExtractionError}</span>
+                  </div>
+                )}
+
+                {!aiExtractionData && !aiExtractionError && !isExtracting && (
+                  <p className="text-xs text-slate-500 italic">
+                    Click &quot;Extract Information&quot; to parse patient narrative into verified structured findings.
+                  </p>
+                )}
+
+                {aiExtractionData && (
+                  <div className="space-y-4 text-xs">
+                    {/* Status & Model metadata */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-slate-50 border rounded text-[11px]">
+                      <div>
+                        <span className="text-slate-500">Status: </span>
+                        <span className="font-semibold text-green-700">{aiExtractionData.generationStatus}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">Model: </span>
+                        <span className="font-mono text-purple-900">{aiExtractionData.model || 'Gemini 2.5 Flash'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">Generated: </span>
+                        <span className="text-slate-700">{new Date(aiExtractionData.generatedAt).toLocaleString()}</span>
+                      </div>
+                    </div>
+
+                    {/* Extracted Symptoms */}
+                    {aiExtractionData.symptoms && aiExtractionData.symptoms.length > 0 && (
+                      <div className="space-y-2">
+                        <span className="font-semibold text-slate-800 block">Extracted Symptoms</span>
+                        <div className="grid grid-cols-1 gap-2">
+                          {aiExtractionData.symptoms.map((s: any, idx: number) => (
+                            <div key={idx} className="p-2.5 bg-purple-50/50 border border-purple-100 rounded text-xs space-y-1">
+                              <div className="flex justify-between items-center">
+                                <span className="font-bold text-purple-950">{s.name}</span>
+                                <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200 text-[9px]">
+                                  Status: {s.status || 'PRESENT'}
+                                </Badge>
+                              </div>
+                              <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[11px] text-slate-600 pt-1">
+                                {s.duration && <div><span className="text-slate-400">Duration:</span> {s.duration}</div>}
+                                {s.onset && <div><span className="text-slate-400">Onset:</span> {s.onset}</div>}
+                                {s.frequency && <div><span className="text-slate-400">Frequency:</span> {s.frequency}</div>}
+                                {s.severity && <div><span className="text-slate-400">Severity:</span> {s.severity}</div>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Negative Findings */}
+                    {aiExtractionData.negativeFindings && aiExtractionData.negativeFindings.length > 0 && (
+                      <div className="space-y-1">
+                        <span className="font-semibold text-slate-800 block">Explicitly Absent Findings</span>
+                        <ul className="list-disc list-inside space-y-0.5 text-slate-700 pl-1 text-[11px]">
+                          {aiExtractionData.negativeFindings.map((item: string, idx: number) => (
+                            <li key={idx}><span className="text-slate-800 font-medium">{item}</span></li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Uncertainties */}
+                    {aiExtractionData.uncertainties && aiExtractionData.uncertainties.length > 0 && (
+                      <div className="space-y-1">
+                        <span className="font-semibold text-amber-900 block">Uncertainties & Ambiguities</span>
+                        <ul className="list-disc list-inside space-y-0.5 text-amber-800 pl-1 text-[11px]">
+                          {aiExtractionData.uncertainties.map((item: string, idx: number) => (
+                            <li key={idx}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    <div className="p-2 bg-amber-50 border border-amber-200 text-amber-900 text-[11px] rounded">
+                      <span className="font-semibold">Human Verification Notice:</span> AI extraction organizes patient narrative facts for human review. It does not diagnose or determine medical urgency.
+                    </div>
                   </div>
                 )}
               </CardContent>

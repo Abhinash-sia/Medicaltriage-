@@ -51,6 +51,14 @@ const SymptomSchema = new Schema<ISymptomDocument>(
       default: InformationSource.PATIENT,
       index: true,
     },
+    status: {
+      type: String,
+      trim: true,
+    },
+    context: {
+      type: String,
+      trim: true,
+    },
     confidence: {
       type: Number,
       min: 0.0,

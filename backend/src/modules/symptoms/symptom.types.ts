@@ -20,6 +20,8 @@ export interface ISymptom {
   bodyLocation?: string;
   associatedSymptoms?: string[];
   source: InformationSource;
+  status?: string;
+  context?: string;
   confidence?: number;
   provenance?: string;
   createdAt?: Date;

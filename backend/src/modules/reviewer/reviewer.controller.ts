@@ -258,3 +258,49 @@ export const processSlaEscalations = async (
     next(error);
   }
 };
+
+export const extractCaseInformation = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.user || !req.user.id) {
+      const error: AppError = new Error('Authentication required');
+      error.statusCode = 401;
+      error.code = 'AUTH_TOKEN_MISSING';
+      return next(error);
+    }
+
+    const caseIdParam = req.params.caseId;
+    const caseId = Array.isArray(caseIdParam) ? caseIdParam[0] : caseIdParam;
+    const forceReextract = req.body?.forceReextract === true;
+
+    const { AiService } = await import('../ai/ai.service.js');
+    const aiService = new AiService();
+
+    const result = await aiService.extractAndPersistCaseInformation(
+      caseId,
+      req.user as any,
+      { forceReextract }
+    );
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error: any) {
+    if (error.message?.includes('Unauthorized') || error.message?.includes('facility')) {
+      error.statusCode = 403;
+      error.code = 'FORBIDDEN';
+    } else if (error.message?.includes('not found')) {
+      error.statusCode = 404;
+      error.code = 'NOT_FOUND';
+    } else if (error.message?.includes('extraction failed')) {
+      error.statusCode = 500;
+      error.code = 'AI_EXTRACTION_ERROR';
+    }
+    next(error);
+  }
+};
+

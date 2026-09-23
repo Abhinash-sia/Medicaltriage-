@@ -20,6 +20,10 @@ export interface ITriageNote {
   timelineSummary?: string;
   relevantExtractedReportInfo?: string;
   missingInformation?: string[];
+  negativeFindings?: string[];
+  uncertainties?: string[];
+  confidence?: number | null;
+  sourceTextHash?: string;
   suggestedFollowUpQuestions?: string[];
   safetySignals?: string[];
   priority: CasePriority;

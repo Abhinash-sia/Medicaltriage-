@@ -34,6 +34,22 @@ const TriageNoteSchema = new Schema<ITriageNoteDocument>(
       type: [String],
       default: [],
     },
+    negativeFindings: {
+      type: [String],
+      default: [],
+    },
+    uncertainties: {
+      type: [String],
+      default: [],
+    },
+    confidence: {
+      type: Number,
+      default: null,
+    },
+    sourceTextHash: {
+      type: String,
+      default: '',
+    },
     suggestedFollowUpQuestions: {
       type: [String],
       default: [],

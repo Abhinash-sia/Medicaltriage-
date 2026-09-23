@@ -26,12 +26,13 @@ export const createApp = (): Express => {
     })
   );
 
-  // Rate Limiter
+  // Rate Limiter (Skipped in test environment)
   const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100, // Limit each IP to 100 requests per windowMs
     standardHeaders: true,
     legacyHeaders: false,
+    skip: () => env.NODE_ENV === 'test' || process.env.VITEST === 'true',
     message: {
       success: false,
       error: {
