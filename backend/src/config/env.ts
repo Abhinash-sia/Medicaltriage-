@@ -28,6 +28,11 @@ const envSchema = z.object({
 
   // Phase 12 Visual Inputs Configuration
   VISION_PROVIDER: z.enum(['mock', 'gemini_vision']).default('mock'),
+
+  // Phase 13 Voice / STT Configuration
+  STT_PROVIDER: z.enum(['mock', 'sarvam']).default('mock'),
+  MAX_AUDIO_UPLOAD_MB: z.coerce.number().default(25),
+  MAX_AUDIO_DURATION_SECONDS: z.coerce.number().default(300),
 });
 
 const parseEnv = () => {

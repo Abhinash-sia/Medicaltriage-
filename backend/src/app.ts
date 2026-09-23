@@ -13,6 +13,7 @@ import { intakeRouter } from './modules/intake/intake.routes.js';
 import { reviewerRouter } from './modules/reviewer/reviewer.routes.js';
 import reportRouter from './modules/reports/report.routes.js';
 import visualInputRouter from './modules/vision/visual-input.routes.js';
+import voiceInputRouter from './modules/voice/voice-input.routes.js';
 
 export const createApp = (): Express => {
   const app = express();
@@ -58,6 +59,7 @@ export const createApp = (): Express => {
   app.use('/api/reviewer', reviewerRouter);
   app.use('/api', reportRouter);
   app.use('/api', visualInputRouter);
+  app.use('/api', voiceInputRouter);
 
   // Error & 404 Handlers
   app.use(notFoundHandler);

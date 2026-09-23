@@ -230,6 +230,45 @@ export default function PatientIntakePage() {
                   className="text-xs text-slate-700 file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700"
                 />
               </div>
+
+              {/* Optional Voice Recording Attachment */}
+              <div className="bg-sky-50 border border-sky-200 rounded-md p-3 space-y-2 text-left">
+                <span className="text-xs font-semibold text-sky-900 block">
+                  Attach Optional Voice Recording
+                </span>
+                <p className="text-[11px] text-sky-800">
+                  You may record or upload an audio message (.wav, .mp3, .ogg, .webm). Your voice recording will be transcribed for review by qualified healthcare staff.
+                </p>
+                <input
+                  type="file"
+                  accept="audio/*,.wav,.mp3,.ogg,.webm"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file || !submittedCase) return;
+                    try {
+                      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+                      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+                      const formData = new FormData();
+                      formData.append('file', file);
+
+                      const res = await fetch(`${apiBaseUrl}/cases/${submittedCase.caseId}/voice-inputs`, {
+                        method: 'POST',
+                        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+                        body: formData,
+                      });
+                      if (res.ok) {
+                        alert('Voice recording attached and transcribed successfully!');
+                      } else {
+                        const errData = await res.json().catch(() => ({}));
+                        alert(errData.error || 'Voice recording upload failed.');
+                      }
+                    } catch {
+                      alert('Voice recording upload failed.');
+                    }
+                  }}
+                  className="text-xs text-slate-700 file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-sky-600 file:text-white hover:file:bg-sky-700"
+                />
+              </div>
             </CardContent>
             <CardFooter>
               <Button

@@ -5,10 +5,21 @@ import { env } from '../../config/env.js';
 import { logger } from '../../lib/logger.js';
 import { FileValidationResult, StoredFileResult } from './storage.types.js';
 
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB limit
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB default limit for docs/images
 
-const ALLOWED_MIME_TYPES = new Set(['application/pdf', 'image/jpeg', 'image/png']);
-const ALLOWED_EXTENSIONS = new Set(['.pdf', '.jpg', '.jpeg', '.png']);
+const ALLOWED_MIME_TYPES = new Set([
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'audio/wav',
+  'audio/x-wav',
+  'audio/mpeg',
+  'audio/mp3',
+  'audio/webm',
+  'audio/ogg',
+]);
+
+const ALLOWED_EXTENSIONS = new Set(['.pdf', '.jpg', '.jpeg', '.png', '.wav', '.mp3', '.webm', '.ogg']);
 
 export class StorageService {
   private baseDir: string;
@@ -31,14 +42,22 @@ export class StorageService {
   public validateFile(
     fileBuffer: Buffer,
     declaredMimeType: string,
-    originalFilename: string
+    originalFilename: string,
+    customMaxSizeBytes?: number
   ): FileValidationResult {
     if (!fileBuffer || fileBuffer.length === 0) {
       return { isValid: false, error: 'File buffer is empty' };
     }
 
-    if (fileBuffer.length > MAX_FILE_SIZE_BYTES) {
-      return { isValid: false, error: 'File size exceeds 10MB limit' };
+    const normalizedDeclaredMime = declaredMimeType.toLowerCase().trim();
+    const isAudio = normalizedDeclaredMime.startsWith('audio/');
+    const maxAllowedBytes =
+      customMaxSizeBytes ||
+      (isAudio ? env.MAX_AUDIO_UPLOAD_MB * 1024 * 1024 : MAX_FILE_SIZE_BYTES);
+
+    if (fileBuffer.length > maxAllowedBytes) {
+      const maxMb = Math.round(maxAllowedBytes / (1024 * 1024));
+      return { isValid: false, error: `File size exceeds configured limit of ${maxMb}MB` };
     }
 
     // Check extension
@@ -48,7 +67,6 @@ export class StorageService {
     }
 
     // Check declared MIME
-    const normalizedDeclaredMime = declaredMimeType.toLowerCase().trim();
     if (!ALLOWED_MIME_TYPES.has(normalizedDeclaredMime)) {
       return { isValid: false, error: `Unsupported MIME type: ${declaredMimeType}` };
     }
@@ -59,22 +77,34 @@ export class StorageService {
       return magicValidation;
     }
 
+    const detected = magicValidation.detectedMimeType!;
+
     // Cross-verify magic byte detected type with declared type/extension
-    if (magicValidation.detectedMimeType !== normalizedDeclaredMime) {
+    if (detected !== normalizedDeclaredMime) {
       // Allow image/jpg vs image/jpeg variations
       const isJpgMismatch =
         (normalizedDeclaredMime === 'image/jpg' || normalizedDeclaredMime === 'image/jpeg') &&
-        magicValidation.detectedMimeType === 'image/jpeg';
+        detected === 'image/jpeg';
 
-      if (!isJpgMismatch) {
+      // Allow audio/mp3 vs audio/mpeg
+      const isMp3Mismatch =
+        (normalizedDeclaredMime === 'audio/mp3' || normalizedDeclaredMime === 'audio/mpeg') &&
+        detected === 'audio/mpeg';
+
+      // Allow audio/x-wav vs audio/wav
+      const isWavMismatch =
+        (normalizedDeclaredMime === 'audio/x-wav' || normalizedDeclaredMime === 'audio/wav') &&
+        detected === 'audio/wav';
+
+      if (!isJpgMismatch && !isMp3Mismatch && !isWavMismatch) {
         return {
           isValid: false,
-          error: `File signature (${magicValidation.detectedMimeType}) does not match declared MIME type (${declaredMimeType})`,
+          error: `File signature (${detected}) does not match declared MIME type (${declaredMimeType})`,
         };
       }
     }
 
-    return { isValid: true, detectedMimeType: magicValidation.detectedMimeType };
+    return { isValid: true, detectedMimeType: detected };
   }
 
   private validateMagicBytes(buffer: Buffer): FileValidationResult {
@@ -107,7 +137,52 @@ export class StorageService {
       return { isValid: true, detectedMimeType: 'image/jpeg' };
     }
 
-    return { isValid: false, error: 'File content does not match any allowed file signature (PDF, JPEG, PNG)' };
+    // Check WAV: RIFF at 0 (0x52, 0x49, 0x46, 0x46) and WAVE at 8 (0x57, 0x41, 0x56, 0x45)
+    if (
+      buffer.length >= 12 &&
+      buffer[0] === 0x52 &&
+      buffer[1] === 0x49 &&
+      buffer[2] === 0x46 &&
+      buffer[3] === 0x46 &&
+      buffer[8] === 0x57 &&
+      buffer[9] === 0x41 &&
+      buffer[10] === 0x56 &&
+      buffer[11] === 0x45
+    ) {
+      return { isValid: true, detectedMimeType: 'audio/wav' };
+    }
+
+    // Check MP3 ID3 header: ID3 (0x49, 0x44, 0x33)
+    if (buffer[0] === 0x49 && buffer[1] === 0x44 && buffer[2] === 0x33) {
+      return { isValid: true, detectedMimeType: 'audio/mpeg' };
+    }
+
+    // Check MP3 raw MPEG sync bits (0xFF 0xFB, 0xFF 0xF3, 0xFF 0xF2, 0xFF 0xE3)
+    if (buffer[0] === 0xff && (buffer[1] & 0xe0) === 0xe0) {
+      return { isValid: true, detectedMimeType: 'audio/mpeg' };
+    }
+
+    // Check OGG: OggS (0x4F, 0x67, 0x67, 0x53)
+    if (
+      buffer[0] === 0x4f &&
+      buffer[1] === 0x67 &&
+      buffer[2] === 0x67 &&
+      buffer[3] === 0x53
+    ) {
+      return { isValid: true, detectedMimeType: 'audio/ogg' };
+    }
+
+    // Check WebM: EBML header (0x1A, 0x45, 0xDF, 0xA3)
+    if (
+      buffer[0] === 0x1a &&
+      buffer[1] === 0x45 &&
+      buffer[2] === 0xdf &&
+      buffer[3] === 0xa3
+    ) {
+      return { isValid: true, detectedMimeType: 'audio/webm' };
+    }
+
+    return { isValid: false, error: 'File content does not match any allowed file signature (PDF, JPEG, PNG, WAV, MP3, OGG, WebM)' };
   }
 
   /**
@@ -123,7 +198,8 @@ export class StorageService {
   public async saveFile(
     fileBuffer: Buffer,
     declaredMimeType: string,
-    originalFilename: string
+    originalFilename: string,
+    customCategory?: string
   ): Promise<StoredFileResult> {
     const validation = this.validateFile(fileBuffer, declaredMimeType, originalFilename);
     if (!validation.isValid) {
@@ -132,7 +208,9 @@ export class StorageService {
 
     const contentHash = this.computeContentHash(fileBuffer);
     const ext = path.extname(originalFilename).toLowerCase();
-    const safeStorageKey = `reports/${crypto.randomUUID()}-${contentHash}${ext}`;
+    const isAudio = (validation.detectedMimeType || declaredMimeType).startsWith('audio/');
+    const category = customCategory || (isAudio ? 'voice' : 'reports');
+    const safeStorageKey = `${category}/${crypto.randomUUID()}-${contentHash}${ext}`;
 
     const resolvedPath = path.resolve(this.baseDir, safeStorageKey);
 
@@ -148,7 +226,7 @@ export class StorageService {
     // Write file
     await fs.promises.writeFile(resolvedPath, fileBuffer);
 
-    logger.info({ storageKey: safeStorageKey, contentHash }, 'Report file securely saved to storage');
+    logger.info({ storageKey: safeStorageKey, contentHash }, 'File securely saved to storage');
 
     return {
       storageKey: safeStorageKey,

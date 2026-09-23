@@ -20,6 +20,8 @@ import {
   UserCheck,
   UserX,
   UserPlus,
+  Mic,
+  Volume2,
 } from 'lucide-react';
 
 interface ReviewerCaseSymptom {
@@ -121,6 +123,13 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
   const [isUploadingVisualInput, setIsUploadingVisualInput] = useState<boolean>(false);
   const [visualInputUploadError, setVisualInputUploadError] = useState<string | null>(null);
   const [visualInputUploadSuccess, setVisualInputUploadSuccess] = useState<string | null>(null);
+
+  // Voice Inputs & Transcripts State
+  const [voiceInputsList, setVoiceInputsList] = useState<any[]>([]);
+  const [isFetchingVoiceInputs, setIsFetchingVoiceInputs] = useState<boolean>(false);
+  const [isUploadingVoiceInput, setIsUploadingVoiceInput] = useState<boolean>(false);
+  const [voiceInputUploadError, setVoiceInputUploadError] = useState<string | null>(null);
+  const [voiceInputUploadSuccess, setVoiceInputUploadSuccess] = useState<string | null>(null);
 
   // Assignment Action State
   const [targetReviewerIdInput, setTargetReviewerIdInput] = useState<string>('');
@@ -341,13 +350,38 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
     }
   }, [caseId]);
 
+  const fetchVoiceInputs = useCallback(async () => {
+    setIsFetchingVoiceInputs(true);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${apiBaseUrl}/cases/${caseId}/voice-inputs`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      const result = await response.json();
+      if (response.ok && result.data) {
+        setVoiceInputsList(result.data);
+      }
+    } catch {
+      // Fallback
+    } finally {
+      setIsFetchingVoiceInputs(false);
+    }
+  }, [caseId]);
+
   useEffect(() => {
     fetchCaseDetails();
     fetchTimeline();
     fetchMissingInformation();
     fetchReports();
     fetchVisualInputs();
-  }, [fetchCaseDetails, fetchTimeline, fetchMissingInformation, fetchReports, fetchVisualInputs]);
+    fetchVoiceInputs();
+  }, [fetchCaseDetails, fetchTimeline, fetchMissingInformation, fetchReports, fetchVisualInputs, fetchVoiceInputs]);
 
   const handleVerifyVisualInput = async (visualInputId: string) => {
     try {
@@ -405,6 +439,64 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
       setVisualInputUploadError(err.message || 'Visual input upload failed.');
     } finally {
       setIsUploadingVisualInput(false);
+    }
+  };
+
+  const handleVerifyVoiceInput = async (voiceInputId: string) => {
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${apiBaseUrl}/voice-inputs/${voiceInputId}/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      if (response.ok) {
+        fetchVoiceInputs();
+      }
+    } catch {
+      // Fallback
+    }
+  };
+
+  const handleVoiceInputUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingVoiceInput(true);
+    setVoiceInputUploadError(null);
+    setVoiceInputUploadSuccess(null);
+
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(`${apiBaseUrl}/cases/${caseId}/voice-inputs`, {
+        method: 'POST',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Voice recording upload failed.');
+      }
+
+      setVoiceInputUploadSuccess('Voice recording uploaded and transcribed successfully.');
+      fetchVoiceInputs();
+    } catch (err: any) {
+      setVoiceInputUploadError(err.message || 'Voice recording upload failed.');
+    } finally {
+      setIsUploadingVoiceInput(false);
     }
   };
 
@@ -1413,6 +1505,176 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
 
                 <div className="p-2 bg-purple-50 border border-purple-200 text-purple-900 text-[11px] rounded">
                   <span className="font-semibold">Safety Disclaimer:</span> AI-generated visual observations for qualified staff review. These observations are descriptive and do not constitute a diagnosis or treatment recommendation.
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Voice Inputs & Transcripts Card */}
+            <Card className="bg-white border-sky-200 shadow-sm">
+              <CardHeader className="bg-sky-50 border-b border-sky-100 py-3 px-4 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-sm font-bold text-sky-950 flex items-center space-x-2">
+                    <Mic className="w-4 h-4 text-sky-600" />
+                    <span>Voice Inputs & Transcripts</span>
+                  </CardTitle>
+                  <CardDescription className="text-xs text-sky-700">
+                    Patient audio recordings and AI speech-to-text transcripts.
+                  </CardDescription>
+                </div>
+                <div>
+                  <label htmlFor="voice-upload-input" className="cursor-pointer">
+                    <span className="inline-flex items-center justify-center rounded-md text-xs font-medium bg-sky-600 text-white hover:bg-sky-700 h-8 px-3 py-1 shadow-2xs transition-colors">
+                      {isUploadingVoiceInput ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Mic className="w-3.5 h-3.5 mr-1.5" />
+                          Upload Voice
+                        </>
+                      )}
+                    </span>
+                    <input
+                      id="voice-upload-input"
+                      type="file"
+                      accept="audio/*,.wav,.mp3,.ogg,.webm"
+                      className="hidden"
+                      onChange={handleVoiceInputUpload}
+                      disabled={isUploadingVoiceInput}
+                    />
+                  </label>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 space-y-4">
+                {voiceInputUploadError && (
+                  <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 rounded text-xs flex items-center space-x-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{voiceInputUploadError}</span>
+                  </div>
+                )}
+                {voiceInputUploadSuccess && (
+                  <div className="p-2.5 bg-green-50 border border-green-200 text-green-700 rounded text-xs flex items-center space-x-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    <span>{voiceInputUploadSuccess}</span>
+                  </div>
+                )}
+
+                {isFetchingVoiceInputs && (
+                  <div className="flex items-center space-x-2 text-xs text-slate-500 p-2">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-sky-600" />
+                    <span>Loading voice inputs...</span>
+                  </div>
+                )}
+
+                {voiceInputsList.length === 0 && !isFetchingVoiceInputs && (
+                  <p className="text-xs text-slate-500 italic">
+                    No voice recordings attached to this case.
+                  </p>
+                )}
+
+                {voiceInputsList.length > 0 && (
+                  <div className="space-y-4">
+                    {voiceInputsList.map((input: any) => {
+                      const inputId = input.id || input._id;
+                      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+                      const streamUrl = `${apiBaseUrl}/voice-inputs/${inputId}/file`;
+
+                      return (
+                        <div key={inputId} className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-3">
+                          <div className="flex justify-between items-center border-b border-slate-200 pb-2">
+                            <div>
+                              <span className="font-bold text-slate-900 block">{input.originalFilename}</span>
+                              <span className="text-[10px] text-slate-500 font-mono">
+                                {(input.fileSize / 1024).toFixed(1)} KB • {input.mimeType} • Language: {input.detectedLanguage || input.requestedLanguage || 'UNKNOWN'}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Badge
+                                variant="outline"
+                                className={
+                                  input.processingStatus === 'PROCESSED'
+                                    ? 'bg-green-50 text-green-700 border-green-200 text-[10px]'
+                                    : input.processingStatus === 'FAILED'
+                                    ? 'bg-red-50 text-red-700 border-red-200 text-[10px]'
+                                    : 'bg-amber-50 text-amber-700 border-amber-200 text-[10px]'
+                                }
+                              >
+                                {input.processingStatus}
+                              </Badge>
+                              <Badge
+                                variant="outline"
+                                className={
+                                  input.verificationStatus === 'VERIFIED'
+                                    ? 'bg-sky-100 text-sky-800 border-sky-300 text-[10px]'
+                                    : 'bg-amber-100 text-amber-800 border-amber-300 text-[10px]'
+                                }
+                              >
+                                {input.verificationStatus === 'VERIFIED' ? 'VERIFIED' : 'VERIFICATION REQUIRED'}
+                              </Badge>
+                            </div>
+                          </div>
+
+                          {/* Audio Player */}
+                          <div className="space-y-1">
+                            <span className="text-[10px] font-semibold text-sky-900 uppercase tracking-wider block">Original Audio Player</span>
+                            <audio controls className="w-full h-8 rounded" src={streamUrl}>
+                              Your browser does not support the audio element.
+                            </audio>
+                          </div>
+
+                          {/* Transcript Box */}
+                          <div className="space-y-1.5 pt-1">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-semibold text-sky-900 uppercase tracking-wider">Transcript</span>
+                              {input.transcript?.provenance && (
+                                <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-200 text-[9px]">
+                                  {input.transcript.provenance}
+                                </Badge>
+                              )}
+                            </div>
+
+                            {input.processingStatus === 'FAILED' && (
+                              <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded">
+                                Audio transcription could not be completed. ({input.processingError || 'Provider error'})
+                              </div>
+                            )}
+
+                            {input.processingStatus === 'PROCESSED' && input.transcriptStatus === 'EMPTY' && (
+                              <div className="p-2.5 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded italic">
+                                No usable transcript was produced from this audio.
+                              </div>
+                            )}
+
+                            {input.processingStatus === 'PROCESSED' && input.transcriptStatus === 'AVAILABLE' && input.transcript && (
+                              <div className="p-3 bg-white border border-sky-100 rounded text-xs text-slate-800 space-y-1 shadow-2xs">
+                                <p className="leading-relaxed whitespace-pre-wrap font-sans">&quot;{input.transcript.text}&quot;</p>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Verification Action Button */}
+                          {input.verificationStatus !== 'VERIFIED' && input.processingStatus === 'PROCESSED' && (
+                            <div className="pt-1 flex justify-end">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleVerifyVoiceInput(inputId)}
+                                className="h-7 text-[11px] border-sky-300 text-sky-700 hover:bg-sky-50"
+                              >
+                                <CheckCircle2 className="w-3 h-3 mr-1" /> Mark Transcript as Verified
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <div className="p-2 bg-sky-50 border border-sky-200 text-sky-900 text-[11px] rounded">
+                  <span className="font-semibold">Safety Disclaimer:</span> Speech-to-text is a transcription capability only. It does not diagnose conditions, determine urgency, recommend treatment, or independently alter case priority.
                 </div>
               </CardContent>
             </Card>
