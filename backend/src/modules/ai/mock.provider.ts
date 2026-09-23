@@ -102,11 +102,56 @@ export class MockAiExtractionProvider implements AiExtractionProvider {
       });
     }
 
+    const missingInformation: ExtractionResult['missingInformation'] = [];
+    const followUpQuestions: ExtractionResult['followUpQuestions'] = [];
+
+    if (narrative.includes('fever') && !narrative.includes('3 days') && !narrative.includes('three days') && !narrative.includes('monday')) {
+      missingInformation.push({
+        id: 'gap-1',
+        field: 'fever_duration',
+        topic: 'Fever Duration',
+        description: 'Duration of reported fever was not specified in the narrative',
+        importance: 'IMPORTANT',
+        reason: 'Clarify timeline of fever onset',
+        source: 'PATIENT_NARRATIVE',
+      });
+      followUpQuestions.push({
+        id: 'q-1',
+        question: 'When did the fever first begin?',
+        linkedMissingInformationId: 'gap-1',
+        priority: 'MEDIUM',
+        reason: 'Clarify fever onset date',
+        answerType: 'DATE',
+      });
+    }
+
+    if (narrative.includes('vomit') || narrative.includes('vomiting')) {
+      missingInformation.push({
+        id: 'gap-2',
+        field: 'vomiting_frequency',
+        topic: 'Vomiting Frequency',
+        description: 'Frequency of vomiting episodes is unclear from narrative',
+        importance: 'IMPORTANT',
+        reason: 'Evaluate fluid loss context',
+        source: 'PATIENT_NARRATIVE',
+      });
+      followUpQuestions.push({
+        id: 'q-2',
+        question: 'How often have you been vomiting?',
+        linkedMissingInformationId: 'gap-2',
+        priority: 'MEDIUM',
+        reason: 'Clarify frequency of vomiting',
+        answerType: 'TEXT',
+      });
+    }
+
     return {
       symptoms,
       negativeFindings,
       timeline,
       uncertainties,
+      missingInformation,
+      followUpQuestions,
       confidence: 0.95,
     };
   }

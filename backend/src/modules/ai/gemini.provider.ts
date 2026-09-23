@@ -46,6 +46,8 @@ Return a JSON object with:
     - "certainty": "CERTAIN" | "APPROXIMATE" | "UNCERTAIN"
     - "sourceQuote": supporting phrase from text (string or null)
 - "uncertainties": list of ambiguous or unclear details.
+- "missingInformation": list of structured items identifying genuinely missing narrative details (fields: "id", "field", "topic", "description", "importance" ["IMPORTANT" | "OPTIONAL"], "reason", "source").
+- "followUpQuestions": list of neutral, non-leading follow-up questions linked to identified missing information gaps (fields: "id", "question", "linkedMissingInformationId", "priority", "reason", "answerType"). DO NOT include diagnostic assertions, leading questions ("right?"), or treatment recommendations.
 - "confidence": extraction-level confidence score from 0.0 to 1.0, or null if uncertain.
 
 Preserve uncertainty. Use null when information is not explicitly provided. Separate explicitly absent findings from unmentioned findings.

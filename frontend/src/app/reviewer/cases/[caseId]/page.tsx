@@ -103,6 +103,11 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
   const [timelineEvents, setTimelineEvents] = useState<any[]>([]);
   const [isFetchingTimeline, setIsFetchingTimeline] = useState<boolean>(false);
 
+  // Missing Information & Follow-Up Questions State
+  const [missingInfoItems, setMissingInfoItems] = useState<any[]>([]);
+  const [followUpQuestionItems, setFollowUpQuestionItems] = useState<any[]>([]);
+  const [isFetchingMissingInfo, setIsFetchingMissingInfo] = useState<boolean>(false);
+
   // Assignment Action State
   const [targetReviewerIdInput, setTargetReviewerIdInput] = useState<string>('');
   const [assignmentLoading, setAssignmentLoading] = useState<boolean>(false);
@@ -178,10 +183,40 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
     }
   }, [caseId]);
 
+  const fetchMissingInformation = useCallback(async () => {
+    setIsFetchingMissingInfo(true);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${apiBaseUrl}/reviewer/cases/${caseId}/missing-information`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      const result = await response.json();
+      if (response.ok && result.success && result.data) {
+        if (result.data.missingInformationItems) {
+          setMissingInfoItems(result.data.missingInformationItems);
+        }
+        if (result.data.followUpQuestionItems) {
+          setFollowUpQuestionItems(result.data.followUpQuestionItems);
+        }
+      }
+    } catch {
+      // Fallback
+    } finally {
+      setIsFetchingMissingInfo(false);
+    }
+  }, [caseId]);
+
   useEffect(() => {
     fetchCaseDetails();
     fetchTimeline();
-  }, [fetchCaseDetails, fetchTimeline]);
+    fetchMissingInformation();
+  }, [fetchCaseDetails, fetchTimeline, fetchMissingInformation]);
 
   const handleClaim = async () => {
     setAssignmentLoading(true);
@@ -311,6 +346,12 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
       setAiExtractionData(result.data);
       if (result.data?.timelineEvents) {
         setTimelineEvents(result.data.timelineEvents);
+      }
+      if (result.data?.missingInformationItems) {
+        setMissingInfoItems(result.data.missingInformationItems);
+      }
+      if (result.data?.followUpQuestionItems) {
+        setFollowUpQuestionItems(result.data.followUpQuestionItems);
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Extraction request failed.';
@@ -687,6 +728,128 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                       <span>
                         <span className="font-semibold">Timeline Safety Note:</span> Chronological ordering of reported observations for human verification.
                       </span>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Missing Information Card */}
+            <Card className="bg-white border-amber-200 shadow-sm">
+              <CardHeader className="bg-amber-50/70 border-b border-amber-100 py-3 px-4 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-sm font-bold text-amber-950 flex items-center space-x-2">
+                    <AlertCircle className="w-4 h-4 text-amber-600" />
+                    <span>Identified Information Gaps</span>
+                    <Badge variant="outline" className="bg-amber-100 text-amber-900 border-amber-300 text-[10px] ml-2">
+                      Informational Completeness
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription className="text-xs text-amber-800">
+                    Important narrative details not specified in intake data.
+                  </CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 space-y-4">
+                {isFetchingMissingInfo && (
+                  <div className="flex items-center space-x-2 text-xs text-slate-500 p-2">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-600" />
+                    <span>Analyzing narrative gaps...</span>
+                  </div>
+                )}
+
+                {missingInfoItems.length === 0 && !isFetchingMissingInfo && (
+                  <p className="text-xs text-slate-500 italic">
+                    No configured narrative information gaps identified from available structured intake data.
+                  </p>
+                )}
+
+                {missingInfoItems.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 gap-2.5">
+                      {missingInfoItems.map((item: any, idx: number) => (
+                        <div key={idx} className="p-3 bg-amber-50/40 border border-amber-200 rounded-md text-xs space-y-1">
+                          <div className="flex justify-between items-center">
+                            <span className="font-bold text-amber-950">{item.topic || item.field || 'Information Gap'}</span>
+                            <Badge
+                              variant="outline"
+                              className={
+                                item.importance === 'CRITICAL'
+                                  ? 'bg-red-50 text-red-700 border-red-200 text-[9px]'
+                                  : item.importance === 'IMPORTANT'
+                                  ? 'bg-amber-100 text-amber-800 border-amber-300 text-[9px]'
+                                  : 'bg-slate-100 text-slate-700 border-slate-300 text-[9px]'
+                              }
+                            >
+                              {item.importance || 'IMPORTANT'}
+                            </Badge>
+                          </div>
+                          <p className="text-slate-800 font-medium pt-0.5">{item.description}</p>
+                          {item.reason && <p className="text-[11px] text-slate-500 pt-0.5"><span className="font-semibold text-slate-600">Reason:</span> {item.reason}</p>}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="p-2 bg-amber-50 border border-amber-200 text-amber-900 text-[11px] rounded">
+                      <span className="font-semibold">Completeness Safety Note:</span> Information gap labels describe data completeness only and do not indicate medical urgency.
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Suggested Follow-Up Questions Card */}
+            <Card className="bg-white border-teal-200 shadow-sm">
+              <CardHeader className="bg-teal-50/70 border-b border-teal-100 py-3 px-4 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-sm font-bold text-teal-950 flex items-center space-x-2">
+                    <MessageSquare className="w-4 h-4 text-teal-600" />
+                    <span>Suggested Follow-Up Questions</span>
+                    <Badge variant="outline" className="bg-teal-100 text-teal-800 border-teal-300 text-[10px] ml-2">
+                      Reviewer Suggestions
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription className="text-xs text-teal-800">
+                    Neutral questions qualified health workers may consider asking to clarify gaps.
+                  </CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 space-y-4">
+                {followUpQuestionItems.length === 0 && !isFetchingMissingInfo && (
+                  <p className="text-xs text-slate-500 italic">
+                    No follow-up questions generated.
+                  </p>
+                )}
+
+                {followUpQuestionItems.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 gap-2.5">
+                      {followUpQuestionItems.map((q: any, idx: number) => (
+                        <div key={idx} className="p-3 bg-teal-50/40 border border-teal-200 rounded-md text-xs space-y-1.5">
+                          <div className="flex justify-between items-center">
+                            <span className="font-bold text-teal-950">Q{idx + 1}. &quot;{q.question}&quot;</span>
+                            <Badge variant="outline" className="bg-teal-100 text-teal-800 border-teal-200 text-[9px]">
+                              Format: {q.answerType || 'TEXT'}
+                            </Badge>
+                          </div>
+                          {q.reason && (
+                            <p className="text-[11px] text-slate-600">
+                              <span className="font-semibold text-slate-500">Goal:</span> {q.reason}
+                            </p>
+                          )}
+                          {q.linkedMissingInformationId && (
+                            <div className="pt-0.5">
+                              <Badge variant="outline" className="bg-slate-100 text-slate-600 border-slate-200 text-[9px]">
+                                Linked Gap: {q.linkedMissingInformationId}
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="p-2 bg-teal-50 border border-teal-200 text-teal-900 text-[11px] rounded">
+                      <span className="font-semibold">Reviewer Workflow Note:</span> Questions are suggestions for staff consideration. The system does not contact patients automatically.
                     </div>
                   </div>
                 )}

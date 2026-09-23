@@ -23,6 +23,27 @@ export interface ITimelineEvent {
   sourceQuote?: string | null;
 }
 
+export interface IMissingInformationItem {
+  id: string;
+  field?: string;
+  topic?: string;
+  description: string;
+  importance: 'CRITICAL' | 'IMPORTANT' | 'OPTIONAL';
+  reason?: string;
+  source: 'PATIENT_NARRATIVE' | 'STRUCTURED_SYMPTOMS' | 'TIMELINE' | 'REPORT';
+  provenance: 'AI_GENERATED' | 'HUMAN_VERIFIED';
+}
+
+export interface IFollowUpQuestionItem {
+  id: string;
+  question: string;
+  linkedMissingInformationId?: string;
+  priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  reason?: string;
+  answerType: 'TEXT' | 'YES_NO' | 'DATE' | 'DURATION' | 'NUMBER' | 'SINGLE_CHOICE' | 'MULTI_CHOICE' | 'UNKNOWN';
+  provenance: 'AI_GENERATED' | 'HUMAN_VERIFIED';
+}
+
 export interface ITriageNote {
   _id?: Types.ObjectId;
   caseId: Types.ObjectId;
@@ -32,11 +53,13 @@ export interface ITriageNote {
   timelineEvents?: ITimelineEvent[];
   relevantExtractedReportInfo?: string;
   missingInformation?: string[];
+  missingInformationItems?: IMissingInformationItem[];
   negativeFindings?: string[];
   uncertainties?: string[];
   confidence?: number | null;
   sourceTextHash?: string;
   suggestedFollowUpQuestions?: string[];
+  followUpQuestionItems?: IFollowUpQuestionItem[];
   safetySignals?: string[];
   priority: CasePriority;
   provenance: NoteProvenance;

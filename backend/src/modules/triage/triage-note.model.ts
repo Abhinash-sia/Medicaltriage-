@@ -65,6 +65,33 @@ const TriageNoteSchema = new Schema<ITriageNoteDocument>(
       type: [String],
       default: [],
     },
+    missingInformationItems: {
+      type: [
+        {
+          id: { type: String, required: true },
+          field: { type: String, default: null },
+          topic: { type: String, default: null },
+          description: { type: String, required: true, trim: true },
+          importance: {
+            type: String,
+            enum: ['CRITICAL', 'IMPORTANT', 'OPTIONAL'],
+            default: 'IMPORTANT',
+          },
+          reason: { type: String, default: null },
+          source: {
+            type: String,
+            enum: ['PATIENT_NARRATIVE', 'STRUCTURED_SYMPTOMS', 'TIMELINE', 'REPORT'],
+            default: 'PATIENT_NARRATIVE',
+          },
+          provenance: {
+            type: String,
+            enum: Object.values(NoteProvenance),
+            default: NoteProvenance.AI_GENERATED,
+          },
+        },
+      ],
+      default: [],
+    },
     negativeFindings: {
       type: [String],
       default: [],
@@ -83,6 +110,32 @@ const TriageNoteSchema = new Schema<ITriageNoteDocument>(
     },
     suggestedFollowUpQuestions: {
       type: [String],
+      default: [],
+    },
+    followUpQuestionItems: {
+      type: [
+        {
+          id: { type: String, required: true },
+          question: { type: String, required: true, trim: true },
+          linkedMissingInformationId: { type: String, default: null },
+          priority: {
+            type: String,
+            enum: ['HIGH', 'MEDIUM', 'LOW'],
+            default: 'MEDIUM',
+          },
+          reason: { type: String, default: null },
+          answerType: {
+            type: String,
+            enum: ['TEXT', 'YES_NO', 'DATE', 'DURATION', 'NUMBER', 'SINGLE_CHOICE', 'MULTI_CHOICE', 'UNKNOWN'],
+            default: 'TEXT',
+          },
+          provenance: {
+            type: String,
+            enum: Object.values(NoteProvenance),
+            default: NoteProvenance.AI_GENERATED,
+          },
+        },
+      ],
       default: [],
     },
     safetySignals: {

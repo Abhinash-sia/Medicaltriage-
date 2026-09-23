@@ -13,7 +13,8 @@ import { getAiProvider } from './ai.provider.js';
 import { ExtractionResult } from './ai.types.js';
 
 import { normalizeAndSortTimelineEvents } from './timeline.normalizer.js';
-import { ITimelineEvent } from '../triage/triage-note.types.js';
+import { normalizeMissingInformationAndQuestions } from './missing-info.normalizer.js';
+import { ITimelineEvent, IMissingInformationItem, IFollowUpQuestionItem } from '../triage/triage-note.types.js';
 
 const MAX_NARRATIVE_LENGTH = 10000;
 
@@ -37,6 +38,8 @@ export interface ExtractionResponse {
   negativeFindings: string[];
   timeline: Array<{ description: string; relativeTime?: string | null }>;
   timelineEvents?: ITimelineEvent[];
+  missingInformationItems?: IMissingInformationItem[];
+  followUpQuestionItems?: IFollowUpQuestionItem[];
   uncertainties: string[];
   confidence?: number | null;
   noteId?: string;
@@ -121,6 +124,9 @@ export class AiService {
           timeline: existingNote.timelineSummary
             ? existingNote.timelineSummary.split('\n').filter(Boolean).map((t) => ({ description: t }))
             : [],
+          timelineEvents: existingNote.timelineEvents || [],
+          missingInformationItems: existingNote.missingInformationItems || [],
+          followUpQuestionItems: existingNote.followUpQuestionItems || [],
           uncertainties: existingNote.uncertainties || [],
           confidence: existingNote.confidence ?? null,
           noteId: existingNote._id.toString(),
@@ -194,6 +200,23 @@ export class AiService {
         },
       });
 
+      await AuditLog.create({
+        actorId: (reviewerUser.id || reviewerUser._id)?.toString() || 'SYSTEM',
+        actorRole: reviewerUser.role,
+        action: AuditEventType.MISSING_INFORMATION_GENERATION_FAILED,
+        resourceType: 'Case',
+        resourceId: existingCase._id.toString(),
+        caseId: existingCase._id,
+        timestamp: new Date(),
+        source: 'REVIEWER_API',
+        outcome: 'FAILURE',
+        metadata: {
+          provider: 'gemini',
+          model: 'gemini-2.5-flash',
+          error: safeErrorMsg,
+        },
+      });
+
       // Verify Safety Invariants
       const updatedCase = await Case.findById(caseId);
       if (updatedCase) {
@@ -242,6 +265,14 @@ export class AiService {
       existingCase.createdAt || new Date()
     );
 
+    // Normalize missing information items and follow-up questions deterministically
+    const { missingInformationItems, followUpQuestionItems } = normalizeMissingInformationAndQuestions(
+      extractionResult.missingInformation || [],
+      extractionResult.followUpQuestions || [],
+      extractionResult.symptoms,
+      extractionResult.uncertainties
+    );
+
     // Save TriageNote
     const timelineSummaryText = normalizedTimelineEvents
       .map((t) => (t.relativeTime ? `[${t.relativeTime}] ${t.description}` : t.description))
@@ -255,6 +286,10 @@ export class AiService {
         symptomSummary: extractionResult.symptoms.map((s) => s.name).join(', ') || 'No symptoms identified',
         timelineSummary: timelineSummaryText,
         timelineEvents: normalizedTimelineEvents,
+        missingInformation: missingInformationItems.map((m) => m.description),
+        missingInformationItems,
+        suggestedFollowUpQuestions: followUpQuestionItems.map((q) => q.question),
+        followUpQuestionItems,
         negativeFindings: extractionResult.negativeFindings,
         uncertainties: extractionResult.uncertainties,
         confidence: extractionResult.confidence ?? null,
@@ -286,6 +321,8 @@ export class AiService {
         symptomCount: extractionResult.symptoms.length,
         negativeFindingCount: extractionResult.negativeFindings.length,
         timelineEventCount: normalizedTimelineEvents.length,
+        missingInformationCount: missingInformationItems.length,
+        followUpQuestionCount: followUpQuestionItems.length,
       },
     });
 
@@ -303,6 +340,24 @@ export class AiService {
         provider: 'gemini',
         model: 'gemini-2.5-flash',
         timelineEventCount: normalizedTimelineEvents.length,
+      },
+    });
+
+    await AuditLog.create({
+      actorId: (reviewerUser.id || reviewerUser._id)?.toString() || 'SYSTEM',
+      actorRole: reviewerUser.role,
+      action: AuditEventType.MISSING_INFORMATION_GENERATED,
+      resourceType: 'Case',
+      resourceId: existingCase._id.toString(),
+      caseId: existingCase._id,
+      timestamp: new Date(),
+      source: 'REVIEWER_API',
+      outcome: 'SUCCESS',
+      metadata: {
+        provider: 'gemini',
+        model: 'gemini-2.5-flash',
+        missingInformationCount: missingInformationItems.length,
+        followUpQuestionCount: followUpQuestionItems.length,
       },
     });
 
@@ -326,6 +381,8 @@ export class AiService {
       negativeFindings: extractionResult.negativeFindings,
       timeline: extractionResult.timeline,
       timelineEvents: normalizedTimelineEvents,
+      missingInformationItems,
+      followUpQuestionItems,
       uncertainties: extractionResult.uncertainties,
       confidence: extractionResult.confidence ?? null,
       noteId: triageNoteDoc._id.toString(),
@@ -372,4 +429,48 @@ export class AiService {
       generatedAt: note?.generatedAt,
     };
   }
+
+  /**
+   * Retrieves missing information items and follow-up questions for a case, enforcing facility authorization.
+   */
+  async getCaseMissingInformation(
+    caseId: string,
+    reviewerUser: IUserDocument
+  ): Promise<{
+    caseId: string;
+    missingInformationItems: IMissingInformationItem[];
+    followUpQuestionItems: IFollowUpQuestionItem[];
+    sourceTextHash?: string;
+    generationStatus: GenerationStatus;
+    generatedAt?: Date;
+  }> {
+    if (!Types.ObjectId.isValid(caseId)) {
+      throw new Error('Invalid case ID format');
+    }
+
+    const existingCase = await Case.findById(caseId);
+    if (!existingCase) {
+      throw new Error('Case not found');
+    }
+
+    // Facility isolation check
+    if (
+      reviewerUser.role !== UserRole.ADMIN &&
+      existingCase.facilityId?.toString() !== reviewerUser.facilityId?.toString()
+    ) {
+      throw new Error('Unauthorized access to case from another facility');
+    }
+
+    const note = await TriageNote.findOne({ caseId: existingCase._id });
+
+    return {
+      caseId: existingCase._id.toString(),
+      missingInformationItems: note?.missingInformationItems || [],
+      followUpQuestionItems: note?.followUpQuestionItems || [],
+      sourceTextHash: note?.sourceTextHash,
+      generationStatus: note?.generationStatus || GenerationStatus.PENDING,
+      generatedAt: note?.generatedAt,
+    };
+  }
 }
+
