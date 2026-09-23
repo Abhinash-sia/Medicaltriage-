@@ -8,6 +8,7 @@ import { ConsentStatus, ConsentType } from '../consent/consent.types.js';
 import { AuditLog } from '../audit/audit-log.model.js';
 import { AuditEventType } from '../audit/audit-log.types.js';
 import { UserRole } from '../users/user.types.js';
+import { SlaService } from '../sla/sla.service.js';
 import { IntakeSubmitInput, IntakeResponseData } from './intake.types.js';
 import { AppError } from '../../middleware/error-handler.js';
 
@@ -61,6 +62,12 @@ export class IntakeService {
     }
 
     try {
+      const now = new Date();
+      const slaDueAt = SlaService.calculateSlaDueAt({
+        createdAt: now,
+        priority: CasePriority.ROUTINE,
+      });
+
       // 1. Create Case Document
       const newCase = new Case({
         caseNumber,
@@ -70,6 +77,7 @@ export class IntakeService {
         intakeSource: IntakeSource.TEXT,
         language: input.language || 'en',
         chiefComplaint: `${input.primarySymptom}: ${input.symptomDescription}`,
+        slaDueAt,
         isDeleted: false,
       });
       await newCase.save({ session: session || undefined });

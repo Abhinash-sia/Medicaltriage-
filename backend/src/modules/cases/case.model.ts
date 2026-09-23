@@ -63,6 +63,20 @@ const CaseSchema = new Schema<ICaseDocument>(
       required: [true, 'Chief complaint description is required'],
       trim: true,
     },
+    slaDueAt: {
+      type: Date,
+      default: null,
+      index: true,
+    },
+    escalatedAt: {
+      type: Date,
+      default: null,
+      index: true,
+    },
+    escalationLevel: {
+      type: Number,
+      default: 0,
+    },
     isDeleted: {
       type: Boolean,
       default: false,
@@ -81,6 +95,7 @@ const CaseSchema = new Schema<ICaseDocument>(
 // Compound index for reviewer triage queue filtering and sorting
 CaseSchema.index({ status: 1, priority: 1, createdAt: -1 });
 CaseSchema.index({ facilityId: 1, status: 1 });
+CaseSchema.index({ facilityId: 1, slaDueAt: 1, escalatedAt: 1 });
 
 export const Case: Model<ICaseDocument> =
   mongoose.models.Case || mongoose.model<ICaseDocument>('Case', CaseSchema);

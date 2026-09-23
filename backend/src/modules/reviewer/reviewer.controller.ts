@@ -1,6 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { reviewerCasesQuerySchema, submitReviewSchema, adminAssignSchema } from './reviewer.schemas.js';
 import { ReviewerService } from './reviewer.service.js';
+import { SlaService } from '../sla/sla.service.js';
 import { AuthenticatedRequest } from '../auth/auth.types.js';
 import { UserRole } from '../users/user.types.js';
 import { AppError } from '../../middleware/error-handler.js';
@@ -224,6 +225,31 @@ export const unassignCaseHandler = async (
     const requestIdStr = req.id ? String(req.id) : undefined;
 
     const result = await ReviewerService.unassignCase(caseId, req.user.id, requestIdStr);
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const processSlaEscalations = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.user || !req.user.id) {
+      const error: AppError = new Error('Authentication required');
+      error.statusCode = 401;
+      error.code = 'AUTH_TOKEN_MISSING';
+      return next(error);
+    }
+
+    const requestIdStr = req.id ? String(req.id) : undefined;
+    const result = await SlaService.processOverdueSlas(req.user.id, req.user.role, requestIdStr);
+
     res.status(200).json({
       success: true,
       data: result,

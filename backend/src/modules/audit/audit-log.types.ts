@@ -19,6 +19,7 @@ export enum AuditEventType {
   CASE_RELEASED = 'CASE_RELEASED',
   CASE_ASSIGNED = 'CASE_ASSIGNED',
   CASE_UNASSIGNED = 'CASE_UNASSIGNED',
+  CASE_SLA_ESCALATED = 'CASE_SLA_ESCALATED',
 }
 
 export type AuditActorRole = UserRole | 'SYSTEM';

@@ -1,6 +1,7 @@
 import { CaseStatus, CasePriority, IntakeSource } from '../cases/case.types.js';
 import { ReviewStatus } from '../reviews/review.types.js';
 import { InformationSource } from '../symptoms/symptom.types.js';
+import { SlaStateDetails } from '../sla/sla.types.js';
 
 export interface ReviewerCasesQuery {
   page?: number;
@@ -8,6 +9,7 @@ export interface ReviewerCasesQuery {
   status?: CaseStatus;
   priority?: CasePriority;
   assignedTo?: 'me' | 'unassigned' | 'all';
+  slaStatus?: 'pending' | 'due_soon' | 'overdue' | 'escalated';
 }
 
 export interface ReviewerQueueItem {
@@ -25,6 +27,7 @@ export interface ReviewerQueueItem {
   assignedReviewerId?: string | null;
   assignedReviewerName?: string;
   isAssigned: boolean;
+  sla: SlaStateDetails;
   createdAt: Date;
   updatedAt?: Date;
 }
@@ -78,6 +81,7 @@ export interface ReviewerCaseDetails {
   assignedReviewerId?: string | null;
   assignedReviewerName?: string;
   isAssigned: boolean;
+  sla: SlaStateDetails;
   createdAt: Date;
   updatedAt?: Date;
   patient: {

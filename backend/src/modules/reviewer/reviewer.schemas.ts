@@ -16,6 +16,7 @@ export const reviewerCasesQuerySchema = z.object({
   status: z.nativeEnum(CaseStatus).optional(),
   priority: z.nativeEnum(CasePriority).optional(),
   assignedTo: z.enum(['me', 'unassigned', 'all']).optional(),
+  slaStatus: z.enum(['pending', 'due_soon', 'overdue', 'escalated']).optional(),
 });
 
 export const submitReviewSchema = z

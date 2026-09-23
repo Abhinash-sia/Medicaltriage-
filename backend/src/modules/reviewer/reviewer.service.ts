@@ -9,6 +9,7 @@ import { Review } from '../reviews/review.model.js';
 import { ReviewStatus } from '../reviews/review.types.js';
 import { AuditLog } from '../audit/audit-log.model.js';
 import { AuditEventType } from '../audit/audit-log.types.js';
+import { SlaService } from '../sla/sla.service.js';
 import {
   ReviewerCasesQuery,
   PaginatedReviewerCasesResponse,
@@ -49,6 +50,7 @@ export class ReviewerService {
     const skip = (page - 1) * limit;
 
     const filter: Record<string, unknown> = { isDeleted: false };
+    const now = new Date();
 
     // Enforce facility authorization scope on queue queries
     const requestingUser = await User.findById(requestingUserId);
@@ -69,6 +71,32 @@ export class ReviewerService {
       filter.assignedReviewerId = null;
     }
 
+    // Database-level timestamp conditions for slaStatus filtering
+    if (query.slaStatus === 'escalated') {
+      filter.escalatedAt = { $ne: null };
+    } else if (query.slaStatus === 'overdue') {
+      filter.escalatedAt = null;
+      filter.slaDueAt = { $lte: now };
+    } else if (query.slaStatus === 'due_soon') {
+      filter.escalatedAt = null;
+      filter.slaDueAt = { $gt: now };
+      filter.$expr = {
+        $lte: [
+          { $subtract: ['$slaDueAt', now] },
+          { $multiply: [{ $subtract: ['$slaDueAt', '$createdAt'] }, 0.25] },
+        ],
+      };
+    } else if (query.slaStatus === 'pending') {
+      filter.escalatedAt = null;
+      filter.slaDueAt = { $gt: now };
+      filter.$expr = {
+        $gt: [
+          { $subtract: ['$slaDueAt', now] },
+          { $multiply: [{ $subtract: ['$slaDueAt', '$createdAt'] }, 0.25] },
+        ],
+      };
+    }
+
     const total = await Case.countDocuments(filter);
     const totalPages = Math.ceil(total / limit) || 1;
 
@@ -86,6 +114,8 @@ export class ReviewerService {
           assignedReviewerName = reviewer?.name;
         }
 
+        const sla = SlaService.getSlaDetails(c, now);
+
         return {
           id: c._id.toString(),
           caseNumber: c.caseNumber,
@@ -101,6 +131,7 @@ export class ReviewerService {
           assignedReviewerId: c.assignedReviewerId ? c.assignedReviewerId.toString() : null,
           assignedReviewerName,
           isAssigned: !!c.assignedReviewerId,
+          sla,
           createdAt: c.createdAt || new Date(),
           updatedAt: c.updatedAt || undefined,
         };
@@ -163,6 +194,8 @@ export class ReviewerService {
       })
     );
 
+    const sla = SlaService.getSlaDetails(caseDoc);
+
     return {
       id: caseDoc._id.toString(),
       caseNumber: caseDoc.caseNumber,
@@ -174,6 +207,7 @@ export class ReviewerService {
       assignedReviewerId: caseDoc.assignedReviewerId ? caseDoc.assignedReviewerId.toString() : null,
       assignedReviewerName,
       isAssigned: !!caseDoc.assignedReviewerId,
+      sla,
       createdAt: caseDoc.createdAt || new Date(),
       updatedAt: caseDoc.updatedAt || undefined,
       patient: {

@@ -9,6 +9,7 @@ import {
   releaseCaseHandler,
   assignCaseHandler,
   unassignCaseHandler,
+  processSlaEscalations,
 } from './reviewer.controller.js';
 
 const reviewerRouter = Router();
@@ -28,6 +29,13 @@ reviewerRouter.use(requireRoles(...REVIEWER_ROLES));
 // Queue endpoints
 reviewerRouter.get('/', getQueueCases);
 reviewerRouter.get('/cases', getQueueCases);
+
+// SLA batch processing endpoint (restricted to ADMIN and MEDICAL_OFFICER roles)
+reviewerRouter.post(
+  '/sla/process',
+  requireRoles(UserRole.ADMIN, UserRole.MEDICAL_OFFICER),
+  processSlaEscalations
+);
 
 // Detail and human review endpoints
 reviewerRouter.get('/cases/:caseId', getCaseDetails);

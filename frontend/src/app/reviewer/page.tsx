@@ -35,6 +35,12 @@ interface ReviewerQueueItem {
   assignedReviewerId?: string | null;
   assignedReviewerName?: string;
   isAssigned: boolean;
+  sla?: {
+    dueAt: string | null;
+    status: string;
+    escalatedAt: string | null;
+    escalationLevel: number;
+  };
   createdAt: string;
 }
 
@@ -51,11 +57,15 @@ export default function ReviewerQueuePage() {
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [priorityFilter, setPriorityFilter] = useState<string>('');
   const [assignedToFilter, setAssignedToFilter] = useState<string>('');
+  const [slaStatusFilter, setSlaStatusFilter] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isProcessingSla, setIsProcessingSla] = useState<boolean>(false);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [processResult, setProcessResult] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     // Read current user token / ID from window if available
@@ -64,8 +74,9 @@ export default function ReviewerQueuePage() {
       if (storedToken) {
         try {
           const payload = JSON.parse(atob(storedToken.split('.')[1]));
-          if (payload && payload.id) {
-            setCurrentUserId(payload.id);
+          if (payload) {
+            if (payload.id) setCurrentUserId(payload.id);
+            if (payload.role) setCurrentUserRole(payload.role);
           }
         } catch {
           // Token decode fallback
@@ -87,6 +98,7 @@ export default function ReviewerQueuePage() {
       if (statusFilter) params.append('status', statusFilter);
       if (priorityFilter) params.append('priority', priorityFilter);
       if (assignedToFilter) params.append('assignedTo', assignedToFilter);
+      if (slaStatusFilter) params.append('slaStatus', slaStatusFilter);
 
       const response = await fetch(`${apiBaseUrl}/reviewer/cases?${params.toString()}`, {
         headers: {
@@ -111,7 +123,46 @@ export default function ReviewerQueuePage() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, statusFilter, priorityFilter, assignedToFilter]);
+  }, [page, statusFilter, priorityFilter, assignedToFilter, slaStatusFilter]);
+
+  useEffect(() => {
+    fetchCases();
+  }, [fetchCases]);
+
+  const handleProcessSla = async () => {
+    setIsProcessingSla(true);
+    setError(null);
+    setProcessResult(null);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${apiBaseUrl}/reviewer/sla/process`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error?.message || 'Failed to process SLA escalations.');
+      }
+
+      const resData = result.data;
+      setProcessResult(
+        `SLA Processing Complete: Evaluated ${resData.processed} cases, escalated ${resData.escalated} newly overdue cases.`
+      );
+      fetchCases();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'SLA processing failed.';
+      setError(msg);
+    } finally {
+      setIsProcessingSla(false);
+    }
+  };
 
   useEffect(() => {
     fetchCases();
@@ -200,6 +251,19 @@ export default function ReviewerQueuePage() {
           </div>
 
           <div className="flex items-center space-x-3">
+            {(currentUserRole === 'ADMIN' || currentUserRole === 'MEDICAL_OFFICER') && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleProcessSla}
+                disabled={isProcessingSla || isLoading}
+                className="border-purple-300 text-purple-800 bg-purple-50 hover:bg-purple-100 font-medium text-xs"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${isProcessingSla ? 'animate-spin' : ''}`} />
+                Process Overdue SLAs
+              </Button>
+            )}
+
             <Button
               variant="outline"
               size="sm"
@@ -219,10 +283,16 @@ export default function ReviewerQueuePage() {
           <div className="space-y-1">
             <p className="font-semibold">Reviewer Operational Notice & Ownership Semantics:</p>
             <p className="leading-relaxed">
-              Case assignment represents operational staff workload ownership only. It does not imply medical diagnosis, clinical approval, or urgency reclassification. Initial queue categories (ROUTINE) represent unassessed intake states.
+              Case assignment represents operational staff workload ownership only. It does not imply medical diagnosis, clinical approval, or urgency reclassification. Initial queue categories (ROUTINE) represent unassessed intake states. Operational SLA status tracks review timeliness and does not indicate medical urgency.
             </p>
           </div>
         </div>
+
+        {processResult && (
+          <div className="p-3 bg-indigo-50 border border-indigo-200 text-indigo-800 rounded-lg text-xs font-medium">
+            {processResult}
+          </div>
+        )}
 
         {/* Filter Controls Bar */}
         <Card className="bg-white border-slate-200 shadow-sm">
@@ -277,6 +347,24 @@ export default function ReviewerQueuePage() {
                   <option value="URGENT">URGENT</option>
                 </select>
               </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700 block">Operational SLA</label>
+                <select
+                  value={slaStatusFilter}
+                  onChange={(e) => {
+                    setSlaStatusFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  className="text-xs p-2 border border-slate-300 rounded-md bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                >
+                  <option value="">All SLA States</option>
+                  <option value="pending">PENDING</option>
+                  <option value="due_soon">DUE_SOON</option>
+                  <option value="overdue">OVERDUE</option>
+                  <option value="escalated">ESCALATED</option>
+                </select>
+              </div>
             </div>
 
             <div className="text-xs text-slate-500 font-medium">
@@ -304,7 +392,7 @@ export default function ReviewerQueuePage() {
             <FileText className="w-10 h-10 text-slate-300 mx-auto" />
             <CardTitle className="text-base text-slate-800">No Cases In Queue</CardTitle>
             <CardDescription className="text-xs text-slate-500">
-              No intake cases currently match the selected workflow and assignment filters.
+              No intake cases currently match the selected workflow, SLA, and assignment filters.
             </CardDescription>
           </Card>
         ) : (
@@ -340,6 +428,25 @@ export default function ReviewerQueuePage() {
                         <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 text-[11px]">
                           Category: {c.priority} (Unassessed)
                         </Badge>
+
+                        {/* Operational SLA Badge */}
+                        {c.sla?.status === 'ESCALATED' ? (
+                          <Badge variant="outline" className="bg-purple-100 text-purple-900 border-purple-300 font-semibold text-[11px]">
+                            SLA: Escalated (L1)
+                          </Badge>
+                        ) : c.sla?.status === 'OVERDUE' ? (
+                          <Badge variant="outline" className="bg-red-100 text-red-900 border-red-300 font-semibold text-[11px]">
+                            SLA: Overdue
+                          </Badge>
+                        ) : c.sla?.status === 'DUE_SOON' ? (
+                          <Badge variant="outline" className="bg-amber-100 text-amber-900 border-amber-300 font-semibold text-[11px]">
+                            SLA: Due Soon
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="bg-slate-100 text-slate-700 border-slate-300 text-[11px]">
+                            SLA: Pending
+                          </Badge>
+                        )}
 
                         {/* Assignment Badge */}
                         {isAssignedToMe ? (

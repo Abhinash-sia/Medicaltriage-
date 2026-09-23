@@ -59,6 +59,12 @@ interface ReviewerCaseDetails {
   assignedReviewerId?: string | null;
   assignedReviewerName?: string;
   isAssigned: boolean;
+  sla?: {
+    dueAt: string | null;
+    status: string;
+    escalatedAt: string | null;
+    escalationLevel: number;
+  };
   createdAt: string;
   patient: {
     id: string;
@@ -673,6 +679,65 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                 </div>
               </CardContent>
             </Card>
+
+            {/* Operational SLA Card */}
+            {caseDetails.sla && (
+              <Card className="bg-white border-slate-200 shadow-sm">
+                <CardHeader className="bg-slate-50 border-b border-slate-200 py-3 px-4">
+                  <CardTitle className="text-xs font-bold text-slate-900 flex items-center space-x-2 uppercase tracking-wider">
+                    <Clock className="w-4 h-4 text-purple-600" />
+                    <span>Operational SLA</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 text-xs space-y-3">
+                  <div className="flex justify-between border-b pb-2">
+                    <span className="text-slate-500">SLA Status:</span>
+                    {caseDetails.sla.status === 'ESCALATED' ? (
+                      <Badge variant="outline" className="bg-purple-100 text-purple-900 border-purple-300 font-semibold text-[10px]">
+                        ESCALATED
+                      </Badge>
+                    ) : caseDetails.sla.status === 'OVERDUE' ? (
+                      <Badge variant="outline" className="bg-red-100 text-red-900 border-red-300 font-semibold text-[10px]">
+                        OVERDUE
+                      </Badge>
+                    ) : caseDetails.sla.status === 'DUE_SOON' ? (
+                      <Badge variant="outline" className="bg-amber-100 text-amber-900 border-amber-300 font-semibold text-[10px]">
+                        DUE SOON
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="bg-slate-100 text-slate-700 border-slate-300 text-[10px]">
+                        PENDING
+                      </Badge>
+                    )}
+                  </div>
+
+                  {caseDetails.sla.dueAt && (
+                    <div className="flex justify-between border-b pb-2">
+                      <span className="text-slate-500">SLA Due At:</span>
+                      <span className="font-mono text-slate-800">{new Date(caseDetails.sla.dueAt).toLocaleString()}</span>
+                    </div>
+                  )}
+
+                  {caseDetails.sla.escalatedAt ? (
+                    <>
+                      <div className="flex justify-between border-b pb-2">
+                        <span className="text-slate-500">Escalated At:</span>
+                        <span className="font-mono text-purple-900">{new Date(caseDetails.sla.escalatedAt).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Escalation Level:</span>
+                        <span className="font-semibold text-purple-900">Level {caseDetails.sla.escalationLevel}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Escalation:</span>
+                      <span className="text-slate-600">Not Escalated</span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Patient Consent Status */}
             {caseDetails.consent && (

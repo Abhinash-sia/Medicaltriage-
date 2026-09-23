@@ -35,6 +35,9 @@ export interface ICase {
   language: string;
   consentId?: Types.ObjectId;
   chiefComplaint: string;
+  slaDueAt?: Date | null;
+  escalatedAt?: Date | null;
+  escalationLevel?: number;
   isDeleted: boolean;
   deletedAt?: Date;
   createdAt?: Date;
