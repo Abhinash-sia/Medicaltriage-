@@ -12,6 +12,9 @@ import { aiExtractionOutputSchema } from './ai.schemas.js';
 import { getAiProvider } from './ai.provider.js';
 import { ExtractionResult } from './ai.types.js';
 
+import { normalizeAndSortTimelineEvents } from './timeline.normalizer.js';
+import { ITimelineEvent } from '../triage/triage-note.types.js';
+
 const MAX_NARRATIVE_LENGTH = 10000;
 
 export interface ExtractionResponse {
@@ -33,6 +36,7 @@ export interface ExtractionResponse {
   }>;
   negativeFindings: string[];
   timeline: Array<{ description: string; relativeTime?: string | null }>;
+  timelineEvents?: ITimelineEvent[];
   uncertainties: string[];
   confidence?: number | null;
   noteId?: string;
@@ -173,6 +177,23 @@ export class AiService {
         },
       });
 
+      await AuditLog.create({
+        actorId: (reviewerUser.id || reviewerUser._id)?.toString() || 'SYSTEM',
+        actorRole: reviewerUser.role,
+        action: AuditEventType.TIMELINE_GENERATION_FAILED,
+        resourceType: 'Case',
+        resourceId: existingCase._id.toString(),
+        caseId: existingCase._id,
+        timestamp: new Date(),
+        source: 'REVIEWER_API',
+        outcome: 'FAILURE',
+        metadata: {
+          provider: 'gemini',
+          model: 'gemini-2.5-flash',
+          error: safeErrorMsg,
+        },
+      });
+
       // Verify Safety Invariants
       const updatedCase = await Case.findById(caseId);
       if (updatedCase) {
@@ -214,8 +235,15 @@ export class AiService {
       await Symptom.insertMany(symptomDocsToInsert);
     }
 
+    // Normalize and sort timeline events chronologically
+    const normalizedTimelineEvents = normalizeAndSortTimelineEvents(
+      extractionResult.timeline,
+      extractionResult.symptoms,
+      existingCase.createdAt || new Date()
+    );
+
     // Save TriageNote
-    const timelineSummaryText = extractionResult.timeline
+    const timelineSummaryText = normalizedTimelineEvents
       .map((t) => (t.relativeTime ? `[${t.relativeTime}] ${t.description}` : t.description))
       .join('\n');
 
@@ -226,6 +254,7 @@ export class AiService {
         presentingConcern: narrative.substring(0, 300),
         symptomSummary: extractionResult.symptoms.map((s) => s.name).join(', ') || 'No symptoms identified',
         timelineSummary: timelineSummaryText,
+        timelineEvents: normalizedTimelineEvents,
         negativeFindings: extractionResult.negativeFindings,
         uncertainties: extractionResult.uncertainties,
         confidence: extractionResult.confidence ?? null,
@@ -256,6 +285,24 @@ export class AiService {
         status: 'COMPLETED',
         symptomCount: extractionResult.symptoms.length,
         negativeFindingCount: extractionResult.negativeFindings.length,
+        timelineEventCount: normalizedTimelineEvents.length,
+      },
+    });
+
+    await AuditLog.create({
+      actorId: (reviewerUser.id || reviewerUser._id)?.toString() || 'SYSTEM',
+      actorRole: reviewerUser.role,
+      action: AuditEventType.TIMELINE_GENERATED,
+      resourceType: 'Case',
+      resourceId: existingCase._id.toString(),
+      caseId: existingCase._id,
+      timestamp: new Date(),
+      source: 'REVIEWER_API',
+      outcome: 'SUCCESS',
+      metadata: {
+        provider: 'gemini',
+        model: 'gemini-2.5-flash',
+        timelineEventCount: normalizedTimelineEvents.length,
       },
     });
 
@@ -278,9 +325,51 @@ export class AiService {
       symptoms: extractionResult.symptoms,
       negativeFindings: extractionResult.negativeFindings,
       timeline: extractionResult.timeline,
+      timelineEvents: normalizedTimelineEvents,
       uncertainties: extractionResult.uncertainties,
       confidence: extractionResult.confidence ?? null,
       noteId: triageNoteDoc._id.toString(),
+    };
+  }
+
+  /**
+   * Retrieves chronological timeline events for a case, enforcing facility authorization.
+   */
+  async getCaseTimeline(
+    caseId: string,
+    reviewerUser: IUserDocument
+  ): Promise<{
+    caseId: string;
+    timelineEvents: ITimelineEvent[];
+    sourceTextHash?: string;
+    generationStatus: GenerationStatus;
+    generatedAt?: Date;
+  }> {
+    if (!Types.ObjectId.isValid(caseId)) {
+      throw new Error('Invalid case ID format');
+    }
+
+    const existingCase = await Case.findById(caseId);
+    if (!existingCase) {
+      throw new Error('Case not found');
+    }
+
+    // Facility isolation check
+    if (
+      reviewerUser.role !== UserRole.ADMIN &&
+      existingCase.facilityId?.toString() !== reviewerUser.facilityId?.toString()
+    ) {
+      throw new Error('Unauthorized access to case from another facility');
+    }
+
+    const note = await TriageNote.findOne({ caseId: existingCase._id });
+
+    return {
+      caseId: existingCase._id.toString(),
+      timelineEvents: note?.timelineEvents || [],
+      sourceTextHash: note?.sourceTextHash,
+      generationStatus: note?.generationStatus || GenerationStatus.PENDING,
+      generatedAt: note?.generatedAt,
     };
   }
 }

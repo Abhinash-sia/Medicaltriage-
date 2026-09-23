@@ -71,10 +71,41 @@ export class MockAiExtractionProvider implements AiExtractionProvider {
       negativeFindings.push('chest pain');
     }
 
+    const timeline: ExtractionResult['timeline'] = [];
+    if (narrative.includes('fever')) {
+      timeline.push({
+        eventType: 'SYMPTOM_ONSET',
+        description: 'Fever started',
+        relativeTime: narrative.includes('3 days') || narrative.includes('three days') ? '3 days ago' : 'Monday',
+        certainty: narrative.includes('monday') ? 'APPROXIMATE' : 'CERTAIN',
+        sourceQuote: 'fever for about three days',
+      });
+    }
+
+    if (narrative.includes('vomit') || narrative.includes('vomiting')) {
+      timeline.push({
+        eventType: 'SYMPTOM_ONSET',
+        description: 'Vomiting began',
+        relativeTime: '2 days ago',
+        certainty: 'CERTAIN',
+        sourceQuote: 'vomiting twice a day',
+      });
+    }
+
+    if (narrative.includes('paracetamol') || narrative.includes('tablet')) {
+      timeline.push({
+        eventType: 'MEDICATION',
+        description: 'Patient reported taking paracetamol',
+        relativeTime: 'Yesterday',
+        certainty: 'CERTAIN',
+        sourceQuote: 'took paracetamol yesterday',
+      });
+    }
+
     return {
       symptoms,
       negativeFindings,
-      timeline: [],
+      timeline,
       uncertainties,
       confidence: 0.95,
     };

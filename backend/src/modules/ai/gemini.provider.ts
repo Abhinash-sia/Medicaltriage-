@@ -38,7 +38,13 @@ OUTPUT FORMAT REQUIREMENT:
 Return a JSON object with:
 - "symptoms": list of symptoms with fields: "name", "normalizedLabel" (descriptive only, e.g. "throwing up" -> "vomiting", NEVER a diagnosis like "malaria"), "status" ("PRESENT" | "ABSENT" | "UNCERTAIN"), "onset", "duration", "frequency", "severity", "context".
 - "negativeFindings": list of strings explicitly stated as absent (e.g. "no chest pain" -> "chest pain").
-- "timeline": list of timeline events with "description" and "relativeTime".
+- "timeline": list of structured timeline events with fields:
+    - "description": event description (string)
+    - "eventType": "SYMPTOM_ONSET" | "SYMPTOM_CHANGE" | "MEDICAL_ENCOUNTER" | "REPORT" | "MEDICATION" | "OTHER"
+    - "relativeTime": relative timing phrase (e.g. "3 days ago", "around Monday", null)
+    - "date": exact calendar date if explicitly stated (e.g. "2026-09-20", null)
+    - "certainty": "CERTAIN" | "APPROXIMATE" | "UNCERTAIN"
+    - "sourceQuote": supporting phrase from text (string or null)
 - "uncertainties": list of ambiguous or unclear details.
 - "confidence": extraction-level confidence score from 0.0 to 1.0, or null if uncertain.
 

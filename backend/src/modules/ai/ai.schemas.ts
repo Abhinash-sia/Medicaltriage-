@@ -12,8 +12,12 @@ export const extractedSymptomSchema = z.object({
 });
 
 export const timelineEventSchema = z.object({
-  description: z.string().min(1),
+  eventType: z.enum(['SYMPTOM_ONSET', 'SYMPTOM_CHANGE', 'MEDICAL_ENCOUNTER', 'REPORT', 'MEDICATION', 'OTHER']).optional().nullable(),
+  date: z.string().optional().nullable(),
   relativeTime: z.string().optional().nullable(),
+  description: z.string().min(1),
+  certainty: z.enum(['CERTAIN', 'APPROXIMATE', 'UNCERTAIN']).optional().nullable(),
+  sourceQuote: z.string().optional().nullable(),
 });
 
 export const aiExtractionOutputSchema = z.object({

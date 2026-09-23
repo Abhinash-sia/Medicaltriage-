@@ -12,12 +12,24 @@ export enum GenerationStatus {
   FAILED = 'FAILED',
 }
 
+export interface ITimelineEvent {
+  eventType?: 'SYMPTOM_ONSET' | 'SYMPTOM_CHANGE' | 'MEDICAL_ENCOUNTER' | 'REPORT' | 'MEDICATION' | 'OTHER';
+  date?: string | null;
+  relativeTime?: string | null;
+  description: string;
+  source: 'PATIENT' | 'AI_EXTRACTION' | 'REPORT' | 'VOICE_TRANSCRIPT';
+  provenance: 'AI_GENERATED' | 'HUMAN_VERIFIED';
+  certainty: 'CERTAIN' | 'APPROXIMATE' | 'UNCERTAIN';
+  sourceQuote?: string | null;
+}
+
 export interface ITriageNote {
   _id?: Types.ObjectId;
   caseId: Types.ObjectId;
   presentingConcern: string;
   symptomSummary: string;
   timelineSummary?: string;
+  timelineEvents?: ITimelineEvent[];
   relevantExtractedReportInfo?: string;
   missingInformation?: string[];
   negativeFindings?: string[];

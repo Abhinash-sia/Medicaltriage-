@@ -99,6 +99,10 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
   const [isExtracting, setIsExtracting] = useState<boolean>(false);
   const [aiExtractionError, setAiExtractionError] = useState<string | null>(null);
 
+  // Timeline State
+  const [timelineEvents, setTimelineEvents] = useState<any[]>([]);
+  const [isFetchingTimeline, setIsFetchingTimeline] = useState<boolean>(false);
+
   // Assignment Action State
   const [targetReviewerIdInput, setTargetReviewerIdInput] = useState<string>('');
   const [assignmentLoading, setAssignmentLoading] = useState<boolean>(false);
@@ -150,9 +154,34 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
     }
   }, [caseId]);
 
+  const fetchTimeline = useCallback(async () => {
+    setIsFetchingTimeline(true);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${apiBaseUrl}/reviewer/cases/${caseId}/timeline`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      const result = await response.json();
+      if (response.ok && result.success && result.data?.timelineEvents) {
+        setTimelineEvents(result.data.timelineEvents);
+      }
+    } catch {
+      // Fallback
+    } finally {
+      setIsFetchingTimeline(false);
+    }
+  }, [caseId]);
+
   useEffect(() => {
     fetchCaseDetails();
-  }, [fetchCaseDetails]);
+    fetchTimeline();
+  }, [fetchCaseDetails, fetchTimeline]);
 
   const handleClaim = async () => {
     setAssignmentLoading(true);
@@ -280,6 +309,9 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
       }
 
       setAiExtractionData(result.data);
+      if (result.data?.timelineEvents) {
+        setTimelineEvents(result.data.timelineEvents);
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Extraction request failed.';
       setAiExtractionError(msg);
@@ -564,6 +596,97 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
 
                     <div className="p-2 bg-amber-50 border border-amber-200 text-amber-900 text-[11px] rounded">
                       <span className="font-semibold">Human Verification Notice:</span> AI extraction organizes patient narrative facts for human review. It does not diagnose or determine medical urgency.
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Patient Timeline Card */}
+            <Card className="bg-white border-blue-200 shadow-sm">
+              <CardHeader className="bg-blue-50 border-b border-blue-100 py-3 px-4 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-sm font-bold text-blue-950 flex items-center space-x-2">
+                    <Clock className="w-4 h-4 text-blue-600" />
+                    <span>AI-Organized Patient Timeline</span>
+                    <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300 text-[10px] ml-2">
+                      Chronological
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription className="text-xs text-blue-700">
+                    Chronological ordering of reported symptom events, timing, and encounters.
+                  </CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 space-y-4">
+                {isFetchingTimeline && (
+                  <div className="flex items-center space-x-2 text-xs text-slate-500 p-2">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
+                    <span>Loading patient timeline...</span>
+                  </div>
+                )}
+
+                {timelineEvents.length === 0 && !isFetchingTimeline && (
+                  <p className="text-xs text-slate-500 italic">
+                    No timeline events available yet. Click &quot;Extract Information&quot; above to generate timeline.
+                  </p>
+                )}
+
+                {timelineEvents.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="relative border-l-2 border-blue-200 ml-3 pl-4 space-y-3">
+                      {timelineEvents.map((evt: any, idx: number) => (
+                        <div key={idx} className="relative group">
+                          {/* Timeline Node Dot */}
+                          <div className="absolute -left-[23px] top-1 w-2.5 h-2.5 rounded-full bg-blue-600 border-2 border-white ring-2 ring-blue-100" />
+
+                          <div className="bg-slate-50 border border-slate-200 rounded-md p-2.5 text-xs space-y-1 hover:border-blue-300 transition-colors">
+                            <div className="flex flex-wrap items-center justify-between gap-1.5 border-b border-slate-200 pb-1.5">
+                              <div className="flex items-center space-x-2">
+                                <span className="font-semibold text-blue-950">
+                                  {evt.relativeTime || evt.date || 'Time unclear'}
+                                </span>
+                                {evt.eventType && (
+                                  <Badge variant="outline" className="bg-slate-100 text-slate-700 border-slate-300 text-[9px]">
+                                    {evt.eventType}
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="flex items-center space-x-1.5">
+                                {evt.certainty && (
+                                  <Badge
+                                    variant="outline"
+                                    className={
+                                      evt.certainty === 'CERTAIN'
+                                        ? 'bg-green-50 text-green-700 border-green-200 text-[9px]'
+                                        : evt.certainty === 'APPROXIMATE'
+                                        ? 'bg-amber-50 text-amber-700 border-amber-200 text-[9px]'
+                                        : 'bg-red-50 text-red-700 border-red-200 text-[9px]'
+                                    }
+                                  >
+                                    {evt.certainty}
+                                  </Badge>
+                                )}
+                                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-[9px]">
+                                  [AI EXTRACTED]
+                                </Badge>
+                              </div>
+                            </div>
+                            <p className="text-slate-900 font-medium pt-0.5">{evt.description}</p>
+                            {evt.sourceQuote && (
+                              <p className="text-[10px] text-slate-500 italic">
+                                &quot;{evt.sourceQuote}&quot;
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="p-2 bg-blue-50 border border-blue-200 text-blue-900 text-[11px] rounded flex items-center justify-between">
+                      <span>
+                        <span className="font-semibold">Timeline Safety Note:</span> Chronological ordering of reported observations for human verification.
+                      </span>
                     </div>
                   </div>
                 )}

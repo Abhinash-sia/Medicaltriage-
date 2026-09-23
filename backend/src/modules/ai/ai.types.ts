@@ -1,6 +1,12 @@
 export interface TimelineEvent {
-  description: string;
+  eventType?: 'SYMPTOM_ONSET' | 'SYMPTOM_CHANGE' | 'MEDICAL_ENCOUNTER' | 'REPORT' | 'MEDICATION' | 'OTHER' | null;
+  date?: string | null;
   relativeTime?: string | null;
+  description: string;
+  source?: 'PATIENT' | 'AI_EXTRACTION' | 'REPORT' | 'VOICE_TRANSCRIPT' | null;
+  provenance?: 'AI_GENERATED' | 'HUMAN_VERIFIED' | null;
+  certainty?: 'CERTAIN' | 'APPROXIMATE' | 'UNCERTAIN' | null;
+  sourceQuote?: string | null;
 }
 
 export interface ExtractionResult {

@@ -11,6 +11,7 @@ import {
   unassignCaseHandler,
   processSlaEscalations,
   extractCaseInformation,
+  getCaseTimelineHandler,
 } from './reviewer.controller.js';
 
 const reviewerRouter = Router();
@@ -42,6 +43,7 @@ reviewerRouter.post(
 reviewerRouter.get('/cases/:caseId', getCaseDetails);
 reviewerRouter.post('/cases/:caseId/review', submitCaseReview);
 reviewerRouter.post('/cases/:caseId/extraction', extractCaseInformation);
+reviewerRouter.get('/cases/:caseId/timeline', getCaseTimelineHandler);
 
 // Reviewer ownership assignment endpoints
 reviewerRouter.post('/cases/:caseId/claim', claimCaseHandler);

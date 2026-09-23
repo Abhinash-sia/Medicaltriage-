@@ -25,6 +25,37 @@ const TriageNoteSchema = new Schema<ITriageNoteDocument>(
       default: '',
       trim: true,
     },
+    timelineEvents: {
+      type: [
+        {
+          eventType: {
+            type: String,
+            enum: ['SYMPTOM_ONSET', 'SYMPTOM_CHANGE', 'MEDICAL_ENCOUNTER', 'REPORT', 'MEDICATION', 'OTHER'],
+            default: 'OTHER',
+          },
+          date: { type: String, default: null },
+          relativeTime: { type: String, default: null },
+          description: { type: String, required: true, trim: true },
+          source: {
+            type: String,
+            enum: ['PATIENT', 'AI_EXTRACTION', 'REPORT', 'VOICE_TRANSCRIPT'],
+            default: 'AI_EXTRACTION',
+          },
+          provenance: {
+            type: String,
+            enum: Object.values(NoteProvenance),
+            default: NoteProvenance.AI_GENERATED,
+          },
+          certainty: {
+            type: String,
+            enum: ['CERTAIN', 'APPROXIMATE', 'UNCERTAIN'],
+            default: 'CERTAIN',
+          },
+          sourceQuote: { type: String, default: null },
+        },
+      ],
+      default: [],
+    },
     relevantExtractedReportInfo: {
       type: String,
       default: '',
