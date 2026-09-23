@@ -17,6 +17,9 @@ import {
   Clock,
   MessageSquare,
   FileCheck,
+  UserCheck,
+  UserX,
+  UserPlus,
 } from 'lucide-react';
 
 interface ReviewerCaseSymptom {
@@ -53,6 +56,9 @@ interface ReviewerCaseDetails {
   chiefComplaint: string;
   intakeSource: string;
   language: string;
+  assignedReviewerId?: string | null;
+  assignedReviewerName?: string;
+  isAssigned: boolean;
   createdAt: string;
   patient: {
     id: string;
@@ -72,6 +78,8 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
   const [caseDetails, setCaseDetails] = useState<ReviewerCaseDetails | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
 
   // Form State
   const [reviewerNotes, setReviewerNotes] = useState<string>('');
@@ -79,6 +87,28 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Assignment Action State
+  const [targetReviewerIdInput, setTargetReviewerIdInput] = useState<string>('');
+  const [assignmentLoading, setAssignmentLoading] = useState<boolean>(false);
+  const [assignmentError, setAssignmentError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedToken = localStorage.getItem('accessToken');
+      if (storedToken) {
+        try {
+          const payload = JSON.parse(atob(storedToken.split('.')[1]));
+          if (payload) {
+            setCurrentUserId(payload.id || null);
+            setCurrentUserRole(payload.role || null);
+          }
+        } catch {
+          // Token decode fallback
+        }
+      }
+    }
+  }, []);
 
   const fetchCaseDetails = useCallback(async () => {
     setIsLoading(true);
@@ -112,6 +142,109 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
   useEffect(() => {
     fetchCaseDetails();
   }, [fetchCaseDetails]);
+
+  const handleClaim = async () => {
+    setAssignmentLoading(true);
+    setAssignmentError(null);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${apiBaseUrl}/reviewer/cases/${caseId}/claim`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      const result = await response.json();
+
+      if (response.status === 409) {
+        throw new Error('This case was already claimed by another reviewer.');
+      }
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error?.message || 'Failed to claim case.');
+      }
+
+      fetchCaseDetails();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Claim action failed.';
+      setAssignmentError(msg);
+    } finally {
+      setAssignmentLoading(false);
+    }
+  };
+
+  const handleRelease = async () => {
+    setAssignmentLoading(true);
+    setAssignmentError(null);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${apiBaseUrl}/reviewer/cases/${caseId}/release`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error?.message || 'Failed to release case.');
+      }
+
+      fetchCaseDetails();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Release action failed.';
+      setAssignmentError(msg);
+    } finally {
+      setAssignmentLoading(false);
+    }
+  };
+
+  const handleAdminAssign = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!targetReviewerIdInput.trim()) {
+      setAssignmentError('Target reviewer ID is required.');
+      return;
+    }
+
+    setAssignmentLoading(true);
+    setAssignmentError(null);
+
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${apiBaseUrl}/reviewer/cases/${caseId}/assign`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ reviewerId: targetReviewerIdInput.trim() }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error?.message || 'Failed to assign case.');
+      }
+
+      setTargetReviewerIdInput('');
+      fetchCaseDetails();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Administrative assignment failed.';
+      setAssignmentError(msg);
+    } finally {
+      setAssignmentLoading(false);
+    }
+  };
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -148,7 +281,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
 
       setSubmitSuccess('Human review submitted successfully.');
       setReviewerNotes('');
-      fetchCaseDetails(); // Refresh case details & review history
+      fetchCaseDetails();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to submit review.';
       setSubmitError(msg);
@@ -190,6 +323,9 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
       </div>
     );
   }
+
+  const isAssignedToMe = currentUserId && caseDetails.assignedReviewerId === currentUserId;
+  const isAdmin = currentUserRole === 'ADMIN';
 
   return (
     <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8 font-sans">
@@ -381,6 +517,103 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
 
           {/* Sidebar Column (1/3 width) */}
           <div className="space-y-6">
+            {/* Case Assignment Card */}
+            <Card className="bg-white border-slate-200 shadow-sm">
+              <CardHeader className="bg-slate-50 border-b border-slate-200 py-3 px-4">
+                <CardTitle className="text-xs font-bold text-slate-900 flex items-center space-x-2 uppercase tracking-wider">
+                  <UserCheck className="w-4 h-4 text-indigo-600" />
+                  <span>Case Ownership</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 text-xs space-y-4">
+                {assignmentError && (
+                  <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 rounded text-[11px] flex items-center space-x-1.5">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{assignmentError}</span>
+                  </div>
+                )}
+
+                <div>
+                  <span className="text-slate-400 block text-[10px] mb-1">Current Owner</span>
+                  {caseDetails.isAssigned ? (
+                    <div className="flex items-center space-x-2">
+                      <Badge className="bg-indigo-600 text-white text-xs">
+                        {isAssignedToMe ? 'Assigned to You' : caseDetails.assignedReviewerName || 'Assigned Reviewer'}
+                      </Badge>
+                    </div>
+                  ) : (
+                    <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200 text-xs">
+                      Unassigned (Unclaimed)
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="pt-2 flex flex-col space-y-2">
+                  {!caseDetails.isAssigned && (
+                    <Button
+                      size="sm"
+                      onClick={handleClaim}
+                      disabled={assignmentLoading}
+                      className="bg-green-600 hover:bg-green-700 text-white text-xs w-full"
+                    >
+                      {assignmentLoading ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
+                      ) : (
+                        <UserCheck className="w-3.5 h-3.5 mr-1" />
+                      )}
+                      Claim Case
+                    </Button>
+                  )}
+
+                  {(isAssignedToMe || isAdmin) && caseDetails.isAssigned && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleRelease}
+                      disabled={assignmentLoading}
+                      className="border-slate-300 text-slate-700 hover:bg-slate-100 text-xs w-full"
+                    >
+                      {assignmentLoading ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
+                      ) : (
+                        <UserX className="w-3.5 h-3.5 mr-1 text-slate-500" />
+                      )}
+                      Release Assignment
+                    </Button>
+                  )}
+                </div>
+
+                {/* Admin Assignment Panel */}
+                {isAdmin && (
+                  <form onSubmit={handleAdminAssign} className="pt-3 border-t border-slate-100 space-y-2">
+                    <label className="text-[11px] font-semibold text-slate-700 block">
+                      Admin Reassignment
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter target reviewer User ID"
+                      value={targetReviewerIdInput}
+                      onChange={(e) => setTargetReviewerIdInput(e.target.value)}
+                      className="w-full text-xs p-2 border border-slate-300 rounded text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                    <Button
+                      type="submit"
+                      size="sm"
+                      disabled={assignmentLoading}
+                      className="bg-slate-800 hover:bg-slate-900 text-white text-xs w-full"
+                    >
+                      {assignmentLoading ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
+                      ) : (
+                        <UserPlus className="w-3.5 h-3.5 mr-1" />
+                      )}
+                      Reassign Case
+                    </Button>
+                  </form>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Patient Contact Info */}
             <Card className="bg-white border-slate-200 shadow-sm">
               <CardHeader className="bg-slate-50 border-b border-slate-200 py-3 px-4">

@@ -15,6 +15,7 @@ export const reviewerCasesQuerySchema = z.object({
     .pipe(z.number().int().min(1, 'Limit must be at least 1').max(100, 'Maximum limit is 100')),
   status: z.nativeEnum(CaseStatus).optional(),
   priority: z.nativeEnum(CasePriority).optional(),
+  assignedTo: z.enum(['me', 'unassigned', 'all']).optional(),
 });
 
 export const submitReviewSchema = z
@@ -31,5 +32,14 @@ export const submitReviewSchema = z
       'Invalid field in review submission. Client cannot override server-controlled fields such as reviewerId or assignedReviewerId.',
   });
 
+export const adminAssignSchema = z
+  .object({
+    reviewerId: z.string({ required_error: 'Target reviewer ID is required' }).trim().min(1, 'Target reviewer ID is required'),
+  })
+  .strict({
+    message: 'Invalid field in admin assignment payload.',
+  });
+
 export type ReviewerCasesQueryInput = z.infer<typeof reviewerCasesQuerySchema>;
 export type SubmitReviewSchemaInput = z.infer<typeof submitReviewSchema>;
+export type AdminAssignSchemaInput = z.infer<typeof adminAssignSchema>;

@@ -59,7 +59,7 @@ medicalTriage/
 │   │   ├── lib/                  # Structured Pino logger
 │   │   ├── app.ts                # Express application factory
 │   │   └── server.ts             # Server bootstrap & graceful shutdown handler
-│   ├── tests/                    # Vitest test suite (health.test.ts, models.test.ts, auth.test.ts, intake.test.ts, reviewer.test.ts)
+│   ├── tests/                    # Vitest test suite (health.test.ts, models.test.ts, auth.test.ts, intake.test.ts, reviewer.test.ts, assignment.test.ts)
 │   ├── package.json              # Backend dependencies and scripts
 │   ├── tsconfig.json             # Backend TypeScript configuration
 │   └── vitest.config.ts          # Vitest testing configuration
@@ -72,6 +72,7 @@ medicalTriage/
 │   ├── authentication.md         # Phase 3 Authentication & Authorization Specification
 │   ├── patient-intake.md         # Phase 4 Patient Intake Workflow Specification
 │   ├── reviewer-dashboard.md     # Phase 5 Reviewer Dashboard & Case Review Specification
+│   ├── assignment.md             # Phase 6 Reviewer Assignment & Ownership Specification
 │   └── development.md            # Developer Setup & Operational Guide
 │
 ├── docker/                       # Docker & Compose Configurations

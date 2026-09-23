@@ -101,21 +101,20 @@ Access to reviewer endpoints and dashboard UI is strictly restricted to authoriz
 > [!IMPORTANT]
 > **Data Minimization Security Policy**: Reviewer endpoints expose patient identity (`name`, `email`, `phone`) solely to enable healthcare staff inspection. Under no circumstances are `passwordHash`, JWT secret keys, API credentials, or internal database metadata returned.
 
-> [!WARNING]
-> **No Assignment in Phase 5**: Setting `Case.assignedReviewerId`, case claiming, workload balancing, and reassignment are explicitly excluded from Phase 5 and deferred to Phase 6.
+> [!NOTE]
+> **Phase 6 Assignment Architecture**: Operational case assignment and ownership (`Case.assignedReviewerId`), atomic case claiming (`POST /api/reviewer/cases/:caseId/claim`), releasing (`POST /api/reviewer/cases/:caseId/release`), administrative reassignment (`POST /api/reviewer/cases/:caseId/assign`), and workload filtering (`assignedTo=me`) are specified in [`docs/assignment.md`](file:///home/abhi/medicalTriage/docs/assignment.md).
 
 > [!CAUTION]
 > **Non-Diagnostic System Boundary**: Initial queue categories (`ROUTINE`) represent unassessed intake states awaiting human evaluation, not clinical conclusions. The reviewer UI presents clear "Patient-Reported Observations" labels and operational safety disclaimers.
 
 ---
 
-## 5. Strict Phase 5 Boundaries (Systems Not Implemented)
+## 5. Strict Phase 6 Boundaries (Systems Not Implemented)
 
-The following capabilities remain **intentionally excluded** from Phase 5:
+The following capabilities remain **intentionally excluded** from Phase 6:
 * AI extraction & summarization (Gemini, Sarvam)
 * OCR / Speech-to-text / Vision processing
 * Automated urgency / risk classification engine
-* Assignment engine / case claiming (Phase 6)
-* SLA timers & automated queue prioritization
-* Notifications & referral workflows
+* SLA timers & automated queue prioritization / predictive routing
+* Notifications (Email/SMS) & referral workflows
 * Redis / BullMQ async background jobs

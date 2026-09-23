@@ -7,6 +7,7 @@ export interface ReviewerCasesQuery {
   limit?: number;
   status?: CaseStatus;
   priority?: CasePriority;
+  assignedTo?: 'me' | 'unassigned' | 'all';
 }
 
 export interface ReviewerQueueItem {
@@ -21,6 +22,9 @@ export interface ReviewerQueueItem {
   chiefComplaint: string;
   intakeSource: IntakeSource;
   language: string;
+  assignedReviewerId?: string | null;
+  assignedReviewerName?: string;
+  isAssigned: boolean;
   createdAt: Date;
   updatedAt?: Date;
 }
@@ -71,6 +75,9 @@ export interface ReviewerCaseDetails {
   chiefComplaint: string;
   intakeSource: IntakeSource;
   language: string;
+  assignedReviewerId?: string | null;
+  assignedReviewerName?: string;
+  isAssigned: boolean;
   createdAt: Date;
   updatedAt?: Date;
   patient: {
@@ -96,4 +103,16 @@ export interface SubmitReviewResponse {
   reviewStatus: ReviewStatus;
   caseStatus: CaseStatus;
   reviewedAt: Date;
+}
+
+export interface AdminAssignInput {
+  reviewerId: string;
+}
+
+export interface AssignmentResponse {
+  caseId: string;
+  caseNumber: string;
+  assignedReviewerId: string | null;
+  assignedReviewerName?: string;
+  action: 'CASE_CLAIMED' | 'CASE_RELEASED' | 'CASE_ASSIGNED' | 'CASE_UNASSIGNED';
 }

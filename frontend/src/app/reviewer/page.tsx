@@ -5,7 +5,20 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, HeartPulse, RefreshCw, ChevronLeft, ChevronRight, User, Calendar, FileText, ArrowUpRight } from 'lucide-react';
+import {
+  AlertCircle,
+  HeartPulse,
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  User,
+  Calendar,
+  FileText,
+  ArrowUpRight,
+  UserCheck,
+  UserX,
+  Loader2,
+} from 'lucide-react';
 
 interface ReviewerQueueItem {
   id: string;
@@ -19,6 +32,9 @@ interface ReviewerQueueItem {
   chiefComplaint: string;
   intakeSource: string;
   language: string;
+  assignedReviewerId?: string | null;
+  assignedReviewerName?: string;
+  isAssigned: boolean;
   createdAt: string;
 }
 
@@ -34,9 +50,29 @@ export default function ReviewerQueuePage() {
   const [pagination, setPagination] = useState<PaginationMeta>({ page: 1, limit: 20, total: 0, totalPages: 1 });
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [priorityFilter, setPriorityFilter] = useState<string>('');
+  const [assignedToFilter, setAssignedToFilter] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Read current user token / ID from window if available
+    if (typeof window !== 'undefined') {
+      const storedToken = localStorage.getItem('accessToken');
+      if (storedToken) {
+        try {
+          const payload = JSON.parse(atob(storedToken.split('.')[1]));
+          if (payload && payload.id) {
+            setCurrentUserId(payload.id);
+          }
+        } catch {
+          // Token decode fallback
+        }
+      }
+    }
+  }, []);
 
   const fetchCases = useCallback(async () => {
     setIsLoading(true);
@@ -50,6 +86,7 @@ export default function ReviewerQueuePage() {
       params.append('limit', '20');
       if (statusFilter) params.append('status', statusFilter);
       if (priorityFilter) params.append('priority', priorityFilter);
+      if (assignedToFilter) params.append('assignedTo', assignedToFilter);
 
       const response = await fetch(`${apiBaseUrl}/reviewer/cases?${params.toString()}`, {
         headers: {
@@ -74,20 +111,74 @@ export default function ReviewerQueuePage() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, statusFilter, priorityFilter]);
+  }, [page, statusFilter, priorityFilter, assignedToFilter]);
 
   useEffect(() => {
     fetchCases();
   }, [fetchCases]);
 
-  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setStatusFilter(e.target.value);
-    setPage(1);
+  const handleClaim = async (caseId: string) => {
+    setActionLoadingId(caseId);
+    setError(null);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${apiBaseUrl}/reviewer/cases/${caseId}/claim`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      const result = await response.json();
+
+      if (response.status === 409) {
+        throw new Error('This case was already claimed by another reviewer.');
+      }
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error?.message || 'Failed to claim case.');
+      }
+
+      fetchCases(); // Refresh queue
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Claim action failed.';
+      setError(msg);
+    } finally {
+      setActionLoadingId(null);
+    }
   };
 
-  const handlePriorityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setPriorityFilter(e.target.value);
-    setPage(1);
+  const handleRelease = async (caseId: string) => {
+    setActionLoadingId(caseId);
+    setError(null);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${apiBaseUrl}/reviewer/cases/${caseId}/release`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error?.message || 'Failed to release case.');
+      }
+
+      fetchCases(); // Refresh queue
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Release action failed.';
+      setError(msg);
+    } finally {
+      setActionLoadingId(null);
+    }
   };
 
   return (
@@ -101,10 +192,10 @@ export default function ReviewerQueuePage() {
               <span>Healthcare Reviewer Portal</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-              Triage Intake Case Queue
+              Triage Intake Case Queue & Ownership
             </h1>
             <p className="text-sm text-slate-600 mt-1">
-              Review patient-submitted healthcare intake records awaiting qualified staff inspection.
+              Review patient-submitted healthcare intake records and manage reviewer case assignments.
             </p>
           </div>
 
@@ -122,13 +213,13 @@ export default function ReviewerQueuePage() {
           </div>
         </div>
 
-        {/* Operational & Safety Disclaimer */}
+        {/* Operational Safety Disclaimer */}
         <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-900 text-xs flex items-start space-x-3 shadow-sm">
           <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <p className="font-semibold">Reviewer Operational Notice & Non-Diagnostic Boundary:</p>
+            <p className="font-semibold">Reviewer Operational Notice & Ownership Semantics:</p>
             <p className="leading-relaxed">
-              This dashboard presents patient-reported information submitted via self-intake. Initial queue priorities (e.g., ROUTINE) represent unassessed workflow states awaiting staff inspection, not clinical determinations. All clinical reviews, triage decisions, and notes require qualified healthcare staff evaluation.
+              Case assignment represents operational staff workload ownership only. It does not imply medical diagnosis, clinical approval, or urgency reclassification. Initial queue categories (ROUTINE) represent unassessed intake states.
             </p>
           </div>
         </div>
@@ -138,10 +229,29 @@ export default function ReviewerQueuePage() {
           <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-3">
               <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700 block">Assigned Workload</label>
+                <select
+                  value={assignedToFilter}
+                  onChange={(e) => {
+                    setAssignedToFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  className="text-xs p-2 border border-slate-300 rounded-md bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                >
+                  <option value="">All Cases</option>
+                  <option value="me">Assigned to Me</option>
+                  <option value="unassigned">Unassigned (Unclaimed)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-700 block">Workflow Status</label>
                 <select
                   value={statusFilter}
-                  onChange={handleStatusChange}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value);
+                    setPage(1);
+                  }}
                   className="text-xs p-2 border border-slate-300 rounded-md bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 >
                   <option value="">All Statuses</option>
@@ -155,7 +265,10 @@ export default function ReviewerQueuePage() {
                 <label className="text-xs font-semibold text-slate-700 block">Queue Category</label>
                 <select
                   value={priorityFilter}
-                  onChange={handlePriorityChange}
+                  onChange={(e) => {
+                    setPriorityFilter(e.target.value);
+                    setPage(1);
+                  }}
                   className="text-xs p-2 border border-slate-300 rounded-md bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 >
                   <option value="">All Categories</option>
@@ -174,7 +287,7 @@ export default function ReviewerQueuePage() {
 
         {/* Error Alert */}
         {error && (
-          <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs flex items-center space-x-2">
+          <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs flex items-center space-x-2 shadow-sm">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
@@ -191,65 +304,122 @@ export default function ReviewerQueuePage() {
             <FileText className="w-10 h-10 text-slate-300 mx-auto" />
             <CardTitle className="text-base text-slate-800">No Cases In Queue</CardTitle>
             <CardDescription className="text-xs text-slate-500">
-              No intake cases currently match the selected workflow filters.
+              No intake cases currently match the selected workflow and assignment filters.
             </CardDescription>
           </Card>
         ) : (
           <div className="space-y-3">
-            {cases.map((c) => (
-              <Card
-                key={c.id}
-                className="bg-white border-slate-200 hover:border-indigo-300 transition-all shadow-sm"
-              >
-                <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="space-y-2 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-indigo-900 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
-                        {c.caseNumber}
-                      </span>
-                      <Badge
-                        variant="outline"
-                        className={
-                          c.status === 'OPEN'
-                            ? 'bg-blue-50 text-blue-700 border-blue-200'
-                            : c.status === 'IN_REVIEW'
-                            ? 'bg-purple-50 text-purple-700 border-purple-200'
-                            : 'bg-slate-100 text-slate-700'
-                        }
-                      >
-                        {c.status}
-                      </Badge>
-                      <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 text-[11px]">
-                        Category: {c.priority} (Awaiting Review)
-                      </Badge>
-                      <span className="text-[11px] text-slate-400 uppercase font-mono">{c.language}</span>
-                    </div>
+            {cases.map((c) => {
+              const isAssignedToMe = currentUserId && c.assignedReviewerId === currentUserId;
 
-                    <div className="space-y-1">
-                      <h2 className="text-sm font-semibold text-slate-900 line-clamp-1">{c.chiefComplaint}</h2>
-                      <div className="flex items-center space-x-4 text-xs text-slate-500">
-                        <span className="flex items-center space-x-1">
-                          <User className="w-3.5 h-3.5 text-slate-400" />
-                          <span>{c.patientName}</span>
+              return (
+                <Card
+                  key={c.id}
+                  className="bg-white border-slate-200 hover:border-indigo-300 transition-all shadow-sm"
+                >
+                  <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="space-y-2 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-indigo-900 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                          {c.caseNumber}
                         </span>
-                        <span className="flex items-center space-x-1">
-                          <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                          <span>{new Date(c.createdAt).toLocaleString()}</span>
-                        </span>
+
+                        <Badge
+                          variant="outline"
+                          className={
+                            c.status === 'OPEN'
+                              ? 'bg-blue-50 text-blue-700 border-blue-200'
+                              : c.status === 'IN_REVIEW'
+                              ? 'bg-purple-50 text-purple-700 border-purple-200'
+                              : 'bg-slate-100 text-slate-700'
+                          }
+                        >
+                          {c.status}
+                        </Badge>
+
+                        <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 text-[11px]">
+                          Category: {c.priority} (Unassessed)
+                        </Badge>
+
+                        {/* Assignment Badge */}
+                        {isAssignedToMe ? (
+                          <Badge className="bg-green-600 text-white border-green-700 text-[11px] flex items-center space-x-1">
+                            <UserCheck className="w-3 h-3" />
+                            <span>Assigned to You</span>
+                          </Badge>
+                        ) : c.isAssigned ? (
+                          <Badge variant="outline" className="bg-indigo-50 text-indigo-800 border-indigo-200 text-[11px] flex items-center space-x-1">
+                            <User className="w-3 h-3 text-indigo-600" />
+                            <span>Assigned: {c.assignedReviewerName || 'Reviewer'}</span>
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200 text-[11px] flex items-center space-x-1">
+                            <UserX className="w-3 h-3 text-amber-600" />
+                            <span>Unassigned</span>
+                          </Badge>
+                        )}
+                      </div>
+
+                      <div className="space-y-1">
+                        <h2 className="text-sm font-semibold text-slate-900 line-clamp-1">{c.chiefComplaint}</h2>
+                        <div className="flex items-center space-x-4 text-xs text-slate-500">
+                          <span className="flex items-center space-x-1">
+                            <User className="w-3.5 h-3.5 text-slate-400" />
+                            <span>{c.patientName}</span>
+                          </span>
+                          <span className="flex items-center space-x-1">
+                            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                            <span>{new Date(c.createdAt).toLocaleString()}</span>
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="sm:self-center">
-                    <Link href={`/reviewer/cases/${c.id}`}>
-                      <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white w-full sm:w-auto text-xs">
-                        Inspect Case <ArrowUpRight className="w-4 h-4 ml-1" />
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    {/* Action Controls */}
+                    <div className="flex items-center space-x-2 sm:self-center">
+                      {!c.isAssigned && (
+                        <Button
+                          size="sm"
+                          onClick={() => handleClaim(c.id)}
+                          disabled={actionLoadingId === c.id}
+                          className="bg-green-600 hover:bg-green-700 text-white text-xs"
+                        >
+                          {actionLoadingId === c.id ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
+                          ) : (
+                            <UserCheck className="w-3.5 h-3.5 mr-1" />
+                          )}
+                          Claim
+                        </Button>
+                      )}
+
+                      {isAssignedToMe && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleRelease(c.id)}
+                          disabled={actionLoadingId === c.id}
+                          className="border-slate-300 text-slate-700 hover:bg-slate-100 text-xs"
+                        >
+                          {actionLoadingId === c.id ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
+                          ) : (
+                            <UserX className="w-3.5 h-3.5 mr-1 text-slate-500" />
+                          )}
+                          Release
+                        </Button>
+                      )}
+
+                      <Link href={`/reviewer/cases/${c.id}`}>
+                        <Button size="sm" variant="outline" className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 text-xs">
+                          Inspect <ArrowUpRight className="w-4 h-4 ml-1" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
 
