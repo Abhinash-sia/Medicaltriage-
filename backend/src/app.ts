@@ -1,0 +1,56 @@
+import express, { Express } from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import { env } from './config/env.js';
+import { requestIdMiddleware } from './middleware/request-id.js';
+import { requestLogger } from './middleware/request-logger.js';
+import { errorHandler } from './middleware/error-handler.js';
+import { notFoundHandler } from './middleware/not-found.js';
+import { healthRouter } from './routes/health.routes.js';
+
+export const createApp = (): Express => {
+  const app = express();
+
+  // Security Middleware
+  app.use(helmet());
+  app.use(
+    cors({
+      origin: env.FRONTEND_URL,
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
+      credentials: true,
+    })
+  );
+
+  // Rate Limiter
+  const generalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      success: false,
+      error: {
+        code: 'TOO_MANY_REQUESTS',
+        message: 'Too many requests from this IP, please try again later.',
+      },
+    },
+  });
+  app.use('/api', generalLimiter);
+
+  // Request parsing & correlation ID middleware
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
+  app.use(requestIdMiddleware);
+  app.use(requestLogger);
+
+  // Routes
+  app.use('/api', healthRouter);
+
+  // Error & 404 Handlers
+  app.use(notFoundHandler);
+  app.use(errorHandler);
+
+  return app;
+};
