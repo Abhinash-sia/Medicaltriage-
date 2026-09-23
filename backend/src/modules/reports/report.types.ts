@@ -5,27 +5,31 @@ export enum ReportProcessingStatus {
   PROCESSING = 'PROCESSING',
   PROCESSED = 'PROCESSED',
   FAILED = 'FAILED',
-  VERIFICATION_REQUIRED = 'VERIFICATION_REQUIRED',
+}
+
+export enum ReportVerificationStatus {
+  REQUIRED = 'REQUIRED',
+  VERIFIED = 'VERIFIED',
 }
 
 export interface IReport {
   _id?: Types.ObjectId;
   caseId: Types.ObjectId;
-  filename: string;
+  storageKey: string;
+  contentHash: string;
   originalFilename: string;
   mimeType: string;
   fileSize: number;
-  storagePath: string;
   uploadTimestamp: Date;
   processingStatus: ReportProcessingStatus;
-  ocrStatus?: string;
-  extractionStatus?: string;
+  verificationStatus: ReportVerificationStatus;
+  ocrStatus?: 'PENDING' | 'PROCESSED' | 'FAILED';
+  ocrUsable: boolean;
   extractionConfidence?: number;
-  extractedText?: string;
-  structuredData?: Record<string, unknown>;
-  verificationRequired: boolean;
-  verifiedBy?: Types.ObjectId;
-  verifiedAt?: Date;
+  extractedText: string;
+  processingError?: string;
+  verifiedBy?: Types.ObjectId | null;
+  verifiedAt?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;
 }

@@ -123,17 +123,16 @@ describe('Phase 2 Database Models Schema Validation Unit Tests', () => {
     it('should validate a valid Report document', () => {
       const validReport = new Report({
         caseId: new mongoose.Types.ObjectId(),
-        filename: 'lab_report_1001.pdf',
+        storageKey: 'reports/lab_report_1001.pdf',
+        contentHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
         originalFilename: 'Blood_Panel_Jan.pdf',
         mimeType: 'application/pdf',
         fileSize: 1048576,
-        storagePath: '/storage/reports/lab_report_1001.pdf',
-        processingStatus: ReportProcessingStatus.VERIFICATION_REQUIRED,
+        processingStatus: ReportProcessingStatus.PROCESSED,
       });
 
       const err = validReport.validateSync();
       expect(err).toBeUndefined();
-      expect(validReport.verificationRequired).toBe(true);
     });
   });
 

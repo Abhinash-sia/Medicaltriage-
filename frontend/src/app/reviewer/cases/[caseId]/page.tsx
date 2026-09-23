@@ -108,6 +108,13 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
   const [followUpQuestionItems, setFollowUpQuestionItems] = useState<any[]>([]);
   const [isFetchingMissingInfo, setIsFetchingMissingInfo] = useState<boolean>(false);
 
+  // Reports & OCR State
+  const [reportsList, setReportsList] = useState<any[]>([]);
+  const [isFetchingReports, setIsFetchingReports] = useState<boolean>(false);
+  const [isUploadingReport, setIsUploadingReport] = useState<boolean>(false);
+  const [reportUploadError, setReportUploadError] = useState<string | null>(null);
+  const [reportUploadSuccess, setReportUploadSuccess] = useState<string | null>(null);
+
   // Assignment Action State
   const [targetReviewerIdInput, setTargetReviewerIdInput] = useState<string>('');
   const [assignmentLoading, setAssignmentLoading] = useState<boolean>(false);
@@ -212,11 +219,96 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
     }
   }, [caseId]);
 
+  const fetchReports = useCallback(async () => {
+    setIsFetchingReports(true);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${apiBaseUrl}/cases/${caseId}/reports`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      const result = await response.json();
+      if (response.ok && result.data?.reports) {
+        setReportsList(result.data.reports);
+      }
+    } catch {
+      // Fallback
+    } finally {
+      setIsFetchingReports(false);
+    }
+  }, [caseId]);
+
   useEffect(() => {
     fetchCaseDetails();
     fetchTimeline();
     fetchMissingInformation();
-  }, [fetchCaseDetails, fetchTimeline, fetchMissingInformation]);
+    fetchReports();
+  }, [fetchCaseDetails, fetchTimeline, fetchMissingInformation, fetchReports]);
+
+  const handleVerifyReport = async (reportId: string) => {
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${apiBaseUrl}/reports/${reportId}/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        fetchReports();
+      }
+    } catch {
+      // Fallback
+    }
+  };
+
+  const handleReportUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingReport(true);
+    setReportUploadError(null);
+    setReportUploadSuccess(null);
+
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('caseId', caseId);
+
+      const response = await fetch(`${apiBaseUrl}/cases/${caseId}/reports`, {
+        method: 'POST',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error?.message || 'Report upload failed.');
+      }
+
+      setReportUploadSuccess('Report uploaded and processed successfully.');
+      fetchReports();
+    } catch (err: any) {
+      setReportUploadError(err.message || 'Report upload failed.');
+    } finally {
+      setIsUploadingReport(false);
+    }
+  };
 
   const handleClaim = async () => {
     setAssignmentLoading(true);
@@ -853,6 +945,182 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                     </div>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* Reports & OCR Documents Card */}
+            <Card className="bg-white border-blue-200 shadow-sm">
+              <CardHeader className="bg-blue-50/70 border-b border-blue-100 py-3 px-4 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-sm font-bold text-blue-950 flex items-center space-x-2">
+                    <FileCheck className="w-4 h-4 text-blue-600" />
+                    <span>Reports & OCR Documents</span>
+                    <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300 text-[10px] ml-2">
+                      {reportsList.length} Attached
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription className="text-xs text-blue-800">
+                    Uploaded lab reports, imaging notes, and document text extractions.
+                  </CardDescription>
+                </div>
+                <div>
+                  <label className="cursor-pointer inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-blue-600 hover:bg-blue-700 text-white h-8 px-3 py-1">
+                    {isUploadingReport ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <UserPlus className="w-3.5 h-3.5 mr-1" />}
+                    Upload Report
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={handleReportUpload}
+                      disabled={isUploadingReport}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 space-y-4">
+                {reportUploadError && (
+                  <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 rounded text-xs flex items-center space-x-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{reportUploadError}</span>
+                  </div>
+                )}
+                {reportUploadSuccess && (
+                  <div className="p-2.5 bg-green-50 border border-green-200 text-green-700 rounded text-xs flex items-center space-x-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    <span>{reportUploadSuccess}</span>
+                  </div>
+                )}
+
+                {isFetchingReports && (
+                  <div className="flex items-center space-x-2 text-xs text-slate-500 p-2">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
+                    <span>Loading report attachments...</span>
+                  </div>
+                )}
+
+                {reportsList.length === 0 && !isFetchingReports && (
+                  <p className="text-xs text-slate-500 italic">
+                    No clinical reports attached to this case.
+                  </p>
+                )}
+
+                {reportsList.length > 0 && (
+                  <div className="space-y-4">
+                    {reportsList.map((report: any) => {
+                      const reportId = report.id || report._id;
+                      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+                      const downloadUrl = `${apiBaseUrl}/reports/${reportId}/file`;
+                      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+
+                      return (
+                        <div key={reportId} className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-2">
+                          <div className="flex justify-between items-center border-b border-slate-200 pb-2">
+                            <div>
+                              <span className="font-bold text-slate-900 block">{report.originalFilename}</span>
+                              <span className="text-[10px] text-slate-500 font-mono">
+                                {(report.fileSize / 1024).toFixed(1)} KB • {report.mimeType} • Uploaded {new Date(report.uploadTimestamp || report.createdAt).toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Badge
+                                variant="outline"
+                                className={
+                                  report.processingStatus === 'PROCESSED'
+                                    ? 'bg-green-50 text-green-700 border-green-200 text-[10px]'
+                                    : report.processingStatus === 'FAILED'
+                                    ? 'bg-red-50 text-red-700 border-red-200 text-[10px]'
+                                    : 'bg-amber-50 text-amber-700 border-amber-200 text-[10px]'
+                                }
+                              >
+                                {report.processingStatus}
+                              </Badge>
+                              <Badge
+                                variant="outline"
+                                className={
+                                  report.verificationStatus === 'VERIFIED'
+                                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300 text-[10px]'
+                                    : 'bg-amber-100 text-amber-800 border-amber-300 text-[10px]'
+                                }
+                              >
+                                {report.verificationStatus === 'VERIFIED' ? 'VERIFIED' : 'VERIFICATION REQUIRED'}
+                              </Badge>
+                            </div>
+                          </div>
+
+                          {/* Original Document Link */}
+                          <div className="flex items-center justify-between pt-1">
+                            <a
+                              href={downloadUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={(e) => {
+                                // Add auth header via fetch download if needed or standard link
+                                if (token) {
+                                  e.preventDefault();
+                                  fetch(downloadUrl, {
+                                    headers: { Authorization: `Bearer ${token}` },
+                                  })
+                                    .then((res) => res.blob())
+                                    .then((blob) => {
+                                      const url = window.URL.createObjectURL(blob);
+                                      const a = document.createElement('a');
+                                      a.href = url;
+                                      a.download = report.originalFilename;
+                                      a.click();
+                                    });
+                                }
+                              }}
+                              className="text-blue-600 hover:text-blue-800 underline font-medium text-[11px] inline-flex items-center"
+                            >
+                              Download Original File
+                            </a>
+
+                            {report.verificationStatus !== 'VERIFIED' && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleVerifyReport(reportId)}
+                                className="h-7 text-[11px] border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                              >
+                                <CheckCircle2 className="w-3 h-3 mr-1" /> Mark OCR as Verified
+                              </Button>
+                            )}
+                          </div>
+
+                          {/* Empty OCR Warning Banner */}
+                          {report.processingStatus === 'PROCESSED' && !report.ocrUsable && (
+                            <div className="p-2 bg-amber-50 border border-amber-200 text-amber-900 text-[11px] rounded flex items-center space-x-2">
+                              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                              <span>OCR completed but produced no usable text.</span>
+                            </div>
+                          )}
+
+                          {/* OCR Processing Failure Banner */}
+                          {report.processingStatus === 'FAILED' && (
+                            <div className="p-2 bg-red-50 border border-red-200 text-red-700 text-[11px] rounded flex items-center space-x-2">
+                              <AlertCircle className="w-4 h-4 shrink-0" />
+                              <span>OCR Processing Error: {report.processingError || 'Extraction failed'}</span>
+                            </div>
+                          )}
+
+                          {/* OCR Text Display */}
+                          {report.ocrUsable && report.extractedText && (
+                            <div className="space-y-1 pt-1">
+                              <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-wider block">Extracted Document Text</span>
+                              <pre className="p-2.5 bg-slate-900 text-slate-100 font-mono text-[11px] rounded overflow-x-auto whitespace-pre-wrap max-h-48 border border-slate-700">
+                                {report.extractedText}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <div className="p-2 bg-slate-100 border border-slate-200 text-slate-700 text-[11px] rounded">
+                  <span className="font-semibold">Storage & Retention Policy:</span> The original report is preserved according to the current prototype storage/retention policy and remains available for authorized reviewer verification.
+                </div>
               </CardContent>
             </Card>
 

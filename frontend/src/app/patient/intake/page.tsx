@@ -193,6 +193,43 @@ export default function PatientIntakePage() {
               <p className="text-xs text-slate-500 text-center">
                 Please note your Case Number. A qualified healthcare reviewer will inspect your intake note.
               </p>
+
+              {/* Optional Report Attachment Section */}
+              <div className="p-3 bg-blue-50/60 border border-blue-200 rounded-lg text-xs space-y-2">
+                <span className="font-semibold text-blue-950 block">Attach Clinical Document (Optional)</span>
+                <p className="text-[11px] text-blue-800">
+                  If you have a lab report or clinical document (PDF, JPEG, PNG), you may attach it to your case for reviewer inspection.
+                </p>
+                <input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file || !submittedCase) return;
+                    try {
+                      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+                      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+                      const formData = new FormData();
+                      formData.append('file', file);
+                      formData.append('caseId', submittedCase.caseId);
+
+                      const res = await fetch(`${apiBaseUrl}/cases/${submittedCase.caseId}/reports`, {
+                        method: 'POST',
+                        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+                        body: formData,
+                      });
+                      if (res.ok) {
+                        alert('Report attached successfully!');
+                      } else {
+                        alert('Report upload failed.');
+                      }
+                    } catch {
+                      alert('Report upload failed.');
+                    }
+                  }}
+                  className="text-xs text-slate-700 file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+                />
+              </div>
             </CardContent>
             <CardFooter>
               <Button

@@ -21,6 +21,10 @@ const envSchema = z.object({
   SARVAM_API_KEY: z.string().optional(),
   GOOGLE_CLOUD_PROJECT_ID: z.string().optional(),
   GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
+
+  // Phase 11 Reports & OCR Configuration
+  REPORT_STORAGE_DIR: z.string().default('./uploads/reports'),
+  OCR_PROVIDER: z.enum(['mock', 'google_vision']).default('mock'),
 });
 
 const parseEnv = () => {

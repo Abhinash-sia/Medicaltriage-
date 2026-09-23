@@ -11,6 +11,7 @@ import { healthRouter } from './routes/health.routes.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { intakeRouter } from './modules/intake/intake.routes.js';
 import { reviewerRouter } from './modules/reviewer/reviewer.routes.js';
+import reportRouter from './modules/reports/report.routes.js';
 
 export const createApp = (): Express => {
   const app = express();
@@ -54,6 +55,7 @@ export const createApp = (): Express => {
   app.use('/api/auth', authRouter);
   app.use('/api/intake', intakeRouter);
   app.use('/api/reviewer', reviewerRouter);
+  app.use('/api', reportRouter);
 
   // Error & 404 Handlers
   app.use(notFoundHandler);

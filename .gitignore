@@ -35,8 +35,10 @@ tmp/
 temp/
 
 # Runtime uploads/storage
-uploads/
-storage/
+/uploads/
+/storage/
+backend/uploads/
+
 
 # Python
 __pycache__/
