@@ -34,6 +34,12 @@ medicalTriage/
 │   │   │   │   ├── auth.controller.ts# Auth HTTP handlers
 │   │   │   │   ├── auth.middleware.ts# authenticateJwt & requireRoles middleware
 │   │   │   │   └── auth.routes.ts# Auth API routes (/api/auth)
+│   │   │   ├── intake/           # Patient Self-Intake Workflow module (Phase 4)
+│   │   │   │   ├── intake.types.ts # Intake DTOs & interfaces
+│   │   │   │   ├── intake.schemas.ts # Intake Zod schemas
+│   │   │   │   ├── intake.service.ts # Case/Consent/Symptom atomic submission service
+│   │   │   │   ├── intake.controller.ts # Intake HTTP controllers
+│   │   │   │   └── intake.routes.ts # Intake routes (/api/intake)
 │   │   │   ├── users/            # User model & types (PATIENT, DOCTOR, NURSE, ADMIN)
 │   │   │   ├── cases/            # Case model & types
 │   │   │   ├── symptoms/         # Symptom model & types
@@ -47,7 +53,7 @@ medicalTriage/
 │   │   ├── lib/                  # Structured Pino logger
 │   │   ├── app.ts                # Express application factory
 │   │   └── server.ts             # Server bootstrap & graceful shutdown handler
-│   ├── tests/                    # Vitest test suite (health.test.ts, models.test.ts, auth.test.ts)
+│   ├── tests/                    # Vitest test suite (health.test.ts, models.test.ts, auth.test.ts, intake.test.ts)
 │   ├── package.json              # Backend dependencies and scripts
 │   ├── tsconfig.json             # Backend TypeScript configuration
 │   └── vitest.config.ts          # Vitest testing configuration
@@ -58,6 +64,7 @@ medicalTriage/
 │   ├── architecture.md           # Phase 0 System Architecture & Pipeline Diagrams
 │   ├── database.md               # Phase 2 Database Schema & ER Topology
 │   ├── authentication.md         # Phase 3 Authentication & Authorization Specification
+│   ├── patient-intake.md         # Phase 4 Patient Intake Workflow Specification
 │   └── development.md            # Developer Setup & Operational Guide
 │
 ├── docker/                       # Docker & Compose Configurations
