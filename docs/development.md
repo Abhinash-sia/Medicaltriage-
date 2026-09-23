@@ -40,6 +40,12 @@ medicalTriage/
 │   │   │   │   ├── intake.service.ts # Case/Consent/Symptom atomic submission service
 │   │   │   │   ├── intake.controller.ts # Intake HTTP controllers
 │   │   │   │   └── intake.routes.ts # Intake routes (/api/intake)
+│   │   │   ├── reviewer/         # Reviewer Dashboard & Review Workflow module (Phase 5)
+│   │   │   │   ├── reviewer.types.ts # Reviewer DTOs & interfaces
+│   │   │   │   ├── reviewer.schemas.ts # Reviewer Zod query & review schemas
+│   │   │   │   ├── reviewer.service.ts # Paginated queue, case detail & review service
+│   │   │   │   ├── reviewer.controller.ts # Reviewer HTTP controllers
+│   │   │   │   └── reviewer.routes.ts # Reviewer protected routes (/api/reviewer)
 │   │   │   ├── users/            # User model & types (PATIENT, DOCTOR, NURSE, ADMIN)
 │   │   │   ├── cases/            # Case model & types
 │   │   │   ├── symptoms/         # Symptom model & types
@@ -53,7 +59,7 @@ medicalTriage/
 │   │   ├── lib/                  # Structured Pino logger
 │   │   ├── app.ts                # Express application factory
 │   │   └── server.ts             # Server bootstrap & graceful shutdown handler
-│   ├── tests/                    # Vitest test suite (health.test.ts, models.test.ts, auth.test.ts, intake.test.ts)
+│   ├── tests/                    # Vitest test suite (health.test.ts, models.test.ts, auth.test.ts, intake.test.ts, reviewer.test.ts)
 │   ├── package.json              # Backend dependencies and scripts
 │   ├── tsconfig.json             # Backend TypeScript configuration
 │   └── vitest.config.ts          # Vitest testing configuration
@@ -65,6 +71,7 @@ medicalTriage/
 │   ├── database.md               # Phase 2 Database Schema & ER Topology
 │   ├── authentication.md         # Phase 3 Authentication & Authorization Specification
 │   ├── patient-intake.md         # Phase 4 Patient Intake Workflow Specification
+│   ├── reviewer-dashboard.md     # Phase 5 Reviewer Dashboard & Case Review Specification
 │   └── development.md            # Developer Setup & Operational Guide
 │
 ├── docker/                       # Docker & Compose Configurations
