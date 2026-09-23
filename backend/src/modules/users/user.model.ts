@@ -20,6 +20,10 @@ const UserSchema = new Schema<IUserDocument>(
       trim: true,
       index: { unique: true, sparse: true },
     },
+    passwordHash: {
+      type: String,
+      select: false,
+    },
     role: {
       type: String,
       enum: Object.values(UserRole),

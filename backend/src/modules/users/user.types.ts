@@ -14,6 +14,7 @@ export interface IUser {
   name: string;
   email?: string;
   phone?: string;
+  passwordHash?: string;
   role: UserRole;
   facilityId?: string;
   isActive: boolean;

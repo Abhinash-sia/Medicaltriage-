@@ -14,6 +14,7 @@ const envSchema = z.object({
   MONGODB_URI: z.string().default('mongodb://localhost:27017/medical_triage'),
   FRONTEND_URL: z.string().default('http://localhost:3000'),
   JWT_SECRET: z.string().default('dev_jwt_secret_change_in_production_min_32_chars'),
+  JWT_EXPIRES_IN: z.string().default('15m'),
 
   // Future AI & External Service Integration Credentials (Optional in Phase 1)
   GEMINI_API_KEY: z.string().optional(),

@@ -25,21 +25,29 @@ medicalTriage/
 ├── backend/                      # Express + TypeScript Backend API Service
 │   ├── src/
 │   │   ├── config/               # Environment (Zod) and database (Mongoose) modules
-│   │   ├── modules/              # Mongoose Data Models & TypeScript Types (Phase 2)
+│   │   ├── modules/              # Mongoose Data Models & TypeScript Types
+│   │   │   ├── auth/             # Authentication & Authorization module (Phase 3)
+│   │   │   │   ├── auth.types.ts # Auth interfaces & JwtPayload
+│   │   │   │   ├── auth.schemas.ts# Zod register/login validation schemas
+│   │   │   │   ├── auth.utils.ts # bcryptjs & jsonwebtoken helpers
+│   │   │   │   ├── auth.service.ts# AuthService register, login, getMe logic
+│   │   │   │   ├── auth.controller.ts# Auth HTTP handlers
+│   │   │   │   ├── auth.middleware.ts# authenticateJwt & requireRoles middleware
+│   │   │   │   └── auth.routes.ts# Auth API routes (/api/auth)
 │   │   │   ├── users/            # User model & types (PATIENT, DOCTOR, NURSE, ADMIN)
-│   │   │   ├── cases/            # Case model & types (OPEN, IN_REVIEW, URGENT, ROUTINE)
-│   │   │   ├── symptoms/         # Symptom model & types (PATIENT vs AI extraction)
-│   │   │   ├── reports/          # Report upload metadata & OCR verification model
-│   │   │   ├── triage/           # TriageNote model & types (AI_GENERATED vs HUMAN_VERIFIED)
-│   │   │   ├── reviews/          # Review decision & notes model
-│   │   │   ├── consent/          # Patient consent records model
-│   │   │   └── audit/            # AuditLog immutable append-only event log model
+│   │   │   ├── cases/            # Case model & types
+│   │   │   ├── symptoms/         # Symptom model & types
+│   │   │   ├── reports/          # Report model & types
+│   │   │   ├── triage/           # TriageNote model & types
+│   │   │   ├── reviews/          # Review model & types
+│   │   │   ├── consent/          # Consent model & types
+│   │   │   └── audit/            # AuditLog model & types
 │   │   ├── middleware/           # Security, request logger, error, and request-id middleware
 │   │   ├── routes/               # Express API routes (health router)
 │   │   ├── lib/                  # Structured Pino logger
 │   │   ├── app.ts                # Express application factory
 │   │   └── server.ts             # Server bootstrap & graceful shutdown handler
-│   ├── tests/                    # Vitest test suite (health.test.ts, models.test.ts)
+│   ├── tests/                    # Vitest test suite (health.test.ts, models.test.ts, auth.test.ts)
 │   ├── package.json              # Backend dependencies and scripts
 │   ├── tsconfig.json             # Backend TypeScript configuration
 │   └── vitest.config.ts          # Vitest testing configuration
@@ -49,6 +57,7 @@ medicalTriage/
 │   ├── safety.md                 # Phase 0 Safety Contract & Fail-Safe Specification
 │   ├── architecture.md           # Phase 0 System Architecture & Pipeline Diagrams
 │   ├── database.md               # Phase 2 Database Schema & ER Topology
+│   ├── authentication.md         # Phase 3 Authentication & Authorization Specification
 │   └── development.md            # Developer Setup & Operational Guide
 │
 ├── docker/                       # Docker & Compose Configurations
