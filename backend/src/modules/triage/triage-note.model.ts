@@ -142,6 +142,50 @@ const TriageNoteSchema = new Schema<ITriageNoteDocument>(
       type: [String],
       default: [],
     },
+    noteVersion: {
+      type: Number,
+      required: true,
+      default: 1,
+    },
+    status: {
+      type: String,
+      enum: ['ACTIVE', 'SUPERSEDED'],
+      default: 'ACTIVE',
+      required: true,
+      index: true,
+    },
+    sourceEvidenceHash: {
+      type: String,
+      default: '',
+    },
+    symptomsSection: {
+      type: [Schema.Types.Mixed],
+      default: [],
+    },
+    reportsSection: {
+      type: [Schema.Types.Mixed],
+      default: [],
+    },
+    voiceSection: {
+      type: [Schema.Types.Mixed],
+      default: [],
+    },
+    visualSection: {
+      type: [Schema.Types.Mixed],
+      default: [],
+    },
+    translationsSection: {
+      type: [Schema.Types.Mixed],
+      default: [],
+    },
+    safetyReviewSection: {
+      type: Schema.Types.Mixed,
+      default: null,
+    },
+    reviewerAttentionSection: {
+      type: Schema.Types.Mixed,
+      default: null,
+    },
     priority: {
       type: String,
       enum: Object.values(CasePriority),
@@ -166,7 +210,7 @@ const TriageNoteSchema = new Schema<ITriageNoteDocument>(
     generatedBy: {
       type: String,
       required: true,
-      default: 'Gemini-2.5-Flash',
+      default: 'System-Deterministic-Assembly',
     },
     generatedAt: {
       type: Date,
@@ -174,7 +218,7 @@ const TriageNoteSchema = new Schema<ITriageNoteDocument>(
     },
     modelVersion: {
       type: String,
-      default: 'v1.0',
+      default: 'Phase16-Deterministic',
     },
     reviewedBy: {
       type: Schema.Types.ObjectId,
@@ -197,6 +241,15 @@ const TriageNoteSchema = new Schema<ITriageNoteDocument>(
     versionKey: false,
   }
 );
+
+// Partial unique index ensuring at most 1 ACTIVE note per case
+TriageNoteSchema.index(
+  { caseId: 1, status: 1 },
+  { unique: true, partialFilterExpression: { status: 'ACTIVE' } }
+);
+
+// Unique note version index
+TriageNoteSchema.index({ caseId: 1, noteVersion: 1 }, { unique: true });
 
 export const TriageNote: Model<ITriageNoteDocument> =
   mongoose.models.TriageNote ||

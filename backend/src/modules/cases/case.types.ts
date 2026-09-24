@@ -43,6 +43,7 @@ export interface ICase {
   priorityOverrideBy?: Types.ObjectId | null;
   priorityOverrideAt?: Date | null;
   currentSafetyVersion?: number;
+  currentNoteVersion?: number;
   isDeleted: boolean;
   deletedAt?: Date;
   createdAt?: Date;

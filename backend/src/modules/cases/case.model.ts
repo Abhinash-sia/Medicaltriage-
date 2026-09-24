@@ -99,6 +99,10 @@ const CaseSchema = new Schema<ICaseDocument>(
       type: Number,
       default: 0,
     },
+    currentNoteVersion: {
+      type: Number,
+      default: 0,
+    },
     isDeleted: {
       type: Boolean,
       default: false,

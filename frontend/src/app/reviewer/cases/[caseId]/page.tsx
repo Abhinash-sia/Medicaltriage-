@@ -146,6 +146,15 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
   const [isEvaluatingSafety, setIsEvaluatingSafety] = useState<boolean>(false);
   const [safetyError, setSafetyError] = useState<string | null>(null);
 
+  // Structured Triage Note State (Phase 16)
+  const [triageNoteData, setTriageNoteData] = useState<any | null>(null);
+  const [isFetchingTriageNote, setIsFetchingTriageNote] = useState<boolean>(false);
+  const [isGeneratingTriageNote, setIsGeneratingTriageNote] = useState<boolean>(false);
+  const [isVerifyingTriageNote, setIsVerifyingTriageNote] = useState<boolean>(false);
+  const [triageNoteError, setTriageNoteError] = useState<string | null>(null);
+  const [triageVerifySuccess, setTriageVerifySuccess] = useState<string | null>(null);
+  const [verifierNotesInput, setVerifierNotesInput] = useState<string>('');
+
   // Assignment Action State
   const [targetReviewerIdInput, setTargetReviewerIdInput] = useState<string>('');
   const [assignmentLoading, setAssignmentLoading] = useState<boolean>(false);
@@ -329,13 +338,99 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
     }
   };
 
+  const fetchTriageNote = useCallback(async () => {
+    setIsFetchingTriageNote(true);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${apiBaseUrl}/reviewer/cases/${caseId}/triage-note`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          setTriageNoteData(result.data);
+        }
+      }
+    } catch {
+      // Fallback
+    } finally {
+      setIsFetchingTriageNote(false);
+    }
+  }, [caseId]);
+
+  const handleGenerateTriageNote = async () => {
+    setIsGeneratingTriageNote(true);
+    setTriageNoteError(null);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${apiBaseUrl}/reviewer/cases/${caseId}/triage-note/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error?.message || 'Triage note generation failed.');
+      }
+
+      setTriageNoteData(result.data);
+    } catch (err: any) {
+      setTriageNoteError(err.message || 'Triage note generation failed.');
+    } finally {
+      setIsGeneratingTriageNote(false);
+    }
+  };
+
+  const handleVerifyTriageNote = async () => {
+    setIsVerifyingTriageNote(true);
+    setTriageNoteError(null);
+    setTriageVerifySuccess(null);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${apiBaseUrl}/reviewer/cases/${caseId}/triage-note/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ reviewerNotes: verifierNotesInput }),
+      });
+
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error?.message || 'Triage note verification failed.');
+      }
+
+      setTriageNoteData(result.data);
+      setTriageVerifySuccess('Structured triage note verified for operational triage review.');
+    } catch (err: any) {
+      setTriageNoteError(err.message || 'Triage note verification failed.');
+    } finally {
+      setIsVerifyingTriageNote(false);
+    }
+  };
+
   useEffect(() => {
     fetchCaseDetails();
     fetchTimeline();
     fetchMissingInformation();
     fetchReports();
     fetchSafetyData();
-  }, [fetchCaseDetails, fetchTimeline, fetchMissingInformation, fetchReports, fetchSafetyData]);
+    fetchTriageNote();
+  }, [fetchCaseDetails, fetchTimeline, fetchMissingInformation, fetchReports, fetchSafetyData, fetchTriageNote]);
 
   const handleVerifyReport = async (reportId: string) => {
     try {
@@ -1027,6 +1122,198 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                 ) : !isFetchingSafety && (
                   <p className="text-xs text-slate-500 italic">
                     No safety evaluation recorded yet. Click &quot;Re-evaluate Safety&quot; above to run the Safety Engine.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Structured Triage Note Card (Phase 16) */}
+            <Card className="bg-white border-blue-200 shadow-sm">
+              <CardHeader className="bg-blue-50/50 border-b border-blue-100 py-3 px-4 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-sm font-bold text-slate-900 flex items-center space-x-2">
+                    <FileCheck className="w-4 h-4 text-blue-600" />
+                    <span>Structured Triage Note (Phase 16)</span>
+                    {triageNoteData && (
+                      <>
+                        <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300 font-bold ml-2">
+                          v{triageNoteData.noteVersion}
+                        </Badge>
+                        <Badge
+                          variant="outline"
+                          className={
+                            triageNoteData.provenance === 'HUMAN_VERIFIED'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-300 font-bold ml-1'
+                              : 'bg-amber-50 text-amber-700 border-amber-300 font-bold ml-1'
+                          }
+                        >
+                          {triageNoteData.provenance}
+                        </Badge>
+                      </>
+                    )}
+                  </CardTitle>
+                  <CardDescription className="text-xs text-slate-500 mt-0.5">
+                    Versioned compiled snapshot of eligible case evidence for clinical reviewer triage review
+                  </CardDescription>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleGenerateTriageNote}
+                    disabled={isGeneratingTriageNote}
+                    className="h-8 text-xs bg-white border-blue-300 text-blue-700 hover:bg-blue-50"
+                  >
+                    {isGeneratingTriageNote ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+                        Compiling...
+                      </>
+                    ) : (
+                      'Re-compile Note'
+                    )}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 space-y-4">
+                {triageNoteError && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-md text-xs text-red-700">
+                    {triageNoteError}
+                  </div>
+                )}
+                {triageVerifySuccess && (
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-md text-xs text-emerald-700 flex items-center space-x-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>{triageVerifySuccess}</span>
+                  </div>
+                )}
+
+                {isFetchingTriageNote ? (
+                  <div className="flex items-center space-x-2 text-xs text-slate-500 py-4">
+                    <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                    <span>Loading Structured Triage Note...</span>
+                  </div>
+                ) : triageNoteData ? (
+                  <div className="space-y-4 text-xs">
+                    {/* Reviewer Attention Banner */}
+                    {triageNoteData.reviewerAttentionSection && (
+                      <div
+                        className={
+                          triageNoteData.reviewerAttentionSection.safetyUrgent
+                            ? 'p-3 bg-red-50 border border-red-200 rounded-lg'
+                            : 'p-3 bg-slate-50 border border-slate-200 rounded-lg'
+                        }
+                      >
+                        <div className="flex items-center justify-between font-bold text-slate-900 mb-1">
+                          <span className="flex items-center space-x-1.5">
+                            <AlertCircle className="w-3.5 h-3.5 text-blue-600" />
+                            <span>Reviewer Attention Summary</span>
+                          </span>
+                          <span className="text-[10px] uppercase font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded">
+                            Action: {triageNoteData.reviewerAttentionSection.actionRequired}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 mt-2 text-center text-[11px]">
+                          <div className="p-1.5 bg-white rounded border border-slate-200">
+                            <span className="text-slate-500 block text-[9px] uppercase">Critical Signals</span>
+                            <span className="font-bold text-slate-900">{triageNoteData.reviewerAttentionSection.criticalCount}</span>
+                          </div>
+                          <div className="p-1.5 bg-white rounded border border-slate-200">
+                            <span className="text-slate-500 block text-[9px] uppercase">Unverified Inputs</span>
+                            <span className="font-bold text-slate-900">{triageNoteData.reviewerAttentionSection.unverifiedCount}</span>
+                          </div>
+                          <div className="p-1.5 bg-white rounded border border-slate-200">
+                            <span className="text-slate-500 block text-[9px] uppercase">Uncertainties</span>
+                            <span className="font-bold text-slate-900">{triageNoteData.reviewerAttentionSection.uncertaintiesCount}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Presenting Concern & Symptom Summary */}
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5">
+                      <div className="font-bold text-slate-500 uppercase text-[10px] tracking-wider">
+                        Presenting Concern & Summary
+                      </div>
+                      <p className="font-semibold text-slate-900 text-xs">{triageNoteData.presentingConcern}</p>
+                      <p className="text-slate-700 text-xs">{triageNoteData.symptomSummary}</p>
+                    </div>
+
+                    {/* Structured Symptoms Section */}
+                    {triageNoteData.symptomsSection && triageNoteData.symptomsSection.length > 0 && (
+                      <div className="space-y-1.5">
+                        <div className="font-bold text-slate-900 text-[11px]">Compiled Structured Symptoms</div>
+                        <div className="divide-y divide-slate-100 border border-slate-200 rounded-md bg-white">
+                          {triageNoteData.symptomsSection.map((s: any, idx: number) => (
+                            <div key={idx} className="p-2 flex items-center justify-between text-[11px]">
+                              <div>
+                                <span className="font-medium text-slate-900">{s.name}</span>
+                                {s.severity && <span className="text-slate-500 ml-1.5 font-bold text-indigo-600">({s.severity})</span>}
+                                {s.duration && <span className="text-slate-500 ml-1.5">[{s.duration}]</span>}
+                                {s.bodySite && <span className="text-slate-500 ml-1.5">at {s.bodySite}</span>}
+                              </div>
+                              <Badge variant="outline" className="text-[9px] bg-slate-50 text-slate-600">
+                                {s.source}
+                              </Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Verification Box / Action */}
+                    <div className="p-3.5 bg-blue-50/50 border border-blue-200 rounded-lg space-y-3">
+                      <div className="text-xs text-blue-900 space-y-1">
+                        <div className="font-bold flex items-center space-x-1.5">
+                          <ShieldCheck className="w-4 h-4 text-blue-600" />
+                          <span>Operational Information Verification</span>
+                        </div>
+                        <p className="text-[11px] text-blue-800 leading-relaxed">
+                          Verification confirms operational review of assembled triage data. It does NOT imply medical diagnosis, treatment recommendation, prescription, medical clearance, or referral.
+                        </p>
+                      </div>
+
+                      {triageNoteData.provenance === 'HUMAN_VERIFIED' ? (
+                        <div className="p-2.5 bg-white border border-emerald-300 rounded text-xs text-emerald-800 flex items-center justify-between font-medium">
+                          <span className="flex items-center space-x-1.5">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                            <span>Verified by Reviewer at {new Date(triageNoteData.reviewedAt).toLocaleString()}</span>
+                          </span>
+                          {triageNoteData.reviewerNotes && (
+                            <span className="text-slate-500 italic text-[11px]">&quot;{triageNoteData.reviewerNotes}&quot;</span>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="space-y-2 pt-1">
+                          <input
+                            type="text"
+                            placeholder="Optional reviewer notes for verification audit log..."
+                            value={verifierNotesInput}
+                            onChange={(e) => setVerifierNotesInput(e.target.value)}
+                            className="w-full text-xs p-2 bg-white border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                          />
+                          <Button
+                            size="sm"
+                            onClick={handleVerifyTriageNote}
+                            disabled={isVerifyingTriageNote}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs"
+                          >
+                            {isVerifyingTriageNote ? (
+                              <>
+                                <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+                                Verifying...
+                              </>
+                            ) : (
+                              'Verify Information (Operational Review)'
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-500 italic">
+                    No active triage note compiled yet. Click &quot;Re-compile Note&quot; above to assemble the Structured Triage Note.
                   </p>
                 )}
               </CardContent>

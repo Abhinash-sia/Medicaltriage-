@@ -44,9 +44,85 @@ export interface IFollowUpQuestionItem {
   provenance: 'AI_GENERATED' | 'HUMAN_VERIFIED';
 }
 
+export enum NoteStatus {
+  ACTIVE = 'ACTIVE',
+  SUPERSEDED = 'SUPERSEDED',
+}
+
+export interface ISymptomSectionItem {
+  id: string;
+  name: string;
+  severity?: string;
+  duration?: string;
+  bodySite?: string;
+  category?: string;
+  verifiedStatus?: string;
+  source: string;
+  provenance: string;
+}
+
+export interface IReportSectionItem {
+  reportId: string;
+  fileType: string;
+  status: string;
+  summary?: string;
+  keyFindings?: string[];
+  verifiedByHuman: boolean;
+  uploadedAt: Date;
+}
+
+export interface IVoiceSectionItem {
+  voiceId: string;
+  transcript: string;
+  durationSeconds?: number;
+  verifiedByHuman: boolean;
+  uploadedAt: Date;
+}
+
+export interface IVisualSectionItem {
+  visualId: string;
+  imageType: string;
+  description?: string;
+  keyFindings?: string[];
+  verifiedByHuman: boolean;
+  uploadedAt: Date;
+}
+
+export interface ITranslationSectionItem {
+  targetLanguage: string;
+  originalText: string;
+  translatedText: string;
+  provider: string;
+  verifiedByHuman: boolean;
+}
+
+export interface ISafetyReviewSection {
+  activeEvaluationId?: string;
+  priority: CasePriority;
+  triggeredRules: Array<{
+    ruleId: string;
+    ruleName: string;
+    category: string;
+    matchedTrigger: string;
+    recommendedPriority: CasePriority;
+  }>;
+  evaluatedAt: Date;
+}
+
+export interface IReviewerAttentionSection {
+  criticalCount: number;
+  unverifiedCount: number;
+  uncertaintiesCount: number;
+  safetyUrgent: boolean;
+  actionRequired: string;
+}
+
 export interface ITriageNote {
   _id?: Types.ObjectId;
   caseId: Types.ObjectId;
+  noteVersion?: number;
+  status?: NoteStatus | 'ACTIVE' | 'SUPERSEDED';
+  sourceEvidenceHash?: string;
   presentingConcern: string;
   symptomSummary: string;
   timelineSummary?: string;
@@ -61,6 +137,13 @@ export interface ITriageNote {
   suggestedFollowUpQuestions?: string[];
   followUpQuestionItems?: IFollowUpQuestionItem[];
   safetySignals?: string[];
+  symptomsSection?: ISymptomSectionItem[];
+  reportsSection?: IReportSectionItem[];
+  voiceSection?: IVoiceSectionItem[];
+  visualSection?: IVisualSectionItem[];
+  translationsSection?: ITranslationSectionItem[];
+  safetyReviewSection?: ISafetyReviewSection;
+  reviewerAttentionSection?: IReviewerAttentionSection;
   priority: CasePriority;
   provenance: NoteProvenance;
   generationStatus: GenerationStatus;
@@ -77,3 +160,4 @@ export interface ITriageNote {
 export interface ITriageNoteDocument extends ITriageNote, Document {
   _id: Types.ObjectId;
 }
+
