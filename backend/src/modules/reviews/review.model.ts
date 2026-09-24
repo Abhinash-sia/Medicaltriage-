@@ -12,7 +12,8 @@ const PriorityChangeSchema = new Schema(
 
 const EscalationDecisionSchema = new Schema(
   {
-    escalatedToFacility: { type: String, required: true },
+    escalatedToFacility: { type: String, default: null },
+    targetUserId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     reason: { type: String, required: true },
   },
   { _id: false }
@@ -51,6 +52,19 @@ const ReviewSchema = new Schema<IReviewDocument>(
       type: String,
       required: [true, 'Reviewer notes are required'],
       trim: true,
+    },
+    triageNoteVersion: {
+      type: Number,
+      default: null,
+    },
+    safetyEvaluationVersion: {
+      type: Number,
+      default: null,
+    },
+    targetUserId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
     },
     priorityChange: {
       type: PriorityChangeSchema,

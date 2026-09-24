@@ -155,6 +155,14 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
   const [triageVerifySuccess, setTriageVerifySuccess] = useState<string | null>(null);
   const [verifierNotesInput, setVerifierNotesInput] = useState<string>('');
 
+  // Phase 17 Human Review & Escalation State
+  const [escalationTargetUserIdInput, setEscalationTargetUserIdInput] = useState<string>('');
+  const [overridePriorityInput, setOverridePriorityInput] = useState<string>('URGENT');
+  const [overrideReasonInput, setOverrideReasonInput] = useState<string>('');
+  const [isSubmittingOverride, setIsSubmittingOverride] = useState<boolean>(false);
+  const [overrideSuccess, setOverrideSuccess] = useState<string | null>(null);
+  const [overrideError, setOverrideError] = useState<string | null>(null);
+
   // Assignment Action State
   const [targetReviewerIdInput, setTargetReviewerIdInput] = useState<string>('');
   const [assignmentLoading, setAssignmentLoading] = useState<boolean>(false);
@@ -913,6 +921,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
         body: JSON.stringify({
           reviewerNotes: reviewerNotes.trim(),
           reviewStatus,
+          targetUserId: reviewStatus === 'ESCALATED' && escalationTargetUserIdInput ? escalationTargetUserIdInput.trim() : undefined,
         }),
       });
 
@@ -922,14 +931,60 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
         throw new Error(result.error?.message || 'Failed to submit human review record.');
       }
 
-      setSubmitSuccess('Human review submitted successfully.');
+      setSubmitSuccess('Human review record submitted successfully.');
       setReviewerNotes('');
+      setEscalationTargetUserIdInput('');
       fetchCaseDetails();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to submit review.';
       setSubmitError(msg);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handlePriorityOverride = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!overrideReasonInput.trim()) {
+      setOverrideError('Priority override reason cannot be empty.');
+      return;
+    }
+
+    setIsSubmittingOverride(true);
+    setOverrideError(null);
+    setOverrideSuccess(null);
+
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${apiBaseUrl}/reviewer/cases/${caseId}/priority-override`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          overridePriority: overridePriorityInput,
+          reason: overrideReasonInput.trim(),
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error?.message || 'Failed to apply priority override.');
+      }
+
+      setOverrideSuccess(`Priority successfully overridden to ${result.data.priority}.`);
+      setOverrideReasonInput('');
+      fetchCaseDetails();
+      fetchSafetyData();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to override priority.';
+      setOverrideError(msg);
+    } finally {
+      setIsSubmittingOverride(false);
     }
   };
 
@@ -2474,11 +2529,29 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                       onChange={(e) => setReviewStatus(e.target.value)}
                       className="w-full text-xs p-2 border border-slate-300 rounded bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                     >
-                      <option value="COMPLETED">COMPLETED (Review Finished)</option>
-                      <option value="IN_PROGRESS">IN_PROGRESS (Review Underway)</option>
-                      <option value="ADDITIONAL_INFO_REQUESTED">ADDITIONAL_INFO_REQUESTED</option>
+                      <option value="COMPLETED">COMPLETED (Mark Case Resolved)</option>
+                      <option value="ADDITIONAL_INFO_REQUESTED">ADDITIONAL_INFO_REQUESTED (Request Info)</option>
+                      <option value="ESCALATED">ESCALATED (Escalate / Handoff)</option>
                     </select>
                   </div>
+
+                  {reviewStatus === 'ESCALATED' && (
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded space-y-2">
+                      <label className="text-xs font-semibold text-amber-900 block">
+                        Target Reviewer User ID (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Target User ObjectId or leave blank for unassigned escalation queue"
+                        value={escalationTargetUserIdInput}
+                        onChange={(e) => setEscalationTargetUserIdInput(e.target.value)}
+                        className="w-full text-xs p-2 border border-amber-300 rounded bg-white text-slate-900 focus:ring-1 focus:ring-amber-500"
+                      />
+                      <p className="text-[10px] text-amber-800 italic">
+                        Leaving this blank transfers the case to the facility unassigned escalation queue. Preserves existing SLA timer.
+                      </p>
+                    </div>
+                  )}
 
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-slate-700 block">
@@ -2507,6 +2580,82 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                       </>
                     ) : (
                       'Save Review Record'
+                    )}
+                  </Button>
+                </CardFooter>
+              </form>
+            </Card>
+
+            {/* Human Priority Override Card */}
+            <Card className="bg-white border-amber-200 shadow-sm">
+              <CardHeader className="bg-amber-50 border-b border-amber-100 py-3 px-4">
+                <CardTitle className="text-sm font-bold text-amber-950 flex items-center space-x-2">
+                  <AlertCircle className="w-4 h-4 text-amber-600" />
+                  <span>Human Priority Override (Phase 17)</span>
+                </CardTitle>
+                <CardDescription className="text-xs text-amber-800">
+                  Override effective workflow priority. Priority demotion requires Doctor, Medical Officer, or Admin authorization.
+                </CardDescription>
+              </CardHeader>
+
+              <form onSubmit={handlePriorityOverride}>
+                <CardContent className="p-4 space-y-3">
+                  {overrideSuccess && (
+                    <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded text-xs flex items-center space-x-2">
+                      <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                      <span>{overrideSuccess}</span>
+                    </div>
+                  )}
+
+                  {overrideError && (
+                    <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded text-xs flex items-center space-x-2">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>{overrideError}</span>
+                    </div>
+                  )}
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-700 block">
+                      Target Override Priority
+                    </label>
+                    <select
+                      value={overridePriorityInput}
+                      onChange={(e) => setOverridePriorityInput(e.target.value)}
+                      className="w-full text-xs p-2 border border-slate-300 rounded bg-white text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none font-bold"
+                    >
+                      <option value="URGENT">URGENT (SLA: 1 hour)</option>
+                      <option value="PRIORITY">PRIORITY (SLA: 4 hours)</option>
+                      <option value="ROUTINE">ROUTINE (SLA: 24 hours)</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-700 block">
+                      Override Reason <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={overrideReasonInput}
+                      onChange={(e) => setOverrideReasonInput(e.target.value)}
+                      placeholder="Enter clinical rationale for human priority override..."
+                      className="w-full text-xs p-2 border border-slate-300 rounded text-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                    />
+                  </div>
+                </CardContent>
+
+                <CardFooter className="bg-amber-50/50 px-4 py-3 border-t border-amber-100 flex justify-end">
+                  <Button
+                    type="submit"
+                    size="sm"
+                    className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold"
+                    disabled={isSubmittingOverride}
+                  >
+                    {isSubmittingOverride ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> Applying Override...
+                      </>
+                    ) : (
+                      'Apply Priority Override'
                     )}
                   </Button>
                 </CardFooter>

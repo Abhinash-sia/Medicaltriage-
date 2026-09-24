@@ -27,11 +27,26 @@ export const submitReviewSchema = z
       .min(1, 'Reviewer notes cannot be empty')
       .max(5000, 'Reviewer notes cannot exceed 5000 characters'),
     reviewStatus: z.nativeEnum(ReviewStatus).optional().default(ReviewStatus.COMPLETED),
+    targetUserId: z.string().optional(),
+    escalationReason: z.string().optional(),
   })
   .strict({
     message:
       'Invalid field in review submission. Client cannot override server-controlled fields such as reviewerId or assignedReviewerId.',
   });
+
+export const priorityOverrideSchema = z
+  .object({
+    overridePriority: z.nativeEnum(CasePriority, {
+      required_error: 'Override priority is required',
+    }),
+    reason: z
+      .string({ required_error: 'Priority override reason is required' })
+      .trim()
+      .min(1, 'Priority override reason cannot be empty')
+      .max(2000, 'Reason cannot exceed 2000 characters'),
+  })
+  .strict();
 
 export const adminAssignSchema = z
   .object({
@@ -43,4 +58,5 @@ export const adminAssignSchema = z
 
 export type ReviewerCasesQueryInput = z.infer<typeof reviewerCasesQuerySchema>;
 export type SubmitReviewSchemaInput = z.infer<typeof submitReviewSchema>;
+export type PriorityOverrideSchemaInput = z.infer<typeof priorityOverrideSchema>;
 export type AdminAssignSchemaInput = z.infer<typeof adminAssignSchema>;

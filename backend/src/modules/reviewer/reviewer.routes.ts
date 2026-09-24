@@ -5,6 +5,8 @@ import {
   getQueueCases,
   getCaseDetails,
   submitCaseReview,
+  overridePriorityHandler,
+  getCaseReviewsHandler,
   claimCaseHandler,
   releaseCaseHandler,
   assignCaseHandler,
@@ -43,6 +45,8 @@ reviewerRouter.post(
 // Detail and human review endpoints
 reviewerRouter.get('/cases/:caseId', getCaseDetails);
 reviewerRouter.post('/cases/:caseId/review', submitCaseReview);
+reviewerRouter.post('/cases/:caseId/priority-override', overridePriorityHandler);
+reviewerRouter.get('/cases/:caseId/reviews', getCaseReviewsHandler);
 reviewerRouter.post('/cases/:caseId/extraction', extractCaseInformation);
 reviewerRouter.get('/cases/:caseId/timeline', getCaseTimelineHandler);
 reviewerRouter.get('/cases/:caseId/missing-information', getCaseMissingInformationHandler);

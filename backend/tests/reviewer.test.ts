@@ -420,7 +420,7 @@ describe('Phase 5 Reviewer Dashboard API Tests', () => {
       const data = res.body.data;
       expect(data).toHaveProperty('reviewId');
       expect(data.reviewerId).toBe(doctorUser._id?.toString());
-      expect(data.caseStatus).toBe(CaseStatus.IN_REVIEW);
+      expect(data.caseStatus).toBe(CaseStatus.RESOLVED);
 
       // Verify Review document
       const createdReview = mockReviews.get(data.reviewId);
@@ -428,9 +428,9 @@ describe('Phase 5 Reviewer Dashboard API Tests', () => {
       expect(createdReview?.reviewerId.toString()).toBe(doctorUser._id?.toString());
       expect(createdReview?.reviewerNotes).toContain('severe frontal headache');
 
-      // Verify Case status updated to IN_REVIEW but assignedReviewerId is NOT modified (Phase 5 rule)
+      // Verify Case status updated to RESOLVED but assignedReviewerId is NOT modified (Phase 17 rule)
       const updatedCase = mockCases.get(sampleCaseId.toString());
-      expect(updatedCase?.status).toBe(CaseStatus.IN_REVIEW);
+      expect(updatedCase?.status).toBe(CaseStatus.RESOLVED);
       expect(updatedCase?.assignedReviewerId).toBeUndefined();
 
       // Verify AuditLog record
@@ -438,7 +438,7 @@ describe('Phase 5 Reviewer Dashboard API Tests', () => {
         (a) => a.resourceId === sampleCaseId.toString()
       );
       expect(createdAudit).toBeDefined();
-      expect(createdAudit?.action).toBe(AuditEventType.REVIEW_STARTED);
+      expect(createdAudit?.action).toBe(AuditEventType.CASE_RESOLVED_BY_REVIEWER);
     });
 
     it('26, 27, 31, 32, 33. should reject invalid reviewer notes, empty payload, or attempted field overrides', async () => {

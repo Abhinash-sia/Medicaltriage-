@@ -1,6 +1,7 @@
 import { Response, NextFunction } from 'express';
-import { reviewerCasesQuerySchema, submitReviewSchema, adminAssignSchema } from './reviewer.schemas.js';
+import { reviewerCasesQuerySchema, submitReviewSchema, priorityOverrideSchema, adminAssignSchema } from './reviewer.schemas.js';
 import { ReviewerService } from './reviewer.service.js';
+import { ReviewService } from '../reviews/review.service.js';
 import { SlaService } from '../sla/sla.service.js';
 import { AuthenticatedRequest } from '../auth/auth.types.js';
 import { UserRole } from '../users/user.types.js';
@@ -93,7 +94,7 @@ export const submitCaseReview = async (
     }
 
     const requestIdStr = req.id ? String(req.id) : undefined;
-    const reviewResult = await ReviewerService.submitReview(
+    const reviewResult = await ReviewService.submitReviewDecision(
       caseId,
       req.user.id,
       parseResult.data,
@@ -103,6 +104,78 @@ export const submitCaseReview = async (
     res.status(201).json({
       success: true,
       data: reviewResult,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const overridePriorityHandler = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.user || !req.user.id) {
+      const error: AppError = new Error('Authentication required for priority override');
+      error.statusCode = 401;
+      error.code = 'AUTH_TOKEN_MISSING';
+      return next(error);
+    }
+
+    const caseIdParam = req.params.caseId;
+    const caseId = Array.isArray(caseIdParam) ? caseIdParam[0] : caseIdParam;
+
+    const parseResult = priorityOverrideSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      const firstErrorMessage =
+        parseResult.error.errors[0]?.message || 'Invalid priority override input';
+      const error: AppError = new Error(firstErrorMessage);
+      error.statusCode = 400;
+      error.code = 'REVIEWER_VALIDATION_ERROR';
+      return next(error);
+    }
+
+    const requestIdStr = req.id ? String(req.id) : undefined;
+    const result = await ReviewService.overridePriority(
+      caseId,
+      req.user.id,
+      parseResult.data.overridePriority,
+      parseResult.data.reason,
+      requestIdStr
+    );
+
+    res.status(200).json({
+      success: true,
+      data: result,
+      message: 'Case priority successfully overridden',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getCaseReviewsHandler = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.user || !req.user.id) {
+      const error: AppError = new Error('Authentication required to fetch review history');
+      error.statusCode = 401;
+      error.code = 'AUTH_TOKEN_MISSING';
+      return next(error);
+    }
+
+    const caseIdParam = req.params.caseId;
+    const caseId = Array.isArray(caseIdParam) ? caseIdParam[0] : caseIdParam;
+
+    const reviews = await ReviewService.getCaseReviews(caseId, req.user.id);
+
+    res.status(200).json({
+      success: true,
+      data: reviews,
     });
   } catch (error) {
     next(error);

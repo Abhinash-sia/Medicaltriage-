@@ -15,7 +15,8 @@ export interface IPriorityChange {
 }
 
 export interface IEscalationDecision {
-  escalatedToFacility: string;
+  escalatedToFacility?: string;
+  targetUserId?: Types.ObjectId | string;
   reason: string;
 }
 
@@ -30,6 +31,9 @@ export interface IReview {
   reviewerId: Types.ObjectId;
   reviewStatus: ReviewStatus;
   reviewerNotes: string;
+  triageNoteVersion?: number;
+  safetyEvaluationVersion?: number;
+  targetUserId?: Types.ObjectId;
   priorityChange?: IPriorityChange;
   escalationDecision?: IEscalationDecision;
   referralDecision?: IReferralDecision;
