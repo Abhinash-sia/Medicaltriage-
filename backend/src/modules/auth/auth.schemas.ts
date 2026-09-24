@@ -39,5 +39,11 @@ export const loginSchema = z
     path: ['email'],
   });
 
+export const updatePreferencesSchema = z.object({
+  preferredLanguage: z.string().trim().min(2, 'Language code must be at least 2 characters'),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>;
+

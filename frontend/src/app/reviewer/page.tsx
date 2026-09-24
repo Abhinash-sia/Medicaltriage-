@@ -18,7 +18,11 @@ import {
   UserCheck,
   UserX,
   Loader2,
+  Globe,
+  Building2,
+  ShieldAlert,
 } from 'lucide-react';
+import { NotificationBell } from '@/components/ui/NotificationBell';
 
 interface ReviewerQueueItem {
   id: string;
@@ -51,6 +55,20 @@ interface PaginationMeta {
   totalPages: number;
 }
 
+const SUPPORTED_LANGUAGES = [
+  { code: 'en', name: 'English' },
+  { code: 'hi', name: 'हिन्दी (Hindi)' },
+  { code: 'or', name: 'ଓଡ଼ିଆ (Odia)' },
+  { code: 'bn', name: 'বাংলা (Bengali)' },
+  { code: 'ta', name: 'தமிழ் (Tamil)' },
+  { code: 'te', name: 'తెలుగు (Telugu)' },
+  { code: 'mr', name: 'मराठी (Marathi)' },
+  { code: 'kn', name: 'ಕನ್ನಡ (Kannada)' },
+  { code: 'ml', name: 'മലയാളം (Malayalam)' },
+  { code: 'pa', name: 'ਪੰਜਾਬੀ (Punjabi)' },
+  { code: 'gu', name: 'ગુજરાતી (Gujarati)' },
+];
+
 export default function ReviewerQueuePage() {
   const [cases, setCases] = useState<ReviewerQueueItem[]>([]);
   const [pagination, setPagination] = useState<PaginationMeta>({ page: 1, limit: 20, total: 0, totalPages: 1 });
@@ -58,6 +76,8 @@ export default function ReviewerQueuePage() {
   const [priorityFilter, setPriorityFilter] = useState<string>('');
   const [assignedToFilter, setAssignedToFilter] = useState<string>('');
   const [slaStatusFilter, setSlaStatusFilter] = useState<string>('');
+  const [languageFilter, setLanguageFilter] = useState<string>('');
+  const [facilityFilter, setFacilityFilter] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isProcessingSla, setIsProcessingSla] = useState<boolean>(false);
@@ -99,6 +119,8 @@ export default function ReviewerQueuePage() {
       if (priorityFilter) params.append('priority', priorityFilter);
       if (assignedToFilter) params.append('assignedTo', assignedToFilter);
       if (slaStatusFilter) params.append('slaStatus', slaStatusFilter);
+      if (languageFilter) params.append('language', languageFilter);
+      if (facilityFilter) params.append('facilityId', facilityFilter);
 
       const response = await fetch(`${apiBaseUrl}/reviewer/cases?${params.toString()}`, {
         headers: {
@@ -123,7 +145,7 @@ export default function ReviewerQueuePage() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, statusFilter, priorityFilter, assignedToFilter, slaStatusFilter]);
+  }, [page, statusFilter, priorityFilter, assignedToFilter, slaStatusFilter, languageFilter, facilityFilter]);
 
   useEffect(() => {
     fetchCases();
@@ -251,6 +273,21 @@ export default function ReviewerQueuePage() {
           </div>
 
           <div className="flex items-center space-x-3">
+            <NotificationBell />
+
+            {currentUserRole === 'ADMIN' && (
+              <Link href="/admin">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-blue-300 text-blue-800 bg-blue-50 hover:bg-blue-100 font-medium text-xs flex items-center gap-1.5"
+                >
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  Admin Operations
+                </Button>
+              </Link>
+            )}
+
             {(currentUserRole === 'ADMIN' || currentUserRole === 'MEDICAL_OFFICER') && (
               <Button
                 variant="outline"
@@ -357,12 +394,33 @@ export default function ReviewerQueuePage() {
                     setPage(1);
                   }}
                   className="text-xs p-2 border border-slate-300 rounded-md bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  aria-label="Filter by SLA status"
                 >
                   <option value="">All SLA States</option>
                   <option value="pending">PENDING</option>
                   <option value="due_soon">DUE_SOON</option>
                   <option value="overdue">OVERDUE</option>
                   <option value="escalated">ESCALATED</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700 block">Case Language</label>
+                <select
+                  value={languageFilter}
+                  onChange={(e) => {
+                    setLanguageFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  className="text-xs p-2 border border-slate-300 rounded-md bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  aria-label="Filter by case language"
+                >
+                  <option value="">All Languages</option>
+                  {SUPPORTED_LANGUAGES.map((l) => (
+                    <option key={l.code} value={l.code}>
+                      {l.name}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

@@ -17,6 +17,7 @@ export interface IUser {
   passwordHash?: string;
   role: UserRole;
   facilityId?: string;
+  preferredLanguage?: string;
   ageMonths?: number;
   dateOfBirth?: Date;
   isActive: boolean;

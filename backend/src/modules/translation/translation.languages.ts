@@ -104,9 +104,32 @@ export function getProviderLanguageCode(code: string): string {
   return code || 'en-IN';
 }
 
+export const LANGUAGE_DISPLAY_NAMES: Record<string, string> = {
+  en: 'English',
+  hi: 'हिन्दी',
+  or: 'ଓଡ଼ିଆ',
+  bn: 'বাংলা',
+  ta: 'தமிழ்',
+  te: 'తెలుగు',
+  mr: 'मराठी',
+  kn: 'ಕನ್ನಡ',
+  ml: 'മലയാളം',
+  pa: 'ਪੰਜਾਬੀ',
+  gu: 'ગુજરાતી',
+};
+
 /**
-  * Returns list of supported language objects.
-  */
+ * Returns native display name for a given language code.
+ */
+export function getLanguageDisplayName(code: string): string {
+  const norm = normalizeLanguageCode(code);
+  return LANGUAGE_DISPLAY_NAMES[norm] || SUPPORTED_LANGUAGES[norm]?.displayName || code;
+}
+
+/**
+ * Returns list of supported language objects.
+ */
 export function getSupportedLanguagesList(): SupportedLanguage[] {
   return Object.values(SUPPORTED_LANGUAGES).filter((l) => l.enabled);
 }
+

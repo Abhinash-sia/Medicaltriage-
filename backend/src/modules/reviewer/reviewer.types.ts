@@ -10,6 +10,8 @@ export interface ReviewerCasesQuery {
   priority?: CasePriority;
   assignedTo?: 'me' | 'unassigned' | 'all';
   slaStatus?: 'pending' | 'due_soon' | 'overdue' | 'escalated';
+  facilityId?: string;
+  language?: string;
 }
 
 export interface ReviewerQueueItem {

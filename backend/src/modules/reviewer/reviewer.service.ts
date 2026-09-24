@@ -11,6 +11,7 @@ import { AuditLog } from '../audit/audit-log.model.js';
 import { AuditEventType } from '../audit/audit-log.types.js';
 import { SlaService } from '../sla/sla.service.js';
 import { ReferralService } from '../referrals/referral.service.js';
+import { NotificationService } from '../notifications/notification.service.js';
 import {
   ReviewerCasesQuery,
   PaginatedReviewerCasesResponse,
@@ -61,6 +62,12 @@ export class ReviewerService {
     const requestingUser = await User.findById(requestingUserId);
     if (requestingUser && requestingUser.role !== UserRole.ADMIN && requestingUser.facilityId) {
       filter.facilityId = requestingUser.facilityId;
+    } else if (query.facilityId) {
+      filter.facilityId = query.facilityId;
+    }
+
+    if (query.language) {
+      filter.language = query.language.toLowerCase().trim();
     }
 
     if (query.status) {
@@ -384,6 +391,14 @@ export class ReviewerService {
     });
     await newAudit.save();
 
+    // Trigger operational notification (fail-safe)
+    NotificationService.triggerAssignmentNotification(
+      updatedCase._id.toString(),
+      updatedCase.caseNumber,
+      reviewerUserId,
+      updatedCase.facilityId
+    ).catch(() => {});
+
     return {
       caseId: updatedCase._id.toString(),
       caseNumber: updatedCase.caseNumber,
@@ -550,6 +565,14 @@ export class ReviewerService {
       },
     });
     await newAudit.save();
+
+    // Trigger operational notification (fail-safe)
+    NotificationService.triggerAssignmentNotification(
+      previousCaseDoc._id.toString(),
+      previousCaseDoc.caseNumber,
+      targetReviewerId,
+      previousCaseDoc.facilityId
+    ).catch(() => {});
 
     return {
       caseId: previousCaseDoc._id.toString(),

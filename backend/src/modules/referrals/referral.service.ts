@@ -9,6 +9,8 @@ import { TriageNote } from '../triage/triage-note.model.js';
 import { SafetyEvaluation } from '../safety/safety-evaluation.model.js';
 import { AuditLog } from '../audit/audit-log.model.js';
 import { AuditEventType } from '../audit/audit-log.types.js';
+import { NotificationService } from '../notifications/notification.service.js';
+import { NotificationType } from '../notifications/notification.types.js';
 import { AppError } from '../../middleware/error-handler.js';
 
 function createError(statusCode: number, message: string, code?: string): AppError {
@@ -177,6 +179,17 @@ export class ReferralService {
         await session.commitTransaction();
         session.endSession();
       }
+
+      // Operational notification for referral initiation (fail-safe)
+      NotificationService.triggerReferralNotification(
+        caseDoc._id.toString(),
+        caseDoc.caseNumber,
+        reviewerUser._id.toString(),
+        NotificationType.CASE_REFERRED,
+        newReferral._id.toString(),
+        input.referralFacilityId.trim(),
+        input.referralReason
+      ).catch(() => {});
 
       return {
         referralId: newReferral._id.toString(),
@@ -420,6 +433,30 @@ export class ReferralService {
         notes: notes || null,
       },
     });
+
+    // Operational notification to referring reviewer (fail-safe)
+    if (
+      targetStatus === ReferralStatus.ACCEPTED ||
+      targetStatus === ReferralStatus.REJECTED ||
+      targetStatus === ReferralStatus.COMPLETED
+    ) {
+      const notifType =
+        targetStatus === ReferralStatus.ACCEPTED
+          ? NotificationType.REFERRAL_ACCEPTED
+          : targetStatus === ReferralStatus.REJECTED
+          ? NotificationType.REFERRAL_REJECTED
+          : NotificationType.REFERRAL_COMPLETED;
+
+      NotificationService.triggerReferralNotification(
+        caseDoc._id.toString(),
+        caseDoc.caseNumber,
+        referral.referringReviewerId.toString(),
+        notifType,
+        referral._id.toString(),
+        referral.originatingFacilityId,
+        notes
+      ).catch(() => {});
+    }
 
     return {
       referralId: updatedReferral._id.toString(),

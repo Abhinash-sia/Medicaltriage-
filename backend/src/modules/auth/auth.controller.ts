@@ -1,5 +1,5 @@
 import { Response, NextFunction } from 'express';
-import { registerSchema, loginSchema } from './auth.schemas.js';
+import { registerSchema, loginSchema, updatePreferencesSchema } from './auth.schemas.js';
 import { AuthService } from './auth.service.js';
 import { AuthenticatedRequest } from './auth.types.js';
 import { AppError } from '../../middleware/error-handler.js';
@@ -74,3 +74,39 @@ export const getMe = async (
     next(error);
   }
 };
+
+export const updatePreferences = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.user || !req.user.id) {
+      const error: AppError = new Error('Authentication token required');
+      error.statusCode = 401;
+      error.code = 'AUTH_TOKEN_MISSING';
+      return next(error);
+    }
+
+    const parseResult = updatePreferencesSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      const error: AppError = new Error(parseResult.error.errors[0]?.message || 'Validation error');
+      error.statusCode = 400;
+      error.code = 'AUTH_VALIDATION_ERROR';
+      return next(error);
+    }
+
+    const updatedProfile = await AuthService.updatePreferences(
+      req.user.id,
+      parseResult.data.preferredLanguage
+    );
+
+    res.status(200).json({
+      success: true,
+      data: updatedProfile,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

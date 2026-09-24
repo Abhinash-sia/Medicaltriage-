@@ -11,6 +11,7 @@ import { SafetyEvaluationService } from '../safety/safety-evaluation.service.js'
 import { SlaService } from '../sla/sla.service.js';
 import { AuditLog } from '../audit/audit-log.model.js';
 import { AuditEventType } from '../audit/audit-log.types.js';
+import { NotificationService } from '../notifications/notification.service.js';
 import { AppError } from '../../middleware/error-handler.js';
 
 function createError(statusCode: number, message: string, code?: string): AppError {
@@ -260,6 +261,24 @@ export class ReviewService {
       if (session) {
         await session.commitTransaction();
         session.endSession();
+      }
+
+      // Operational Notification triggers (fail-safe)
+      if (reviewStatus === ReviewStatus.ESCALATED && targetUserObjectId) {
+        NotificationService.triggerEscalationNotification(
+          caseDoc._id.toString(),
+          caseDoc.caseNumber,
+          targetUserObjectId.toString(),
+          caseDoc.escalationLevel || 1,
+          caseDoc.facilityId
+        ).catch(() => {});
+      } else if (reviewStatus === ReviewStatus.ADDITIONAL_INFO_REQUESTED && caseDoc.patientId) {
+        NotificationService.triggerMoreInfoRequestedNotification(
+          caseDoc._id.toString(),
+          caseDoc.caseNumber,
+          caseDoc.patientId.toString(),
+          caseDoc.facilityId
+        ).catch(() => {});
       }
 
       return {

@@ -20,6 +20,9 @@ import { triageNoteRouter } from './modules/triage/triage-note.routes.js';
 import { referralRouter } from './modules/referrals/referral.routes.js';
 import { retentionRouter } from './modules/retention/retention.routes.js';
 import { auditRouter } from './modules/audit/audit.routes.js';
+import { facilityRouter } from './modules/facilities/facility.routes.js';
+import { notificationRouter } from './modules/notifications/notification.routes.js';
+import { adminRouter } from './modules/admin/admin.routes.js';
 
 export const createApp = (): Express => {
   const app = express();
@@ -71,6 +74,9 @@ export const createApp = (): Express => {
   app.use('/api', translationRouter);
   app.use('/api/referrals', referralRouter);
   app.use('/api/admin/retention', retentionRouter);
+  app.use('/api/admin', adminRouter);
+  app.use('/api/facilities', facilityRouter);
+  app.use('/api/notifications', notificationRouter);
   app.use('/api/cases', auditRouter);
 
   // Error & 404 Handlers
@@ -79,3 +85,4 @@ export const createApp = (): Express => {
 
   return app;
 };
+

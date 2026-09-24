@@ -121,6 +121,7 @@ describe('Phase 3 Authentication & Authorization API Tests', () => {
         email: 'anita.verma@example.com',
         phone: '+919876543210',
         role: UserRole.PATIENT,
+        preferredLanguage: expect.any(String),
         createdAt: expect.any(String),
       });
 
@@ -233,17 +234,27 @@ describe('Phase 3 Authentication & Authorization API Tests', () => {
       expect(response.body.data).toHaveProperty('accessToken');
       expect(response.body.data.user.email).toBe('rajesh.kumar@example.com');
 
-      // Verify minimized JWT token payload explicitly
+      // Verify minimized JWT token payload explicitly (Phase 3 & Phase 19 Security Invariant)
       const token = response.body.data.accessToken;
-      const payloadParts = token.split('.');
-      const payload = JSON.parse(Buffer.from(payloadParts[1], 'base64').toString());
+      const decoded = jwt.decode(token) as Record<string, unknown>;
 
-      expect(payload).toHaveProperty('id');
-      expect(payload).toHaveProperty('role', UserRole.PATIENT);
-      expect(payload).not.toHaveProperty('email');
-      expect(payload).not.toHaveProperty('phone');
-      expect(payload).not.toHaveProperty('password');
-      expect(payload).not.toHaveProperty('passwordHash');
+      expect(decoded).toBeDefined();
+      expect(decoded.id).toBeDefined();
+      expect(decoded.role).toBe(UserRole.PATIENT);
+      expect(decoded.iat).toBeTypeOf('number');
+      expect(decoded.exp).toBeTypeOf('number');
+
+      // Strict claims invariant: ONLY id, role, iat, exp are present
+      expect(Object.keys(decoded).sort()).toEqual(['exp', 'iat', 'id', 'role']);
+
+      // Explicit negative checks for profile/preference leakage
+      expect(decoded).not.toHaveProperty('preferredLanguage');
+      expect(decoded).not.toHaveProperty('email');
+      expect(decoded).not.toHaveProperty('phone');
+      expect(decoded).not.toHaveProperty('password');
+      expect(decoded).not.toHaveProperty('passwordHash');
+      expect(decoded).not.toHaveProperty('name');
+      expect(decoded).not.toHaveProperty('facilityId');
     });
 
     it('should fail generically with invalid password without leaking error details', async () => {

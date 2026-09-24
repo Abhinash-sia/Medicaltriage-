@@ -5,6 +5,7 @@ import { User } from '../users/user.model.js';
 import { UserRole } from '../users/user.types.js';
 import { AuditLog } from '../audit/audit-log.model.js';
 import { AuditEventType } from '../audit/audit-log.types.js';
+import { NotificationService } from '../notifications/notification.service.js';
 import { SlaStatus, SlaStateDetails, SlaProcessorResult } from './sla.types.js';
 import { SLA_POLICY, SLA_DUE_SOON_RATIO } from './sla.config.js';
 
@@ -97,11 +98,13 @@ export class SlaService {
    */
   static async processOverdueSlas(
     actorUserId: string,
-    actorRole: string,
+    actorRole: string = UserRole.ADMIN,
     requestId?: string
   ): Promise<SlaProcessorResult> {
     const now = new Date();
-    const actorUser = await User.findById(actorUserId);
+    const actorUser = mongoose.Types.ObjectId.isValid(actorUserId)
+      ? await User.findById(actorUserId)
+      : null;
 
     const filter: Record<string, unknown> = {
       isDeleted: false,
@@ -183,6 +186,16 @@ export class SlaService {
             session.endSession();
           }
 
+          // Operational SLA Overdue Notification (fail-safe)
+          if (updatedCase.assignedReviewerId) {
+            NotificationService.triggerSlaOverdueNotification(
+              updatedCase._id.toString(),
+              updatedCase.caseNumber,
+              updatedCase.assignedReviewerId.toString(),
+              updatedCase.facilityId
+            ).catch(() => {});
+          }
+
           newlyEscalatedCount++;
         } else {
           if (session) {
@@ -205,11 +218,65 @@ export class SlaService {
       }
     }
 
+    // Fail-safe secondary operational side-effect: process DUE_SOON notifications in scope
+    try {
+      await this.processDueSoonNotifications(
+        actorUserId,
+        actorUser && actorUser.role !== UserRole.ADMIN ? actorUser.facilityId : undefined
+      );
+    } catch {
+      // Fail-safe: Notification errors never affect SLA processing result
+    }
+
     return {
       processed: candidateCases.length,
       escalated: newlyEscalatedCount,
       alreadyEscalated: alreadyEscalatedCount,
       failed: failedCount,
     };
+  }
+
+  /**
+   * Identifies cases in DUE_SOON status and generates operational notifications (fail-safe).
+   */
+  static async processDueSoonNotifications(
+    actorUserId?: string,
+    facilityIdScope?: string
+  ): Promise<number> {
+    const now = new Date();
+    const filter: Record<string, unknown> = {
+      isDeleted: false,
+      escalatedAt: null,
+      slaDueAt: { $gt: now },
+      assignedReviewerId: { $ne: null },
+    };
+
+    if (facilityIdScope) {
+      filter.facilityId = facilityIdScope;
+    }
+
+    const candidateCases = await Case.find(filter).select(
+      '_id caseNumber slaDueAt createdAt priority assignedReviewerId facilityId'
+    );
+    let dueSoonNotifiedCount = 0;
+
+    for (const c of candidateCases) {
+      try {
+        const status = this.deriveSlaStatus(c, now);
+        if (status === SlaStatus.DUE_SOON && c.assignedReviewerId) {
+          await NotificationService.triggerSlaDueSoonNotification(
+            c._id.toString(),
+            c.caseNumber,
+            c.assignedReviewerId.toString(),
+            c.facilityId
+          );
+          dueSoonNotifiedCount++;
+        }
+      } catch {
+        // Fail-safe: ignore notification error so caller workflow is never affected
+      }
+    }
+
+    return dueSoonNotifiedCount;
   }
 }

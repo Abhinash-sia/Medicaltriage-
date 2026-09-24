@@ -36,6 +36,11 @@ const UserSchema = new Schema<IUserDocument>(
       trim: true,
       index: true,
     },
+    preferredLanguage: {
+      type: String,
+      default: 'en',
+      trim: true,
+    },
     ageMonths: {
       type: Number,
       default: null,
