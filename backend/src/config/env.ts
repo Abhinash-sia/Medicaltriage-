@@ -33,6 +33,9 @@ const envSchema = z.object({
   STT_PROVIDER: z.enum(['mock', 'sarvam']).default('mock'),
   MAX_AUDIO_UPLOAD_MB: z.coerce.number().default(25),
   MAX_AUDIO_DURATION_SECONDS: z.coerce.number().default(300),
+
+  // Phase 14 Multilingual & Translation Configuration
+  TRANSLATION_PROVIDER: z.enum(['mock', 'sarvam']).default('mock'),
 });
 
 const parseEnv = () => {

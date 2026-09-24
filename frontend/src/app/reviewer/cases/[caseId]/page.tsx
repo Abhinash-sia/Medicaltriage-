@@ -22,6 +22,8 @@ import {
   UserPlus,
   Mic,
   Volume2,
+  Languages,
+  Globe,
 } from 'lucide-react';
 
 interface ReviewerCaseSymptom {
@@ -130,6 +132,13 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
   const [isUploadingVoiceInput, setIsUploadingVoiceInput] = useState<boolean>(false);
   const [voiceInputUploadError, setVoiceInputUploadError] = useState<string | null>(null);
   const [voiceInputUploadSuccess, setVoiceInputUploadSuccess] = useState<string | null>(null);
+
+  // Multilingual & Translation State
+  const [translationsList, setTranslationsList] = useState<any[]>([]);
+  const [isFetchingTranslations, setIsFetchingTranslations] = useState<boolean>(false);
+  const [translationTargetLang, setTranslationTargetLang] = useState<string>('en');
+  const [isTranslatingId, setIsTranslatingId] = useState<string | null>(null);
+  const [translationError, setTranslationError] = useState<string | null>(null);
 
   // Assignment Action State
   const [targetReviewerIdInput, setTargetReviewerIdInput] = useState<string>('');
@@ -374,6 +383,30 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
     }
   }, [caseId]);
 
+  const fetchTranslations = useCallback(async () => {
+    setIsFetchingTranslations(true);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${apiBaseUrl}/cases/${caseId}/translations`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      const result = await response.json();
+      if (response.ok && result.data) {
+        setTranslationsList(result.data);
+      }
+    } catch {
+      // Fallback
+    } finally {
+      setIsFetchingTranslations(false);
+    }
+  }, [caseId]);
+
   useEffect(() => {
     fetchCaseDetails();
     fetchTimeline();
@@ -381,7 +414,63 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
     fetchReports();
     fetchVisualInputs();
     fetchVoiceInputs();
-  }, [fetchCaseDetails, fetchTimeline, fetchMissingInformation, fetchReports, fetchVisualInputs, fetchVoiceInputs]);
+    fetchTranslations();
+  }, [fetchCaseDetails, fetchTimeline, fetchMissingInformation, fetchReports, fetchVisualInputs, fetchVoiceInputs, fetchTranslations]);
+
+  const handleRequestTranslation = async (sourceType: string, sourceId?: string) => {
+    const actionId = sourceId || sourceType;
+    setIsTranslatingId(actionId);
+    setTranslationError(null);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${apiBaseUrl}/cases/${caseId}/translations`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          sourceType,
+          sourceId,
+          targetLanguage: translationTargetLang,
+        }),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Translation request failed');
+      }
+
+      fetchTranslations();
+    } catch (err: any) {
+      setTranslationError(err?.message || 'Translation failed');
+    } finally {
+      setIsTranslatingId(null);
+    }
+  };
+
+  const handleVerifyTranslation = async (translationId: string) => {
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${apiBaseUrl}/translations/${translationId}/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      if (response.ok) {
+        fetchTranslations();
+      }
+    } catch {
+      // Fallback
+    }
+  };
 
   const handleVerifyVisualInput = async (visualInputId: string) => {
     try {
@@ -775,12 +864,105 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 space-y-4">
-                <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200 text-xs space-y-2">
-                  <span className="text-slate-500 font-semibold block uppercase text-[10px] tracking-wider">
-                    Chief Complaint Narrative
-                  </span>
+                <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200 text-xs space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 font-semibold block uppercase text-[10px] tracking-wider">
+                      Chief Complaint Narrative ({caseDetails.language ? caseDetails.language.toUpperCase() : 'UNKNOWN'})
+                    </span>
+                    <div className="flex items-center space-x-2">
+                      <select
+                        value={translationTargetLang}
+                        onChange={(e) => setTranslationTargetLang(e.target.value)}
+                        className="text-[11px] bg-white border border-slate-300 rounded px-2 py-1 text-slate-700 font-medium"
+                      >
+                        <option value="en">Translate to English</option>
+                        <option value="hi">Translate to Hindi (हिन्दी)</option>
+                        <option value="or">Translate to Odia (ଓଡ଼ିଆ)</option>
+                        <option value="bn">Translate to Bengali (বাংলা)</option>
+                        <option value="ta">Translate to Tamil (தமிழ்)</option>
+                        <option value="te">Translate to Telugu (తెలుగు)</option>
+                        <option value="mr">Translate to Marathi (मराठी)</option>
+                        <option value="kn">Translate to Kannada (କನ್ನಡ)</option>
+                        <option value="ml">Translate to Malayalam (മലയാളം)</option>
+                        <option value="pa">Translate to Punjabi (ਪੰਜਾਬੀ)</option>
+                        <option value="gu">Translate to Gujarati (ગુજરાતી)</option>
+                      </select>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleRequestTranslation('PATIENT_TEXT')}
+                        disabled={isTranslatingId === 'PATIENT_TEXT'}
+                        className="text-[11px] h-7 px-2 bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100"
+                      >
+                        {isTranslatingId === 'PATIENT_TEXT' ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
+                        ) : (
+                          <Languages className="w-3.5 h-3.5 mr-1" />
+                        )}
+                        Translate Narrative
+                      </Button>
+                    </div>
+                  </div>
                   <p className="text-slate-900 font-medium leading-relaxed">{caseDetails.chiefComplaint}</p>
                 </div>
+
+                {translationError && (
+                  <div className="p-2 bg-red-50 border border-red-200 text-red-700 text-xs rounded">
+                    {translationError}
+                  </div>
+                )}
+
+                {/* Patient Text Translation Cards */}
+                {translationsList
+                  .filter((t: any) => t.sourceType === 'PATIENT_TEXT')
+                  .map((t: any) => (
+                    <div key={t._id || t.id} className="p-3.5 bg-indigo-50/60 border border-indigo-200 rounded-lg text-xs space-y-2">
+                      <div className="flex justify-between items-center border-b border-indigo-100 pb-2">
+                        <span className="font-bold text-indigo-950 flex items-center space-x-1.5">
+                          <Globe className="w-3.5 h-3.5 text-indigo-600" />
+                          <span>AI Translation — {t.targetLanguage.toUpperCase()}</span>
+                        </span>
+                        <div className="flex items-center space-x-2">
+                          <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-[10px]">
+                            Provenance: {t.provenance}
+                          </Badge>
+                          <Badge
+                            variant="outline"
+                            className={
+                              t.verificationStatus === 'VERIFIED'
+                                ? 'bg-green-50 text-green-700 border-green-200 text-[10px]'
+                                : 'bg-amber-50 text-amber-700 border-amber-200 text-[10px]'
+                            }
+                          >
+                            {t.verificationStatus === 'VERIFIED' ? 'VERIFIED' : 'VERIFICATION REQUIRED'}
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                        <div className="p-2 bg-white/80 rounded border border-indigo-100 space-y-1">
+                          <span className="text-[10px] font-semibold uppercase text-slate-400 block">Original ({t.sourceLanguage?.toUpperCase() || 'UNKNOWN'})</span>
+                          <p className="text-slate-800 leading-relaxed font-medium">{t.originalText}</p>
+                        </div>
+                        <div className="p-2 bg-white rounded border border-indigo-200 space-y-1 shadow-sm">
+                          <span className="text-[10px] font-semibold uppercase text-indigo-600 block">Translated ({t.targetLanguage.toUpperCase()})</span>
+                          <p className="text-slate-900 leading-relaxed font-medium">{t.translatedText || t.processingError || 'No translation output.'}</p>
+                        </div>
+                      </div>
+                      {t.verificationStatus !== 'VERIFIED' && (
+                        <div className="pt-1 flex justify-end">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleVerifyTranslation(t._id || t.id)}
+                            className="text-[11px] h-6 px-2 bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100"
+                          >
+                            <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-600" />
+                            Verify Translation
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
 
                 {caseDetails.symptoms.length > 0 && (
                   <div className="space-y-3">
@@ -1295,11 +1477,67 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
 
                           {/* OCR Text Display */}
                           {report.ocrUsable && report.extractedText && (
-                            <div className="space-y-1 pt-1">
-                              <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-wider block">Extracted Document Text</span>
+                            <div className="space-y-2 pt-1">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-wider block">Extracted Document Text</span>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleRequestTranslation('REPORT_OCR', reportId)}
+                                  disabled={isTranslatingId === reportId}
+                                  className="text-[10px] h-6 px-2 shrink-0 bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100"
+                                >
+                                  {isTranslatingId === reportId ? (
+                                    <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                                  ) : (
+                                    <Languages className="w-3 h-3 mr-1" />
+                                  )}
+                                  Translate OCR
+                                </Button>
+                              </div>
                               <pre className="p-2.5 bg-slate-900 text-slate-100 font-mono text-[11px] rounded overflow-x-auto whitespace-pre-wrap max-h-48 border border-slate-700">
                                 {report.extractedText}
                               </pre>
+
+                              {/* Report OCR Translation Cards */}
+                              {translationsList
+                                .filter((t: any) => t.sourceType === 'REPORT_OCR' && t.sourceId === reportId)
+                                .map((t: any) => (
+                                  <div key={t._id || t.id} className="p-2.5 bg-indigo-50/60 border border-indigo-200 rounded text-xs space-y-2">
+                                    <div className="flex justify-between items-center border-b border-indigo-100 pb-1">
+                                      <span className="font-bold text-indigo-950 text-[11px] flex items-center space-x-1">
+                                        <Globe className="w-3 h-3 text-indigo-600" />
+                                        <span>Translated OCR Text — {t.targetLanguage.toUpperCase()}</span>
+                                      </span>
+                                      <Badge
+                                        variant="outline"
+                                        className={
+                                          t.verificationStatus === 'VERIFIED'
+                                            ? 'bg-green-50 text-green-700 border-green-200 text-[9px]'
+                                            : 'bg-amber-50 text-amber-700 border-amber-200 text-[9px]'
+                                        }
+                                      >
+                                        {t.verificationStatus === 'VERIFIED' ? 'VERIFIED' : 'REQUIRED'}
+                                      </Badge>
+                                    </div>
+                                    <p className="text-slate-900 leading-relaxed font-medium bg-white p-2 rounded border border-indigo-100">
+                                      {t.translatedText || t.processingError}
+                                    </p>
+                                    {t.verificationStatus !== 'VERIFIED' && (
+                                      <div className="flex justify-end">
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => handleVerifyTranslation(t._id || t.id)}
+                                          className="text-[10px] h-5 px-1.5 bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100"
+                                        >
+                                          <CheckCircle2 className="w-2.5 h-2.5 mr-1 text-emerald-600" />
+                                          Verify
+                                        </Button>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
                             </div>
                           )}
                         </div>
@@ -1648,8 +1886,64 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                             )}
 
                             {input.processingStatus === 'PROCESSED' && input.transcriptStatus === 'AVAILABLE' && input.transcript && (
-                              <div className="p-3 bg-white border border-sky-100 rounded text-xs text-slate-800 space-y-1 shadow-2xs">
-                                <p className="leading-relaxed whitespace-pre-wrap font-sans">&quot;{input.transcript.text}&quot;</p>
+                              <div className="space-y-2">
+                                <div className="p-3 bg-white border border-sky-100 rounded text-xs text-slate-800 space-y-1 shadow-2xs flex justify-between items-start">
+                                  <p className="leading-relaxed whitespace-pre-wrap font-sans">&quot;{input.transcript.text}&quot;</p>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleRequestTranslation('VOICE_TRANSCRIPT', inputId)}
+                                    disabled={isTranslatingId === inputId}
+                                    className="text-[10px] h-6 px-2 shrink-0 ml-2 bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100"
+                                  >
+                                    {isTranslatingId === inputId ? (
+                                      <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                                    ) : (
+                                      <Languages className="w-3 h-3 mr-1" />
+                                    )}
+                                    Translate
+                                  </Button>
+                                </div>
+
+                                {/* Voice Transcript Translation Cards */}
+                                {translationsList
+                                  .filter((t: any) => t.sourceType === 'VOICE_TRANSCRIPT' && t.sourceId === inputId)
+                                  .map((t: any) => (
+                                    <div key={t._id || t.id} className="p-2.5 bg-indigo-50/60 border border-indigo-200 rounded text-xs space-y-2">
+                                      <div className="flex justify-between items-center border-b border-indigo-100 pb-1">
+                                        <span className="font-bold text-indigo-950 text-[11px] flex items-center space-x-1">
+                                          <Globe className="w-3 h-3 text-indigo-600" />
+                                          <span>Translated Transcript — {t.targetLanguage.toUpperCase()}</span>
+                                        </span>
+                                        <Badge
+                                          variant="outline"
+                                          className={
+                                            t.verificationStatus === 'VERIFIED'
+                                              ? 'bg-green-50 text-green-700 border-green-200 text-[9px]'
+                                              : 'bg-amber-50 text-amber-700 border-amber-200 text-[9px]'
+                                          }
+                                        >
+                                          {t.verificationStatus === 'VERIFIED' ? 'VERIFIED' : 'REQUIRED'}
+                                        </Badge>
+                                      </div>
+                                      <p className="text-slate-900 leading-relaxed font-medium bg-white p-2 rounded border border-indigo-100">
+                                        {t.translatedText || t.processingError}
+                                      </p>
+                                      {t.verificationStatus !== 'VERIFIED' && (
+                                        <div className="flex justify-end">
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleVerifyTranslation(t._id || t.id)}
+                                            className="text-[10px] h-5 px-1.5 bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100"
+                                          >
+                                            <CheckCircle2 className="w-2.5 h-2.5 mr-1 text-emerald-600" />
+                                            Verify
+                                          </Button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
                               </div>
                             )}
                           </div>

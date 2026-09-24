@@ -14,6 +14,7 @@ import { reviewerRouter } from './modules/reviewer/reviewer.routes.js';
 import reportRouter from './modules/reports/report.routes.js';
 import visualInputRouter from './modules/vision/visual-input.routes.js';
 import voiceInputRouter from './modules/voice/voice-input.routes.js';
+import translationRouter from './modules/translation/translation.routes.js';
 
 export const createApp = (): Express => {
   const app = express();
@@ -60,6 +61,7 @@ export const createApp = (): Express => {
   app.use('/api', reportRouter);
   app.use('/api', visualInputRouter);
   app.use('/api', voiceInputRouter);
+  app.use('/api', translationRouter);
 
   // Error & 404 Handlers
   app.use(notFoundHandler);
