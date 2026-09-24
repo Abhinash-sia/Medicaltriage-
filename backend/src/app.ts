@@ -17,6 +17,9 @@ import voiceInputRouter from './modules/voice/voice-input.routes.js';
 import translationRouter from './modules/translation/translation.routes.js';
 import { safetyRouter } from './modules/safety/safety.routes.js';
 import { triageNoteRouter } from './modules/triage/triage-note.routes.js';
+import { referralRouter } from './modules/referrals/referral.routes.js';
+import { retentionRouter } from './modules/retention/retention.routes.js';
+import { auditRouter } from './modules/audit/audit.routes.js';
 
 export const createApp = (): Express => {
   const app = express();
@@ -66,6 +69,9 @@ export const createApp = (): Express => {
   app.use('/api', visualInputRouter);
   app.use('/api', voiceInputRouter);
   app.use('/api', translationRouter);
+  app.use('/api/referrals', referralRouter);
+  app.use('/api/admin/retention', retentionRouter);
+  app.use('/api/cases', auditRouter);
 
   // Error & 404 Handlers
   app.use(notFoundHandler);

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { Case } from '../cases/case.model.js';
-import { ICase } from '../cases/case.types.js';
+import { ICase, CaseStatus } from '../cases/case.types.js';
 import { User } from '../users/user.model.js';
 import { UserRole } from '../users/user.types.js';
 import { Symptom } from '../symptoms/symptom.model.js';
@@ -10,6 +10,7 @@ import { ReviewStatus } from '../reviews/review.types.js';
 import { AuditLog } from '../audit/audit-log.model.js';
 import { AuditEventType } from '../audit/audit-log.types.js';
 import { SlaService } from '../sla/sla.service.js';
+import { ReferralService } from '../referrals/referral.service.js';
 import {
   ReviewerCasesQuery,
   PaginatedReviewerCasesResponse,
@@ -32,10 +33,14 @@ async function checkFacilityAccess(caseDoc: ICase, userId: string): Promise<void
   const user = await User.findById(userId);
   if (user && user.role !== UserRole.ADMIN && user.facilityId && caseDoc.facilityId) {
     if (caseDoc.facilityId !== user.facilityId) {
-      const error: AppError = new Error('Access forbidden: Case belongs to a different facility');
-      error.statusCode = 403;
-      error.code = 'AUTH_FORBIDDEN';
-      throw error;
+      if (caseDoc.status === CaseStatus.REFERRED || caseDoc.status === CaseStatus.IN_REVIEW) {
+        await ReferralService.checkReferralFacilityAccess(caseDoc, userId);
+      } else {
+        const error: AppError = new Error('Access forbidden: Case belongs to a different facility');
+        error.statusCode = 403;
+        error.code = 'AUTH_FORBIDDEN';
+        throw error;
+      }
     }
   }
 }

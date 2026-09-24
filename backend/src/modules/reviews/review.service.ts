@@ -35,11 +35,15 @@ export interface SubmitReviewDecisionInput {
   reviewerNotes: string;
   targetUserId?: string;
   escalationReason?: string;
+  referralFacilityId?: string;
+  destinationDepartment?: string;
+  referralReason?: string;
+  referralSummary?: string;
 }
 
 export class ReviewService {
   /**
-   * Submits a formal human review decision (RESOLVE, REQUEST_INFO, ESCALATE).
+   * Submits a formal human review decision (RESOLVE, REQUEST_INFO, ESCALATE, REFER).
    */
   public static async submitReviewDecision(
     caseIdInput: string | Types.ObjectId,
@@ -87,6 +91,46 @@ export class ReviewService {
     }
 
     const reviewStatus = input.reviewStatus || ReviewStatus.COMPLETED;
+
+    // Canonical Referral Decision Delegate Flow
+    if (reviewStatus === ReviewStatus.REFERRED) {
+      const { ReferralService } = await import('../referrals/referral.service.js');
+      const referralResult = await ReferralService.createReferral(
+        caseDoc,
+        reviewerUser,
+        {
+          referralFacilityId: input.referralFacilityId || '',
+          destinationDepartment: input.destinationDepartment,
+          referralReason: input.referralReason || input.reviewerNotes,
+          referralSummary: input.referralSummary || input.reviewerNotes,
+        },
+        requestId
+      );
+
+      const newReview = new Review({
+        caseId: caseDoc._id,
+        reviewerId: new mongoose.Types.ObjectId(reviewerUserId),
+        reviewStatus: ReviewStatus.REFERRED,
+        reviewerNotes: input.reviewerNotes,
+        triageNoteVersion: activeNote ? activeNote.noteVersion : undefined,
+        safetyEvaluationVersion: activeSafety ? activeSafety.evaluationVersion : undefined,
+        referralDecision: {
+          referralFacility: input.referralFacilityId || '',
+          summary: input.referralSummary || input.reviewerNotes,
+        },
+        reviewedAt: new Date(),
+      });
+      await newReview.save();
+
+      return {
+        reviewId: newReview._id.toString(),
+        caseId: caseDoc._id.toString(),
+        reviewerId: reviewerUserId,
+        reviewStatus: ReviewStatus.REFERRED,
+        caseStatus: CaseStatus.REFERRED,
+        reviewedAt: newReview.reviewedAt,
+      };
+    }
     let targetUserObjectId: Types.ObjectId | null = null;
     let escalationDecisionObj: any = null;
 

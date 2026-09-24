@@ -29,6 +29,10 @@ export const submitReviewSchema = z
     reviewStatus: z.nativeEnum(ReviewStatus).optional().default(ReviewStatus.COMPLETED),
     targetUserId: z.string().optional(),
     escalationReason: z.string().optional(),
+    referralFacilityId: z.string().optional(),
+    destinationDepartment: z.string().optional(),
+    referralReason: z.string().optional(),
+    referralSummary: z.string().optional(),
   })
   .strict({
     message:

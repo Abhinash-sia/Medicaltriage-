@@ -24,7 +24,11 @@ import {
   Volume2,
   Languages,
   Globe,
+  Share2,
+  History,
 } from 'lucide-react';
+import { ReferralHistoryView } from '@/components/reviewer/ReferralHistoryView';
+import { AuditTrailModal } from '@/components/reviewer/AuditTrailModal';
 
 interface ReviewerCaseSymptom {
   id: string;
@@ -167,6 +171,13 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
   const [targetReviewerIdInput, setTargetReviewerIdInput] = useState<string>('');
   const [assignmentLoading, setAssignmentLoading] = useState<boolean>(false);
   const [assignmentError, setAssignmentError] = useState<string | null>(null);
+
+  // Phase 18 Referral & Audit Trail State
+  const [referralFacilityIdInput, setReferralFacilityIdInput] = useState<string>('');
+  const [destinationDepartmentInput, setDestinationDepartmentInput] = useState<string>('');
+  const [referralReasonInput, setReferralReasonInput] = useState<string>('');
+  const [referralSummaryInput, setReferralSummaryInput] = useState<string>('');
+  const [isAuditTrailOpen, setIsAuditTrailOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -904,6 +915,21 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
       return;
     }
 
+    if (reviewStatus === 'REFERRED') {
+      if (!referralFacilityIdInput.trim()) {
+        setSubmitError('Destination facility ID is required for referrals.');
+        return;
+      }
+      if (!referralReasonInput.trim()) {
+        setSubmitError('Referral reason is required.');
+        return;
+      }
+      if (!referralSummaryInput.trim()) {
+        setSubmitError('Referral summary is required.');
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     setSubmitError(null);
     setSubmitSuccess(null);
@@ -922,6 +948,10 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
           reviewerNotes: reviewerNotes.trim(),
           reviewStatus,
           targetUserId: reviewStatus === 'ESCALATED' && escalationTargetUserIdInput ? escalationTargetUserIdInput.trim() : undefined,
+          referralFacilityId: reviewStatus === 'REFERRED' ? referralFacilityIdInput.trim() : undefined,
+          destinationDepartment: reviewStatus === 'REFERRED' && destinationDepartmentInput.trim() ? destinationDepartmentInput.trim() : undefined,
+          referralReason: reviewStatus === 'REFERRED' ? referralReasonInput.trim() : undefined,
+          referralSummary: reviewStatus === 'REFERRED' ? referralSummaryInput.trim() : undefined,
         }),
       });
 
@@ -934,6 +964,10 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
       setSubmitSuccess('Human review record submitted successfully.');
       setReviewerNotes('');
       setEscalationTargetUserIdInput('');
+      setReferralFacilityIdInput('');
+      setDestinationDepartmentInput('');
+      setReferralReasonInput('');
+      setReferralSummaryInput('');
       fetchCaseDetails();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to submit review.';
@@ -1030,11 +1064,21 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Navigation & Case Reference */}
         <div className="flex items-center justify-between">
-          <Link href="/reviewer">
-            <Button variant="outline" size="sm" className="text-xs bg-white text-slate-700 border-slate-300">
-              <ChevronLeft className="w-4 h-4 mr-1" /> Back to Reviewer Queue
+          <div className="flex items-center space-x-2">
+            <Link href="/reviewer">
+              <Button variant="outline" size="sm" className="text-xs bg-white text-slate-700 border-slate-300">
+                <ChevronLeft className="w-4 h-4 mr-1" /> Back to Reviewer Queue
+              </Button>
+            </Link>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsAuditTrailOpen(true)}
+              className="text-xs bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
+            >
+              <History className="w-4 h-4 mr-1 text-indigo-600" /> Case Audit Trail
             </Button>
-          </Link>
+          </div>
           <div className="flex items-center space-x-2">
             <Badge variant="outline" className="bg-indigo-50 text-indigo-800 border-indigo-200 font-mono text-xs">
               {caseDetails.caseNumber}
@@ -2532,6 +2576,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                       <option value="COMPLETED">COMPLETED (Mark Case Resolved)</option>
                       <option value="ADDITIONAL_INFO_REQUESTED">ADDITIONAL_INFO_REQUESTED (Request Info)</option>
                       <option value="ESCALATED">ESCALATED (Escalate / Handoff)</option>
+                      <option value="REFERRED">REFERRED (Refer to Another Facility)</option>
                     </select>
                   </div>
 
@@ -2549,6 +2594,73 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                       />
                       <p className="text-[10px] text-amber-800 italic">
                         Leaving this blank transfers the case to the facility unassigned escalation queue. Preserves existing SLA timer.
+                      </p>
+                    </div>
+                  )}
+
+                  {reviewStatus === 'REFERRED' && (
+                    <div className="p-3.5 bg-indigo-50/70 border border-indigo-200 rounded-lg space-y-3">
+                      <div className="font-bold text-xs text-indigo-950 flex items-center space-x-1.5">
+                        <Share2 className="w-4 h-4 text-indigo-600" />
+                        <span>Facility Referral Details (Phase 18)</span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-semibold text-slate-700 block">
+                            Destination Facility ID <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Destination facility ObjectId"
+                            value={referralFacilityIdInput}
+                            onChange={(e) => setReferralFacilityIdInput(e.target.value)}
+                            className="w-full text-xs p-2 border border-slate-300 rounded bg-white text-slate-900 focus:ring-1 focus:ring-indigo-500"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-semibold text-slate-700 block">
+                            Destination Department (Optional)
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Cardiology, Orthopedics, ICU"
+                            value={destinationDepartmentInput}
+                            onChange={(e) => setDestinationDepartmentInput(e.target.value)}
+                            className="w-full text-xs p-2 border border-slate-300 rounded bg-white text-slate-900 focus:ring-1 focus:ring-indigo-500"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-semibold text-slate-700 block">
+                          Referral Reason <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Reason for referring case to destination facility"
+                          value={referralReasonInput}
+                          onChange={(e) => setReferralReasonInput(e.target.value)}
+                          className="w-full text-xs p-2 border border-slate-300 rounded bg-white text-slate-900 focus:ring-1 focus:ring-indigo-500"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-semibold text-slate-700 block">
+                          Referral Clinical Summary <span className="text-red-500">*</span>
+                        </label>
+                        <textarea
+                          rows={2}
+                          placeholder="Clinical handoff summary for receiving facility staff..."
+                          value={referralSummaryInput}
+                          onChange={(e) => setReferralSummaryInput(e.target.value)}
+                          className="w-full text-xs p-2 border border-slate-300 rounded bg-white text-slate-900 focus:ring-1 focus:ring-indigo-500"
+                        />
+                      </div>
+
+                      <p className="text-[10px] text-indigo-800 italic">
+                        Creating a referral changes case status to REFERRED, unassigns current reviewer, and grants destination facility reviewers read-only handoff access.
                       </p>
                     </div>
                   )}
@@ -2691,6 +2803,9 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                 </CardContent>
               </Card>
             )}
+
+            {/* Referral Handoff History (Phase 18) */}
+            <ReferralHistoryView caseId={caseId} />
           </div>
 
           {/* Sidebar Column (1/3 width) */}
@@ -2939,6 +3054,13 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
           </div>
         </div>
       </div>
+
+      {/* Audit Trail Modal (Phase 18) */}
+      <AuditTrailModal
+        caseId={caseId}
+        isOpen={isAuditTrailOpen}
+        onClose={() => setIsAuditTrailOpen(false)}
+      />
     </div>
   );
 }
