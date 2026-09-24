@@ -17,6 +17,8 @@ export interface IUser {
   passwordHash?: string;
   role: UserRole;
   facilityId?: string;
+  ageMonths?: number;
+  dateOfBirth?: Date;
   isActive: boolean;
   isDeleted: boolean;
   deletedAt?: Date;

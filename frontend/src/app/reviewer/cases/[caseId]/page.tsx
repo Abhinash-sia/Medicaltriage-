@@ -140,6 +140,12 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
   const [isTranslatingId, setIsTranslatingId] = useState<string | null>(null);
   const [translationError, setTranslationError] = useState<string | null>(null);
 
+  // Safety & Urgency Engine State
+  const [safetyData, setSafetyData] = useState<any | null>(null);
+  const [isFetchingSafety, setIsFetchingSafety] = useState<boolean>(false);
+  const [isEvaluatingSafety, setIsEvaluatingSafety] = useState<boolean>(false);
+  const [safetyError, setSafetyError] = useState<string | null>(null);
+
   // Assignment Action State
   const [targetReviewerIdInput, setTargetReviewerIdInput] = useState<string>('');
   const [assignmentLoading, setAssignmentLoading] = useState<boolean>(false);
@@ -268,12 +274,68 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
     }
   }, [caseId]);
 
+  const fetchSafetyData = useCallback(async () => {
+    setIsFetchingSafety(true);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${apiBaseUrl}/reviewer/cases/${caseId}/safety`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          setSafetyData(result.data.activeEvaluation || null);
+        }
+      }
+    } catch {
+      // Fallback
+    } finally {
+      setIsFetchingSafety(false);
+    }
+  }, [caseId]);
+
+  const handleTriggerSafetyEvaluate = async () => {
+    setIsEvaluatingSafety(true);
+    setSafetyError(null);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${apiBaseUrl}/reviewer/cases/${caseId}/safety/evaluate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error?.message || 'Safety evaluation trigger failed.');
+      }
+
+      setSafetyData(result.data);
+      fetchCaseDetails();
+    } catch (err: any) {
+      setSafetyError(err.message || 'Safety evaluation failed.');
+    } finally {
+      setIsEvaluatingSafety(false);
+    }
+  };
+
   useEffect(() => {
     fetchCaseDetails();
     fetchTimeline();
     fetchMissingInformation();
     fetchReports();
-  }, [fetchCaseDetails, fetchTimeline, fetchMissingInformation, fetchReports]);
+    fetchSafetyData();
+  }, [fetchCaseDetails, fetchTimeline, fetchMissingInformation, fetchReports, fetchSafetyData]);
 
   const handleVerifyReport = async (reportId: string) => {
     try {
@@ -855,6 +917,121 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Main Content Column (2/3 width) */}
           <div className="md:col-span-2 space-y-6">
+            {/* Safety & Urgency Engine Card */}
+            <Card className="bg-white border-emerald-200 shadow-sm">
+              <CardHeader className="bg-emerald-50/50 border-b border-emerald-100 py-3 px-4 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-sm font-bold text-slate-900 flex items-center space-x-2">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                    <span>Safety & Urgency Engine (Phase 15)</span>
+                    {safetyData && (
+                      <Badge
+                        variant="outline"
+                        className={
+                          safetyData.effectivePriority === 'URGENT'
+                            ? 'bg-red-50 text-red-700 border-red-200 font-bold ml-2'
+                            : safetyData.effectivePriority === 'PRIORITY'
+                            ? 'bg-amber-50 text-amber-700 border-amber-200 font-bold ml-2'
+                            : 'bg-emerald-50 text-emerald-700 border-emerald-200 font-bold ml-2'
+                        }
+                      >
+                        Priority: {safetyData.effectivePriority}
+                      </Badge>
+                    )}
+                  </CardTitle>
+                  <CardDescription className="text-xs text-slate-600">
+                    Deterministic review priority evaluation based on structured case evidence.
+                  </CardDescription>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleTriggerSafetyEvaluate}
+                  disabled={isEvaluatingSafety}
+                  className="text-xs bg-white text-emerald-700 border-emerald-300 hover:bg-emerald-50"
+                >
+                  {isEvaluatingSafety ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
+                  ) : (
+                    <ShieldCheck className="w-3.5 h-3.5 mr-1" />
+                  )}
+                  Re-evaluate Safety
+                </Button>
+              </CardHeader>
+              <CardContent className="p-4 space-y-3">
+                {safetyError && (
+                  <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-md">
+                    {safetyError}
+                  </div>
+                )}
+
+                {isFetchingSafety && (
+                  <div className="flex items-center space-x-2 text-xs text-slate-500 p-2">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />
+                    <span>Loading safety evaluation state...</span>
+                  </div>
+                )}
+
+                {safetyData?.hasHumanOverride && (
+                  <div className="p-2.5 bg-purple-50 border border-purple-200 rounded-md text-xs text-purple-900 flex items-center justify-between">
+                    <span className="font-semibold flex items-center space-x-1.5">
+                      <UserCheck className="w-4 h-4 text-purple-600" />
+                      <span>Human Priority Override Active</span>
+                    </span>
+                    <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-300 text-[10px]">
+                      Locked to {safetyData.effectivePriority}
+                    </Badge>
+                  </div>
+                )}
+
+                {safetyData ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs text-slate-500 border-b border-slate-100 pb-1.5">
+                      <span>Evaluated Version: #{safetyData.evaluationVersion}</span>
+                      <span>Evaluated At: {new Date(safetyData.evaluatedAt).toLocaleString()}</span>
+                    </div>
+
+                    {safetyData.matchedSignals && safetyData.matchedSignals.length > 0 ? (
+                      <div className="space-y-2 pt-1">
+                        <span className="text-xs font-bold text-slate-800 block">Matched Safety Signals ({safetyData.matchedSignals.length})</span>
+                        <div className="space-y-2">
+                          {safetyData.matchedSignals.map((sig: any, idx: number) => (
+                            <div key={idx} className="p-3 bg-slate-50 border border-slate-200 rounded-md text-xs space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="font-bold text-slate-900">{sig.ruleName}</span>
+                                <Badge
+                                  variant="outline"
+                                  className={
+                                    sig.category === 'CLINICAL_URGENT'
+                                      ? 'bg-red-50 text-red-700 border-red-200 text-[10px]'
+                                      : sig.category === 'SYSTEM_UNCERTAINTY'
+                                      ? 'bg-amber-50 text-amber-700 border-amber-200 text-[10px]'
+                                      : 'bg-indigo-50 text-indigo-700 border-indigo-200 text-[10px]'
+                                  }
+                                >
+                                  {sig.category}
+                                </Badge>
+                              </div>
+                              <p className="text-slate-700 text-[11px] font-medium">{sig.evidenceSnippet}</p>
+                              <p className="text-slate-500 text-[10px] italic">{sig.explanation}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-3 bg-emerald-50/50 border border-emerald-100 rounded-md text-xs text-emerald-800">
+                        No higher-priority workflow review signals detected. Case review status is ROUTINE.
+                      </div>
+                    )}
+                  </div>
+                ) : !isFetchingSafety && (
+                  <p className="text-xs text-slate-500 italic">
+                    No safety evaluation recorded yet. Click &quot;Re-evaluate Safety&quot; above to run the Safety Engine.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Patient Reported Symptoms Card */}
             <Card className="bg-white border-slate-200 shadow-sm">
               <CardHeader className="bg-slate-50 border-b border-slate-200 py-3 px-4">

@@ -74,6 +74,19 @@ const ReportSchema = new Schema<IReportDocument>(
       type: String,
       default: '',
     },
+    extractedData: {
+      type: Schema.Types.Mixed,
+      default: {},
+    },
+    hasUnstructuredLabData: {
+      type: Boolean,
+      default: false,
+    },
+    isLatest: {
+      type: Boolean,
+      default: true,
+      index: true,
+    },
     processingError: {
       type: String,
       default: null,

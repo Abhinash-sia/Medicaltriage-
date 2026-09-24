@@ -8,6 +8,19 @@ export enum InformationSource {
   VOICE_TRANSCRIPT = 'VOICE_TRANSCRIPT',
 }
 
+export enum SymptomStatus {
+  PRESENT = 'PRESENT',
+  ABSENT = 'ABSENT',
+  UNCERTAIN = 'UNCERTAIN',
+}
+
+export enum TemporalStatus {
+  CURRENT = 'CURRENT',
+  RECENT = 'RECENT',
+  HISTORICAL = 'HISTORICAL',
+  UNKNOWN = 'UNKNOWN',
+}
+
 export interface ISymptom {
   _id?: Types.ObjectId;
   caseId: Types.ObjectId;
@@ -20,7 +33,8 @@ export interface ISymptom {
   bodyLocation?: string;
   associatedSymptoms?: string[];
   source: InformationSource;
-  status?: string;
+  status?: SymptomStatus | string;
+  temporalStatus?: TemporalStatus | string;
   context?: string;
   confidence?: number;
   provenance?: string;

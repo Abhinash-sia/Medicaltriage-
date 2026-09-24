@@ -38,6 +38,11 @@ export interface ICase {
   slaDueAt?: Date | null;
   escalatedAt?: Date | null;
   escalationLevel?: number;
+  priorityOverride?: CasePriority | null;
+  priorityOverrideReason?: string | null;
+  priorityOverrideBy?: Types.ObjectId | null;
+  priorityOverrideAt?: Date | null;
+  currentSafetyVersion?: number;
   isDeleted: boolean;
   deletedAt?: Date;
   createdAt?: Date;

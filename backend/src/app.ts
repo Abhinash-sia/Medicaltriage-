@@ -15,6 +15,7 @@ import reportRouter from './modules/reports/report.routes.js';
 import visualInputRouter from './modules/vision/visual-input.routes.js';
 import voiceInputRouter from './modules/voice/voice-input.routes.js';
 import translationRouter from './modules/translation/translation.routes.js';
+import { safetyRouter } from './modules/safety/safety.routes.js';
 
 export const createApp = (): Express => {
   const app = express();
@@ -57,6 +58,7 @@ export const createApp = (): Express => {
   app.use('/api', healthRouter);
   app.use('/api/auth', authRouter);
   app.use('/api/intake', intakeRouter);
+  app.use('/api/reviewer/cases', safetyRouter);
   app.use('/api/reviewer', reviewerRouter);
   app.use('/api', reportRouter);
   app.use('/api', visualInputRouter);

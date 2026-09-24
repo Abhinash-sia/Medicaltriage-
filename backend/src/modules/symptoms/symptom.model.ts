@@ -54,6 +54,13 @@ const SymptomSchema = new Schema<ISymptomDocument>(
     status: {
       type: String,
       trim: true,
+      default: 'PRESENT',
+    },
+    temporalStatus: {
+      type: String,
+      trim: true,
+      default: 'CURRENT',
+      index: true,
     },
     context: {
       type: String,

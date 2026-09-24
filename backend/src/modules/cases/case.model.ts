@@ -77,6 +77,28 @@ const CaseSchema = new Schema<ICaseDocument>(
       type: Number,
       default: 0,
     },
+    priorityOverride: {
+      type: String,
+      enum: Object.values(CasePriority),
+      default: null,
+    },
+    priorityOverrideReason: {
+      type: String,
+      default: null,
+    },
+    priorityOverrideBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    priorityOverrideAt: {
+      type: Date,
+      default: null,
+    },
+    currentSafetyVersion: {
+      type: Number,
+      default: 0,
+    },
     isDeleted: {
       type: Boolean,
       default: false,

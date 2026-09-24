@@ -27,6 +27,9 @@ export interface IReport {
   ocrUsable: boolean;
   extractionConfidence?: number;
   extractedText: string;
+  extractedData?: Record<string, any>;
+  hasUnstructuredLabData?: boolean;
+  isLatest?: boolean;
   processingError?: string;
   verifiedBy?: Types.ObjectId | null;
   verifiedAt?: Date | null;

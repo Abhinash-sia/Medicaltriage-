@@ -36,6 +36,14 @@ const UserSchema = new Schema<IUserDocument>(
       trim: true,
       index: true,
     },
+    ageMonths: {
+      type: Number,
+      default: null,
+    },
+    dateOfBirth: {
+      type: Date,
+      default: null,
+    },
     isActive: {
       type: Boolean,
       default: true,
