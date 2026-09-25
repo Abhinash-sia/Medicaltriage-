@@ -23,6 +23,7 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import { NotificationBell } from '@/components/ui/NotificationBell';
+import { DemoBanner } from '@/components/ui/DemoBanner';
 
 interface ReviewerQueueItem {
   id: string;
@@ -255,8 +256,10 @@ export default function ReviewerQueuePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-slate-50 font-sans flex flex-col">
+      <DemoBanner />
+      <div className="py-8 px-4 sm:px-6 lg:px-8 flex-1">
+        <div className="max-w-6xl mx-auto space-y-6">
         {/* Header & Branding */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200 pb-4">
           <div>
@@ -616,5 +619,7 @@ export default function ReviewerQueuePage() {
         )}
       </div>
     </div>
+  </div>
   );
 }
+

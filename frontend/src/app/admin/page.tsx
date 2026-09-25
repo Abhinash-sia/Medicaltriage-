@@ -17,6 +17,7 @@ import { FacilityManagementPanel } from '@/components/admin/FacilityManagementPa
 import { RetentionPurgePanel } from '@/components/admin/RetentionPurgePanel';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { Button } from '@/components/ui/button';
+import { DemoBanner } from '@/components/ui/DemoBanner';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'facilities' | 'retention'>(
@@ -44,6 +45,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col">
+      <DemoBanner />
       {/* Header */}
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur border-b border-slate-200 dark:border-slate-800 px-4 sm:px-8 py-3 flex items-center justify-between">
         <div className="flex items-center gap-4">

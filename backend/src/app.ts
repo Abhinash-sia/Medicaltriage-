@@ -33,7 +33,8 @@ export const createApp = (): Express => {
     cors({
       origin: env.FRONTEND_URL,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID', 'Idempotency-Key', 'idempotency-key'],
+
       credentials: true,
     })
   );

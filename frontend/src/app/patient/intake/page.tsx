@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, CheckCircle2, ShieldCheck, HeartPulse, ChevronRight, ChevronLeft, Loader2 } from 'lucide-react';
+import { DemoBanner } from '@/components/ui/DemoBanner';
 
 interface IntakeFormData {
   consent: boolean;
@@ -130,8 +131,10 @@ export default function PatientIntakePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-2xl mx-auto space-y-6">
+    <div className="min-h-screen bg-slate-50 font-sans flex flex-col">
+      <DemoBanner />
+      <div className="py-10 px-4 sm:px-6 lg:px-8 flex-1">
+        <div className="max-w-2xl mx-auto space-y-6">
         {/* Header Branding */}
         <div className="text-center space-y-2">
           <div className="inline-flex items-center space-x-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase">
@@ -575,5 +578,7 @@ export default function PatientIntakePage() {
         )}
       </div>
     </div>
+  </div>
   );
 }
+

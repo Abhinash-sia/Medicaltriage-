@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { ReferralHistoryView } from '@/components/reviewer/ReferralHistoryView';
 import { AuditTrailModal } from '@/components/reviewer/AuditTrailModal';
+import { DemoBanner } from '@/components/ui/DemoBanner';
 
 interface ReviewerCaseSymptom {
   id: string;
@@ -1060,8 +1061,10 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
   const isAdmin = currentUserRole === 'ADMIN';
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-slate-50 font-sans flex flex-col">
+      <DemoBanner />
+      <div className="py-8 px-4 sm:px-6 lg:px-8 flex-1">
+        <div className="max-w-4xl mx-auto space-y-6">
         {/* Navigation & Case Reference */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -3054,6 +3057,9 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
           </div>
         </div>
       </div>
+    </div>
+
+
 
       {/* Audit Trail Modal (Phase 18) */}
       <AuditTrailModal
@@ -3063,4 +3069,6 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
       />
     </div>
   );
+
 }
+
