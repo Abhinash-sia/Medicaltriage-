@@ -52,108 +52,87 @@ export class IntakeService {
     const randomDigits = Math.floor(1000 + Math.random() * 9000);
     const caseNumber = `CAS-${timestamp}-${randomDigits}`;
 
-    const session =
-      mongoose.connection.readyState === 1
-        ? await mongoose.startSession().catch(() => null)
-        : null;
+    const now = new Date();
+    const slaDueAt = SlaService.calculateSlaDueAt({
+      createdAt: now,
+      priority: CasePriority.ROUTINE,
+    });
 
-    if (session) {
-      session.startTransaction();
-    }
+    // 1. Create Case Document
+    const newCase = new Case({
+      caseNumber,
+      patientId: patientObjectId,
+      status: CaseStatus.OPEN,
+      priority: CasePriority.ROUTINE, // Default initial workflow category awaiting safety evaluation
+      intakeSource: IntakeSource.TEXT,
+      language: input.language || 'en',
+      chiefComplaint: `${input.primarySymptom}: ${input.symptomDescription}`,
+      slaDueAt,
+      isDeleted: false,
+    });
+    await newCase.save();
 
-    try {
-      const now = new Date();
-      const slaDueAt = SlaService.calculateSlaDueAt({
-        createdAt: now,
-        priority: CasePriority.ROUTINE,
-      });
+    // 2. Create Consent Document
+    const newConsent = new Consent({
+      caseId: newCase._id,
+      patientId: patientObjectId,
+      consentType: ConsentType.GENERAL_TRIAGE,
+      status: ConsentStatus.GRANTED,
+      version: input.consentVersion || 'v1.0-hackathon',
+      capturedBy: 'PATIENT_PORTAL',
+      capturedAt: new Date(),
+    });
+    await newConsent.save();
 
-      // 1. Create Case Document
-      const newCase = new Case({
-        caseNumber,
-        patientId: patientObjectId,
-        status: CaseStatus.OPEN,
-        priority: CasePriority.ROUTINE, // Default initial workflow category awaiting safety evaluation
+    // Link consent reference back to case
+    newCase.consentId = newConsent._id;
+    await newCase.save();
+
+    // 3. Create Symptom Document (Preserving Patient Provenance)
+    const newSymptom = new Symptom({
+      caseId: newCase._id,
+      symptomName: input.primarySymptom,
+      onset: input.onset,
+      duration: input.duration,
+      severity: input.severity,
+      bodyLocation: input.bodyLocation,
+      associatedSymptoms: input.associatedSymptoms || [],
+      source: InformationSource.PATIENT, // Patient provenance tag
+      confidence: undefined, // No artificial AI confidence for patient direct inputs
+    });
+    await newSymptom.save();
+
+    // 4. Create Audit Log Entry
+    const newAudit = new AuditLog({
+      actorId: patientUserId,
+      actorRole: UserRole.PATIENT,
+      action: AuditEventType.CASE_CREATED,
+      resourceType: 'Case',
+      resourceId: newCase._id.toString(),
+      caseId: newCase._id,
+      requestId: requestId || null,
+      timestamp: new Date(),
+      source: 'PATIENT_PORTAL',
+      outcome: 'SUCCESS',
+      metadata: {
         intakeSource: IntakeSource.TEXT,
-        language: input.language || 'en',
-        chiefComplaint: `${input.primarySymptom}: ${input.symptomDescription}`,
-        slaDueAt,
-        isDeleted: false,
-      });
-      await newCase.save({ session: session || undefined });
+        idempotencyKey: input.idempotencyKey || null,
+      },
+    });
+    await newAudit.save();
 
-      // 2. Create Consent Document
-      const newConsent = new Consent({
-        caseId: newCase._id,
-        patientId: patientObjectId,
-        consentType: ConsentType.GENERAL_TRIAGE,
-        status: ConsentStatus.GRANTED,
-        version: input.consentVersion || 'v1.0-hackathon',
-        capturedBy: 'PATIENT_PORTAL',
-        capturedAt: new Date(),
-      });
-      await newConsent.save({ session: session || undefined });
-
-      // Link consent reference back to case
-      newCase.consentId = newConsent._id;
-      await newCase.save({ session: session || undefined });
-
-      // 3. Create Symptom Document (Preserving Patient Provenance)
-      const newSymptom = new Symptom({
-        caseId: newCase._id,
-        symptomName: input.primarySymptom,
-        onset: input.onset,
-        duration: input.duration,
-        severity: input.severity,
-        bodyLocation: input.bodyLocation,
-        associatedSymptoms: input.associatedSymptoms || [],
-        source: InformationSource.PATIENT, // Patient provenance tag
-        confidence: undefined, // No artificial AI confidence for patient direct inputs
-      });
-      await newSymptom.save({ session: session || undefined });
-
-      // 4. Create Audit Log Entry
-      const newAudit = new AuditLog({
-        actorId: patientUserId,
-        actorRole: UserRole.PATIENT,
-        action: AuditEventType.CASE_CREATED,
-        resourceType: 'Case',
-        resourceId: newCase._id.toString(),
-        caseId: newCase._id,
-        requestId: requestId || null,
-        timestamp: new Date(),
-        outcome: 'SUCCESS',
-        metadata: {
-          intakeSource: IntakeSource.TEXT,
-          idempotencyKey: input.idempotencyKey || null,
-        },
-      });
-      await newAudit.save({ session: session || undefined });
-
-      if (session) {
-        await session.commitTransaction();
-        session.endSession();
-      }
-
-      return {
-        caseId: newCase._id.toString(),
-        caseNumber: newCase.caseNumber,
-        patientId: newCase.patientId.toString(),
-        status: newCase.status,
-        priority: newCase.priority,
-        chiefComplaint: newCase.chiefComplaint,
-        primarySymptom: input.primarySymptom,
-        language: newCase.language,
-        consentStatus: ConsentStatus.GRANTED,
-        createdAt: newCase.createdAt || new Date(),
-      };
-    } catch (error) {
-      if (session) {
-        await session.abortTransaction();
-        session.endSession();
-      }
-      throw error;
-    }
+    return {
+      caseId: newCase._id.toString(),
+      caseNumber: newCase.caseNumber,
+      patientId: newCase.patientId.toString(),
+      status: newCase.status,
+      priority: newCase.priority,
+      chiefComplaint: newCase.chiefComplaint,
+      primarySymptom: input.primarySymptom,
+      language: newCase.language,
+      consentStatus: ConsentStatus.GRANTED,
+      createdAt: newCase.createdAt || new Date(),
+    };
   }
 
   static async getPatientCases(patientUserId: string) {
