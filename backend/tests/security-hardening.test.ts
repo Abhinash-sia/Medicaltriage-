@@ -562,4 +562,136 @@ describe('Phase 20 — Comprehensive Security Hardening & Regression Suite', () 
       expect(res.body.data.dryRun).toBe(true);
     });
   });
+
+  // =========================================================================
+  // 7. MULTIMODAL PROVIDER FAILURE & FALLBACK INVARIANTS
+  // =========================================================================
+  describe('7. Multimodal Provider Fail-Safe Resilience', () => {
+    it('AI extraction failure elevates safety evaluation to PRIORITY (never defaults to ROUTINE)', () => {
+      const ctx = createTestSafetyContext({
+        aiExtractions: [{ status: 'FAILED', error: 'Gemini network timeout' }],
+      });
+      const result = SafetyEngine.evaluate(ctx);
+      expect(result.calculatedPriority).toBe(CasePriority.PRIORITY);
+      expect(result.matchedSignals.some((s) => s.ruleId === 'UNCERTAINTY_AI_EXTRACTION')).toBe(true);
+    });
+
+    it('Low AI extraction confidence (<0.70) elevates safety evaluation to PRIORITY', () => {
+      const ctx = createTestSafetyContext({
+        aiExtractions: [{ status: 'PROCESSED', confidence: 0.42 }],
+      });
+      const result = SafetyEngine.evaluate(ctx);
+      expect(result.calculatedPriority).toBe(CasePriority.PRIORITY);
+      expect(result.matchedSignals.some((s) => s.ruleId === 'UNCERTAINTY_LOW_CONFIDENCE')).toBe(true);
+    });
+
+    it('OCR processing failure elevates safety evaluation to PRIORITY', () => {
+      const ctx = createTestSafetyContext({
+        reports: [{ ocrStatus: 'FAILED', ocrUsable: false }],
+      });
+      const result = SafetyEngine.evaluate(ctx);
+      expect(result.calculatedPriority).toBe(CasePriority.PRIORITY);
+      expect(result.matchedSignals.some((s) => s.ruleId === 'UNCERTAINTY_OCR_FAILURE')).toBe(true);
+    });
+
+    it('Voice STT failure elevates safety evaluation to PRIORITY', () => {
+      const ctx = createTestSafetyContext({
+        voiceInputs: [{ status: 'FAILED', error: 'STT provider timeout' }],
+      });
+      const result = SafetyEngine.evaluate(ctx);
+      expect(result.calculatedPriority).toBe(CasePriority.PRIORITY);
+      expect(result.matchedSignals.some((s) => s.ruleId === 'UNCERTAINTY_VOICE_STT_FAILURE')).toBe(true);
+    });
+
+    it('Visual processing failure elevates safety evaluation to PRIORITY', () => {
+      const ctx = createTestSafetyContext({
+        visualInputs: [{ status: 'FAILED', error: 'Vision model unavailable' }],
+      });
+      const result = SafetyEngine.evaluate(ctx);
+      expect(result.calculatedPriority).toBe(CasePriority.PRIORITY);
+      expect(result.matchedSignals.some((s) => s.ruleId === 'UNCERTAINTY_VISUAL_FAILURE')).toBe(true);
+    });
+  });
+
+  // =========================================================================
+  // 8. FILE UPLOAD & BOUNDARY HARDENING
+  // =========================================================================
+  describe('8. File Upload & Boundary Hardening', () => {
+    it('Rejects unauthenticated file upload attempts with 401', async () => {
+      const dummyCaseId = new Types.ObjectId().toString();
+      const res = await request(app)
+        .post(`/api/cases/${dummyCaseId}/reports`)
+        .attach('file', Buffer.from('dummy pdf content'), 'test.pdf');
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('Rejects unauthorized file upload attempt to another patient case with 403', async () => {
+      const otherPatientCase = await createTestCase({ patientId: patientB._id, facilityId: facilityA });
+
+      const res = await request(app)
+        .post(`/api/cases/${otherPatientCase._id}/reports`)
+        .set('Authorization', `Bearer ${tokenPatientA}`)
+        .attach('file', Buffer.from('%PDF-1.4 test content'), 'test.pdf');
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+    });
+  });
+
+  // =========================================================================
+  // 9. SECURITY HEADERS & CORS HARDENING
+  // =========================================================================
+  describe('9. Security Headers & CORS Configuration', () => {
+    it('Applies Helmet security headers on API responses', async () => {
+      const res = await request(app).get('/api/health');
+
+      expect(res.status).toBe(200);
+      expect(res.headers).toHaveProperty('x-dns-prefetch-control');
+      expect(res.headers).toHaveProperty('x-content-type-options');
+    });
+
+    it('Does NOT output wildcard Access-Control-Allow-Origin: * for authenticated API routes', async () => {
+      const res = await request(app)
+        .get('/api/auth/me')
+        .set('Authorization', `Bearer ${tokenPatientA}`);
+
+      expect(res.headers['access-control-allow-origin']).not.toBe('*');
+    });
+  });
+
+  // =========================================================================
+  // 10. NOSQL & SQL INJECTION RESILIENCE
+  // =========================================================================
+  describe('10. Injection Resilience', () => {
+    it('Handles SQL injection payloads safely in intake narrative without throwing database error', async () => {
+      const sqlPayload = "'; DROP TABLE users; SELECT * FROM cases WHERE '1'='1";
+
+      const res = await request(app)
+        .post('/api/intake')
+        .set('Authorization', `Bearer ${tokenPatientA}`)
+        .send({
+          consent: true,
+          primarySymptom: 'Back Pain',
+          symptomDescription: sqlPayload,
+          onset: '3 days ago',
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+    });
+
+    it('Handles Mongo operator objects in auth requests safely without query injection', async () => {
+      const res = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: { $gt: '' },
+          password: { $gt: '' },
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+  });
 });

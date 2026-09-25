@@ -40,6 +40,10 @@ async function run(): Promise<void> {
     console.log(` Referrals:            ${summary.referrals}`);
     console.log(` Notifications:        ${summary.notifications}`);
     console.log(` Audit Logs:           ${summary.auditLogs}`);
+    console.log(` Voice Inputs (STT):   ${summary.voiceInputs}`);
+    console.log(` Medical Reports (OCR):${summary.reports}`);
+    console.log(` Visual Inputs:        ${summary.visualInputs}`);
+    console.log(` Translations:         ${summary.translations}`);
     console.log('======================================================\n');
   } catch (err) {
     console.error('Failed to seed synthetic dataset:', err);

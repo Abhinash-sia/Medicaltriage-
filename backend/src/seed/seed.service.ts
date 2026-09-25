@@ -24,6 +24,10 @@ import { Notification } from '../modules/notifications/notification.model.js';
 import { NotificationChannel, NotificationStatus, NotificationType } from '../modules/notifications/notification.types.js';
 import { AuditLog } from '../modules/audit/audit-log.model.js';
 import { AuditEventType } from '../modules/audit/audit-log.types.js';
+import { VoiceInputModel } from '../modules/voice/voice-input.model.js';
+import { Report } from '../modules/reports/report.model.js';
+import { VisualInput } from '../modules/vision/visual-input.model.js';
+import { TranslationModel } from '../modules/translation/translation.model.js';
 import {
   SYNTHETIC_FACILITIES,
   SYNTHETIC_USERS,
@@ -40,6 +44,10 @@ export interface SeedSummary {
   referrals: number;
   notifications: number;
   auditLogs: number;
+  voiceInputs: number;
+  reports: number;
+  visualInputs: number;
+  translations: number;
 }
 
 export class SeedService {
@@ -64,6 +72,10 @@ export class SeedService {
       referrals: 0,
       notifications: 0,
       auditLogs: 0,
+      voiceInputs: 0,
+      reports: 0,
+      visualInputs: 0,
+      translations: 0,
     };
 
     // 1. Seed Facilities
@@ -312,6 +324,129 @@ export class SeedService {
           metadata: { caseNumber: c.caseNumber, priority: c.priority },
         });
         summary.auditLogs++;
+      }
+      // 10. Seed Multimodal Sub-Documents for Synthetic Scenarios
+      // A. Voice STT Input (CASE-SYN-PRIORITY-007)
+      if (c.caseNumber === 'CASE-SYN-PRIORITY-007') {
+        await VoiceInputModel.findOneAndUpdate(
+          { caseId: caseObjectId, contentHash: `hash-voice-${c.caseNumber}` },
+          {
+            caseId: caseObjectId,
+            storageKey: `uploads/synthetic_voice_${c.caseNumber.toLowerCase()}.wav`,
+            contentHash: `hash-voice-${c.caseNumber}`,
+            originalFilename: `synthetic_voice_${c.caseNumber.toLowerCase()}.wav`,
+            mimeType: 'audio/wav',
+            fileSize: 102400,
+            durationMs: 15000,
+            uploadedBy: patientId,
+            uploadedAt: createdAt,
+            processingStatus: 'PROCESSED' as any,
+            transcriptStatus: 'COMPLETED' as any,
+            verificationStatus: 'REQUIRED' as any,
+            requestedLanguage: 'or-IN',
+            detectedLanguage: 'or',
+            provider: 'mock',
+            transcript: {
+              text: c.chiefComplaint,
+              source: 'VOICE_TRANSCRIPT' as any,
+              provenance: 'AI_GENERATED' as any,
+              language: 'or',
+              confidence: 0.65,
+            },
+          },
+          { upsert: true, new: true }
+        );
+        summary.voiceInputs++;
+      }
+
+      // B. Medical OCR Report (CASE-SYN-PRIORITY-006, CASE-SYN-URGENT-010)
+      if (c.caseNumber === 'CASE-SYN-PRIORITY-006' || c.caseNumber === 'CASE-SYN-URGENT-010') {
+        await Report.findOneAndUpdate(
+          { caseId: caseObjectId, contentHash: `hash-ocr-${c.caseNumber}` },
+          {
+            caseId: caseObjectId,
+            storageKey: `uploads/synthetic_report_${c.caseNumber.toLowerCase()}.pdf`,
+            contentHash: `hash-ocr-${c.caseNumber}`,
+            originalFilename: `synthetic_report_${c.caseNumber.toLowerCase()}.pdf`,
+            mimeType: 'application/pdf',
+            fileSize: 204800,
+            uploadTimestamp: createdAt,
+            processingStatus: 'PROCESSED' as any,
+            verificationStatus: 'REQUIRED' as any,
+            ocrStatus: 'PROCESSED',
+            ocrUsable: true,
+            extractionConfidence: c.caseNumber === 'CASE-SYN-PRIORITY-006' ? 0.55 : 0.95,
+            extractedText: c.chiefComplaint,
+            extractedData: c.caseNumber === 'CASE-SYN-URGENT-010' ? { Potassium: '7.1 mmol/L' } : {},
+            hasUnstructuredLabData: c.caseNumber === 'CASE-SYN-PRIORITY-006',
+            isLatest: true,
+          },
+          { upsert: true, new: true }
+        );
+        summary.reports++;
+      }
+
+      // C. Visual Observation (CASE-SYN-ROUTINE-002)
+      if (c.caseNumber === 'CASE-SYN-ROUTINE-002') {
+        await VisualInput.findOneAndUpdate(
+          { caseId: caseObjectId, contentHash: `hash-vision-${c.caseNumber}` },
+          {
+            caseId: caseObjectId,
+            storageKey: 'uploads/synthetic_skin_rash.jpg',
+            contentHash: `hash-vision-${c.caseNumber}`,
+            originalFilename: 'synthetic_skin_rash.jpg',
+            mimeType: 'image/jpeg',
+            fileSize: 153600,
+            uploadedBy: patientId,
+            uploadedAt: createdAt,
+            processingStatus: 'PROCESSED' as any,
+            verificationStatus: 'REQUIRED' as any,
+            qualityStatus: 'SUFFICIENT',
+            provider: 'mock',
+            observations: [
+              {
+                id: `obs-syn-${c.caseNumber}`,
+                type: 'REDNESS' as any,
+                description: 'Erythematous pruritic rash on forearm',
+                location: 'Forearm',
+                certainty: 'OBSERVED' as any,
+                provenance: 'AI_GENERATED' as any,
+              },
+            ],
+          },
+          { upsert: true, new: true }
+        );
+        summary.visualInputs++;
+      }
+
+      // D. Multilingual Translation (for non-English synthetic cases)
+      if (c.language !== 'en') {
+        await TranslationModel.findOneAndUpdate(
+          {
+            caseId: caseObjectId,
+            sourceType: 'PATIENT_TEXT' as any,
+            sourceId: caseObjectId,
+            sourceContentHash: `hash-trans-${c.caseNumber}`,
+            targetLanguage: 'en',
+          },
+          {
+            caseId: caseObjectId,
+            sourceType: 'PATIENT_TEXT' as any,
+            sourceId: caseObjectId,
+            sourceLanguage: c.language,
+            targetLanguage: 'en',
+            originalText: c.chiefComplaint,
+            translatedText: `[Translated from ${c.language}]: ${c.chiefComplaint}`,
+            sourceContentHash: `hash-trans-${c.caseNumber}`,
+            status: 'COMPLETED' as any,
+            provider: 'MockTranslationProvider',
+            provenance: 'AI_GENERATED' as any,
+            verificationStatus: 'REQUIRED' as any,
+            requestedBy: patientId,
+          },
+          { upsert: true, new: true }
+        );
+        summary.translations++;
       }
     }
 

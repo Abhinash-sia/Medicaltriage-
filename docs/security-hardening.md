@@ -1,7 +1,13 @@
 # Security Hardening & Controls (Phase 20)
 
 > **PROTOTYPE / DEMO DISCLAIMER:**
-> This repository is an engineering demonstration and prototype healthcare triage system built for research and demonstration purposes. It is not a certified medical device, nor has it undergone third-party regulatory medical software audit (e.g. HIPAA, CE-MDR, ISO 13485/27001).
+> Prototype/hackathon implementation for research and evaluation purposes.
+> 
+> This project has not undergone an independent security audit, clinical validation,
+> medical-device conformity assessment, or regulatory certification.
+> 
+> Real-world deployment would require appropriate legal, clinical, privacy,
+> security, infrastructure, and regulatory review for the target jurisdiction.
 
 ---
 

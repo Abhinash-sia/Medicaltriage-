@@ -14,7 +14,7 @@ To enable safe, deterministic testing, evaluation, and demonstrations without ri
 
 ## 2. Dataset Composition
 
-The synthetic dataset consists of **3 facilities**, **10 users**, and **20 diverse clinical cases** covering the entire spectrum of triage workflows.
+The synthetic dataset consists of **3 facilities**, **10 users**, and **22 diverse clinical cases** covering the entire spectrum of triage workflows and multimodal inputs.
 
 ### 2.1 Facilities
 * `FAC-PHC-BALASORE`: Balasore Primary Health Centre (Primary Care)
@@ -29,7 +29,7 @@ The synthetic dataset consists of **3 facilities**, **10 users**, and **20 diver
 ### 2.3 Case Scenarios
 * **Routine (5 Cases)**:
   - Low-risk mild viral rhinitis without fever or dyspnea.
-  - Mild localized forearm dermatitis.
+  - Mild localized forearm dermatitis (with Visual Observation input).
   - Stable chronic hypertension medication renewal.
   - Mild ankle sprain with full weight-bearing capacity.
   - Tension headache relieved by rest.
@@ -40,8 +40,8 @@ The synthetic dataset consists of **3 facilities**, **10 users**, and **20 diver
   - Incomplete intake missing critical clinical onset and vitals.
   - Complex abdominal pain with low-confidence AI extraction.
   - Blurry unstructured OCR laboratory report.
-  - Odia voice intake with background noise / partial STT confidence.
-* **Urgent (8 Cases — All Phase 15 Safety Rules)**:
+  - Odia voice intake with background noise / partial STT confidence (with Voice Input & Translation).
+* **Urgent (10 Cases — All Phase 15 Safety Rules)**:
   - Severe respiratory distress with stridor / gasping.
   - Crushing retrosternal chest pain radiating to left jaw.
   - Sudden altered mental status / acute neurological deficit (suspected stroke).
@@ -50,6 +50,8 @@ The synthetic dataset consists of **3 facilities**, **10 users**, and **20 diver
   - Explicit suicidal intent / acute psychiatric distress.
   - Acute anaphylactic angioedema with airway involvement.
   - Post-stabilization emergency cardiology referral to tertiary center.
+  - 6-month-old infant with high fever (104°F), lethargy, and inspiratory stridor (Pediatric Critical Rule).
+  - Clinician-configured critical lab alert: Serum Potassium 7.1 mmol/L (Hyperkalemia Critical Lab Rule).
 
 ---
 
@@ -62,7 +64,7 @@ npm run seed:test-data
 
 ### Execution Output:
 ```text
-Connecting to database: mongodb://localhost:27017/medical_triage...
+Connecting to database: mongodb://localhost:27017/medicaltriage...
 Database connected successfully.
 
 --- SEEDING DETERMINISTIC SYNTHETIC DATASET ---
@@ -72,13 +74,17 @@ Database connected successfully.
 ======================================================
  Facilities:           3
  Users:                10
- Cases:                20
- Safety Evaluations:   20
- Triage Notes:         20
+ Cases:                22
+ Safety Evaluations:   22
+ Triage Notes:         22
  Reviews:              2
  Referrals:            1
- Notifications:        16
+ Notifications:        17
  Audit Logs:           20
+ Voice Inputs (STT):   1
+ Medical Reports (OCR):2
+ Visual Inputs:        1
+ Translations:         22
 ======================================================
 ```
 
