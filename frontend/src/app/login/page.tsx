@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { HeartPulse, ShieldAlert, LogIn, Loader2, User, Lock, CheckCircle2, ArrowRight } from 'lucide-react';
+import { LanguageSelector } from '@/components/ui/LanguageSelector';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const SYNTHETIC_DEMO_ACCOUNTS = [
   {
@@ -45,6 +47,7 @@ const SYNTHETIC_DEMO_ACCOUNTS = [
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [email, setEmail] = useState<string>('doctor.demo.001@example.test');
   const [password, setPassword] = useState<string>('Password123!');
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -93,7 +96,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-center items-center p-4">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-center items-center p-4 relative">
+      <div className="absolute top-4 right-4 z-10">
+        <LanguageSelector variant="full" />
+      </div>
+
       <div className="max-w-md w-full space-y-6">
         {/* Header Branding */}
         <div className="text-center space-y-2">
@@ -104,14 +111,14 @@ export default function LoginPage() {
             <span>MedicalTriage</span>
           </Link>
           <p className="text-xs text-slate-500 font-medium">
-            Synthetic Demo Authentication Portal
+            {t('auth.subtitle')}
           </p>
         </div>
 
         {/* Login Card */}
         <Card className="border border-slate-200 shadow-sm bg-white">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-lg font-bold text-slate-900">Sign In to Account</CardTitle>
+            <CardTitle className="text-lg font-bold text-slate-900">{t('auth.title')}</CardTitle>
             <CardDescription className="text-xs text-slate-500">
               Enter credentials or select a 1-click synthetic demo persona below.
             </CardDescription>

@@ -62,31 +62,50 @@ All 22 deterministic safety rules implemented in Phase 15 are systematically tes
 * Verified that concurrent or repeated submissions with identical idempotency keys do not produce duplicate cases or notifications.
 * Verified that background SLA transitions and notification side effects do not race or double-escalate.
 
+### 3.5 Playwright Golden End-to-End Suite (Phase 21)
+* **Canonical Multi-Role E2E**: Validates complete workflow end-to-end:
+  1. Public landing page rendering and non-diagnostic disclaimer assertion.
+  2. Patient self-intake form completion, explicit consent, narrative submission, and `CAS-` case number generation.
+  3. Doctor login, queue inspection, case claiming, AI extraction, 22-rule safety evaluation, structured triage note compilation, human review, and immutable audit trail API event verification.
+* **Location**: `frontend/e2e/golden-triage-workflow.spec.ts`
+
 ---
 
 ## 4. Test & Verification Commands
 
-### Run All Backend Tests:
+### Run All Backend Tests (339 Vitest Tests):
 ```bash
+cd backend
 npm test
 ```
 
 ### Build Backend:
 ```bash
+cd backend
 npm run build
 ```
 
 ### Lint Frontend:
 ```bash
+cd frontend
 npm run lint
 ```
 
 ### Build Frontend:
 ```bash
+cd frontend
 npm run build
+```
+
+### Run Playwright Golden E2E Test Suite:
+```bash
+cd frontend
+npx playwright test
 ```
 
 ### Seed Synthetic Dataset:
 ```bash
+cd backend
 npm run seed:test-data
 ```
+

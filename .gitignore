@@ -46,3 +46,7 @@ __pycache__/
 
 # Docker
 docker-data/
+
+
+test-results/
+playwright-report/

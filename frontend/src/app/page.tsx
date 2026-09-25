@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import {
@@ -24,8 +26,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { LanguageSelector } from '@/components/ui/LanguageSelector';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 export default function PublicLandingPage() {
+  const { t } = useLanguage();
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       {/* Top Navigation */}
@@ -62,15 +68,16 @@ export default function PublicLandingPage() {
           </nav>
 
           <div className="flex items-center space-x-3">
+            <LanguageSelector variant="full" />
             <Link href="/login">
               <Button variant="outline" size="sm" className="hidden sm:inline-flex items-center gap-1.5">
                 <LogIn className="w-4 h-4" />
-                Sign In
+                {t('common.login')}
               </Button>
             </Link>
             <Link href="/patient/intake">
               <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
-                Patient Intake
+                {t('landing.patientPortal')}
               </Button>
             </Link>
           </div>

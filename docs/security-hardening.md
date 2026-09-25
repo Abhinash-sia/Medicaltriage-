@@ -32,16 +32,18 @@ Phase 3 and Phase 19 established a strict token minimization invariant:
 ## 2. Authorization Matrix & Facility Isolation
 
 ### 2.1 Role-Based Access Control (RBAC)
+The system enforces a 6-role access control model:
 * **PATIENT**:
   - May create self-intake cases (`POST /api/intake`) and view own cases (`GET /api/intake/my-cases`, `GET /api/intake/:caseId`).
   - Strict isolation: Cannot access reviewer queues, cannot review or escalate cases, cannot access audit logs, cannot access administrative APIs.
-* **REVIEWER (Nurse / Doctor / Medical Officer)**:
+* **REVIEWER ROLES (`NURSE`, `HEALTH_WORKER`, `DOCTOR`, `MEDICAL_OFFICER`)**:
   - May view reviewer queue for their assigned facility (`GET /api/reviewer/cases`).
   - May submit formal reviews, manual escalations, and priority overrides (`POST /api/reviewer/cases/:caseId/review`).
-  - May trigger AI extraction and structured triage note generation for facility cases.
+  - May trigger AI extraction, safety evaluation, and structured triage note generation for facility cases.
   - Restricted from admin user management, facility configuration, and data purge endpoints.
 * **ADMIN**:
   - Full operational management across facilities, user activation/deactivation, retention status, and data purge execution.
+
 
 ### 2.2 Facility Boundary & Referral Exception
 * **Global Isolation**: Reviewers are restricted to cases belonging to their authorized `facilityId`.

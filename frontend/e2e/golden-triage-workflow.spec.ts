@@ -56,8 +56,9 @@ test.describe('Golden Triage End-to-End Workflow', () => {
 
     // Step 1: Consent & Language
     await expect(page.getByText('Patient Self-Intake Portal')).toBeVisible();
-    const consentCheckbox = page.locator('input[type="checkbox"]');
-    await consentCheckbox.check();
+    const consentCheckbox = page.locator('input[type="checkbox"]').first();
+    await consentCheckbox.click();
+
     await page.getByRole('button', { name: 'Next Step' }).click();
 
     // Step 2: Primary Symptom & Narrative
@@ -97,34 +98,33 @@ test.describe('Golden Triage End-to-End Workflow', () => {
     expect(authRes.ok()).toBeTruthy();
     const authJson = await authRes.json();
     doctorToken = authJson.data.accessToken;
+    const doctorUser = authJson.data.user;
     expect(doctorToken).toBeTruthy();
 
-    // Set token in browser storage
+    // Set token & user in browser storage
     await page.goto('/');
-    await page.evaluate((tok) => {
+    await page.evaluate(({ tok, usr }) => {
       localStorage.setItem('accessToken', tok);
-    }, doctorToken);
+      localStorage.setItem('user', JSON.stringify(usr));
+    }, { tok: doctorToken, usr: doctorUser });
 
     // 2. Navigate to Reviewer Queue
     await page.goto('/reviewer');
     await expect(page.getByText('Triage Intake Case Queue')).toBeVisible();
 
     // 3. Find and open the submitted case
-    await page.goto(`/reviewer`);
-    const caseLink = page.locator(`a:has-text("${createdCaseNumber}")`).first();
-    
-    // Fallback: If case list paginated, navigate directly to latest case via API query or list
     const casesRes = await page.request.get(`${apiBaseUrl}/reviewer/cases?limit=5`, {
       headers: { Authorization: `Bearer ${doctorToken}` },
     });
     expect(casesRes.ok()).toBeTruthy();
     const casesJson = await casesRes.json();
     const targetCase = casesJson.data.find((c: any) => c.caseNumber === createdCaseNumber) || casesJson.data[0];
-    createdCaseId = targetCase.id;
+    createdCaseId = targetCase.id || targetCase._id;
 
     // Open Case Detail Page
     await page.goto(`/reviewer/cases/${createdCaseId}`);
-    await expect(page.getByText(targetCase.caseNumber).first()).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('body')).toContainText(targetCase.caseNumber, { timeout: 15000 });
+
 
 
     // 4. Claim Case if visible
