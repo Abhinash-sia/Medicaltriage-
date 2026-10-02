@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   ShieldAlert,
   ArrowLeft,
@@ -21,6 +22,7 @@ import { DemoBanner } from '@/components/ui/DemoBanner';
 import { useLanguage } from '@/i18n/LanguageContext';
 
 export default function AdminPage() {
+  const router = useRouter();
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'facilities' | 'retention'>(
     'dashboard'
@@ -31,19 +33,25 @@ export default function AdminPage() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('accessToken') || '';
+      if (!token) {
+        router.push('/login');
+        return;
+      }
       setAuthToken(token);
-      if (token) {
-        try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          if (payload && payload.role) {
-            setCurrentUserRole(payload.role);
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload && payload.role) {
+          setCurrentUserRole(payload.role);
+          if (payload.role !== 'ADMIN') {
+            router.push(payload.role === 'PATIENT' ? '/patient/intake' : '/reviewer');
           }
-        } catch {
-          // Token decode fallback
         }
+      } catch {
+        localStorage.removeItem('accessToken');
+        router.push('/login');
       }
     }
-  }, []);
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col">

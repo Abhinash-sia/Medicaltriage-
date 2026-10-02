@@ -53,6 +53,15 @@ export function AdminDashboard() {
           ...getAuthHeader(),
         },
       });
+      if (res.status === 401) {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('user');
+          window.location.href = '/login?expired=true';
+        }
+        return;
+      }
+
       if (res.ok) {
         const json = await res.json();
         if (json.success && json.data) {

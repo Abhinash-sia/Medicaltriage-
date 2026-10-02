@@ -35,11 +35,14 @@ export function NotificationBell() {
   };
 
   const fetchUnreadCount = useCallback(async () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    if (!token) return;
+
     try {
       const res = await fetch(`${getApiUrl()}/notifications/unread-count`, {
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeader(),
+          Authorization: `Bearer ${token}`,
         },
       });
       if (res.ok) {
@@ -54,13 +57,16 @@ export function NotificationBell() {
   }, []);
 
   const fetchNotifications = useCallback(async () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    if (!token) return;
+
     setIsLoading(true);
     setError(null);
     try {
       const res = await fetch(`${getApiUrl()}/notifications?limit=15`, {
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeader(),
+          Authorization: `Bearer ${token}`,
         },
       });
       if (res.ok) {
