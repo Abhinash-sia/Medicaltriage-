@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, CheckCircle2, ShieldCheck, HeartPulse, ChevronRight, ChevronLeft, Loader2 } from 'lucide-react';
 import { DemoBanner } from '@/components/ui/DemoBanner';
+import { LanguageSelector } from '@/components/ui/LanguageSelector';
 import { useLanguage } from '@/i18n/LanguageContext';
 
 interface IntakeFormData {
@@ -135,10 +137,22 @@ export default function PatientIntakePage() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans flex flex-col">
       <DemoBanner />
-      <div className="py-10 px-4 sm:px-6 lg:px-8 flex-1">
+      <div className="py-8 px-4 sm:px-6 lg:px-8 flex-1">
         <div className="max-w-2xl mx-auto space-y-6">
-        {/* Header Branding */}
-        <div className="text-center space-y-2">
+          {/* Top Bar Navigation */}
+          <div className="flex items-center justify-between">
+            <Link
+              href="/patient"
+              className="inline-flex items-center text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-2xs hover:bg-slate-50 transition-colors"
+            >
+              <ChevronLeft className="w-3.5 h-3.5 mr-1" />
+              <span>{t('patient.backToDashboard')}</span>
+            </Link>
+            <LanguageSelector />
+          </div>
+
+          {/* Header Branding */}
+          <div className="text-center space-y-2">
           <div className="inline-flex items-center space-x-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase">
             <HeartPulse className="w-3.5 h-3.5" />
             <span>{t('patient.portalTitle')}</span>
@@ -275,9 +289,15 @@ export default function PatientIntakePage() {
                 />
               </div>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex flex-col sm:flex-row gap-3">
+              <Link href="/patient" className="w-full sm:w-1/2">
+                <Button variant="outline" className="w-full text-xs font-semibold">
+                  <ChevronLeft className="w-4 h-4 mr-1.5" />
+                  {t('patient.backToDashboard')}
+                </Button>
+              </Link>
               <Button
-                className="w-full"
+                className="w-full sm:w-1/2 bg-blue-600 hover:bg-blue-700 text-xs font-semibold"
                 onClick={() => {
                   setSubmittedCase(null);
                   setFormData(initialForm);

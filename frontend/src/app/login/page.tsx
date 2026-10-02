@@ -32,7 +32,7 @@ const SYNTHETIC_DEMO_ACCOUNTS = [
     email: 'patient.demo.001@example.test',
     password: 'Password123!',
     role: 'PATIENT',
-    targetRoute: '/patient/intake',
+    targetRoute: '/patient',
     color: 'bg-purple-50 border-purple-200 text-purple-800 hover:bg-purple-100',
   },
   {
@@ -89,7 +89,7 @@ export default function LoginPage() {
       }
 
       if (user.role === 'PATIENT') {
-        router.push('/patient/intake');
+        router.push('/patient');
       } else if (user.role === 'ADMIN') {
         router.push('/admin');
       } else {

@@ -8,10 +8,10 @@ type CommonExtra = Pick<typeof en.common, 'demoBannerNotice' | 'previous' | 'nex
 
 export interface RegionalModules {
   commonExtra: CommonExtra;
-  auth: AuthDict;
-  patient: PatientDict;
-  reviewer: ReviewerDict;
-  admin: AdminDict;
+  auth: Partial<AuthDict>;
+  patient: Partial<PatientDict>;
+  reviewer: Partial<ReviewerDict>;
+  admin: Partial<AdminDict>;
 }
 
 /* -------------------------------------------------------------------------- */
