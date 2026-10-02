@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, CheckCircle2, ShieldCheck, HeartPulse, ChevronRight, ChevronLeft, Loader2 } from 'lucide-react';
 import { DemoBanner } from '@/components/ui/DemoBanner';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface IntakeFormData {
   consent: boolean;
@@ -34,6 +35,7 @@ const initialForm: IntakeFormData = {
 };
 
 export default function PatientIntakePage() {
+  const { t } = useLanguage();
   const [step, setStep] = useState<number>(1);
   const [formData, setFormData] = useState<IntakeFormData>(initialForm);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -60,15 +62,15 @@ export default function PatientIntakePage() {
   const nextStep = () => {
     setSubmitError(null);
     if (step === 1 && !formData.consent) {
-      setSubmitError('Explicit patient consent is required to proceed.');
+      setSubmitError(t('patient.consentRequiredError'));
       return;
     }
     if (step === 2 && (!formData.primarySymptom.trim() || !formData.symptomDescription.trim())) {
-      setSubmitError('Please enter both your primary symptom and a description.');
+      setSubmitError(t('patient.symptomRequiredError'));
       return;
     }
     if (step === 3 && !formData.onset.trim()) {
-      setSubmitError('Please specify when your symptoms started.');
+      setSubmitError(t('patient.onsetRequiredError'));
       return;
     }
     setStep((prev) => Math.min(prev + 1, 4));
@@ -139,13 +141,13 @@ export default function PatientIntakePage() {
         <div className="text-center space-y-2">
           <div className="inline-flex items-center space-x-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase">
             <HeartPulse className="w-3.5 h-3.5" />
-            <span>Healthcare Triage Assistant — Patient Intake</span>
+            <span>{t('patient.portalTitle')}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-            Patient Self-Intake Portal
+            {t('patient.intakeTitle')}
           </h1>
           <p className="text-sm text-slate-600">
-            Provide your symptom information to organize your case for qualified healthcare reviewer inspection.
+            {t('patient.intakeSubtitle')}
           </p>
         </div>
 
@@ -153,9 +155,9 @@ export default function PatientIntakePage() {
         <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-900 text-xs flex items-start space-x-3 shadow-sm">
           <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <p className="font-semibold">Safety & System Boundary Disclaimer:</p>
+            <p className="font-semibold">{t('patient.safetyNoticeTitle')}</p>
             <p className="leading-relaxed">
-              This system assists healthcare staff by organizing patient communications. It does not diagnose conditions or prescribe medication. If you are experiencing a severe emergency (such as severe chest pain or acute breathing difficulty), seek immediate medical assistance.
+              {t('patient.safetyNoticeDesc')}
             </p>
           </div>
         </div>
@@ -167,41 +169,41 @@ export default function PatientIntakePage() {
               <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-2">
                 <CheckCircle2 className="w-7 h-7" />
               </div>
-              <CardTitle className="text-xl text-slate-900">Intake Submitted Successfully</CardTitle>
-              <CardDescription>Your information has been recorded for healthcare staff review.</CardDescription>
+              <CardTitle className="text-xl text-slate-900">{t('patient.successTitle')}</CardTitle>
+              <CardDescription>{t('patient.successSubtitle')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 pt-4 border-t border-slate-100">
               <div className="bg-slate-50 p-4 rounded-lg space-y-2 text-sm">
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-500">Case Reference Number:</span>
+                  <span className="text-slate-500">{t('patient.caseRefNumber')}</span>
                   <span className="font-mono font-bold text-slate-900">{submittedCase.caseNumber}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-500">Workflow Status:</span>
+                  <span className="text-slate-500">{t('patient.workflowStatus')}</span>
                   <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                     {submittedCase.status}
                   </Badge>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-500">Queue Category:</span>
+                  <span className="text-slate-500">{t('patient.queueCategory')}</span>
                   <Badge variant="outline" className="bg-slate-100 text-slate-700">
-                    {submittedCase.priority} (Awaiting Staff Review)
+                    {submittedCase.priority} ({t('patient.awaitingReview')})
                   </Badge>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-500">Submission Time:</span>
+                  <span className="text-slate-500">{t('patient.submissionTime')}</span>
                   <span className="text-slate-700">{new Date(submittedCase.createdAt).toLocaleString()}</span>
                 </div>
               </div>
               <p className="text-xs text-slate-500 text-center">
-                Please note your Case Number. A qualified healthcare reviewer will inspect your intake note.
+                {t('patient.noticeCaseNumber')}
               </p>
 
               {/* Optional Report Attachment Section */}
               <div className="p-3 bg-blue-50/60 border border-blue-200 rounded-lg text-xs space-y-2">
-                <span className="font-semibold text-blue-950 block">Attach Clinical Document (Optional)</span>
+                <span className="font-semibold text-blue-950 block">{t('patient.attachDoc')}</span>
                 <p className="text-[11px] text-blue-800">
-                  If you have a lab report or clinical document (PDF, JPEG, PNG), you may attach it to your case for reviewer inspection.
+                  {t('patient.attachDocDesc')}
                 </p>
                 <input
                   type="file"
@@ -237,10 +239,10 @@ export default function PatientIntakePage() {
               {/* Optional Voice Recording Attachment */}
               <div className="bg-sky-50 border border-sky-200 rounded-md p-3 space-y-2 text-left">
                 <span className="text-xs font-semibold text-sky-900 block">
-                  Attach Optional Voice Recording
+                  {t('patient.attachVoice')}
                 </span>
                 <p className="text-[11px] text-sky-800">
-                  You may record or upload an audio message (.wav, .mp3, .ogg, .webm). Your voice recording will be transcribed for review by qualified healthcare staff.
+                  {t('patient.attachVoiceDesc')}
                 </p>
                 <input
                   type="file"
@@ -282,7 +284,7 @@ export default function PatientIntakePage() {
                   setStep(1);
                 }}
               >
-                Start New Intake
+                {t('patient.startNewIntake')}
               </Button>
             </CardFooter>
           </Card>
@@ -291,13 +293,13 @@ export default function PatientIntakePage() {
           <Card className="shadow-md bg-white border border-slate-200">
             {/* Step Stepper Header */}
             <div className="bg-slate-50 px-6 py-3 border-b border-slate-200 flex justify-between items-center text-xs font-semibold text-slate-600">
-              <span className={step === 1 ? 'text-blue-600 font-bold' : ''}>1. Consent</span>
+              <span className={step === 1 ? 'text-blue-600 font-bold' : ''}>{t('patient.step1')}</span>
               <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-              <span className={step === 2 ? 'text-blue-600 font-bold' : ''}>2. Primary Symptom</span>
+              <span className={step === 2 ? 'text-blue-600 font-bold' : ''}>{t('patient.step2')}</span>
               <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-              <span className={step === 3 ? 'text-blue-600 font-bold' : ''}>3. Details</span>
+              <span className={step === 3 ? 'text-blue-600 font-bold' : ''}>{t('patient.step3')}</span>
               <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-              <span className={step === 4 ? 'text-blue-600 font-bold' : ''}>4. Review</span>
+              <span className={step === 4 ? 'text-blue-600 font-bold' : ''}>{t('patient.step4')}</span>
             </div>
 
             <CardContent className="p-6 space-y-6">
@@ -314,23 +316,17 @@ export default function PatientIntakePage() {
                   <div className="space-y-1">
                     <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
                       <ShieldCheck className="w-5 h-5 text-blue-600" />
-                      <span>Step 1: Patient Consent & Operational Notice</span>
+                      <span>{t('patient.step1Title')}</span>
                     </h2>
                     <p className="text-xs text-slate-500">
-                      Before submitting your healthcare information, please review and confirm consent.
+                      {t('patient.step1Subtitle')}
                     </p>
                   </div>
 
                   <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 text-xs text-slate-700 space-y-3 leading-relaxed">
-                    <p>
-                      <strong>1. Purpose of Intake:</strong> The information you enter will be organized into a structured triage note for review by qualified doctors and healthcare workers at authorized facilities.
-                    </p>
-                    <p>
-                      <strong>2. Non-Diagnostic System:</strong> This system assists with information workflow organization. It does not provide medical diagnoses or prescribe treatment.
-                    </p>
-                    <p>
-                      <strong>3. Human Verification:</strong> A qualified human reviewer is responsible for inspecting your submitted case and taking appropriate healthcare actions.
-                    </p>
+                    <p>{t('patient.consentPoint1')}</p>
+                    <p>{t('patient.consentPoint2')}</p>
+                    <p>{t('patient.consentPoint3')}</p>
                   </div>
 
                   <div className="pt-2">
@@ -339,10 +335,10 @@ export default function PatientIntakePage() {
                         type="checkbox"
                         checked={formData.consent}
                         onChange={handleConsentChange}
-                        className="mt-1 h-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                        className="mt-1 h-4 w-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
                       />
                       <span className="text-xs text-slate-800 font-medium leading-normal">
-                        I have read the operational notice and affirmatively consent to submit my symptom information for healthcare triage review.
+                        {t('patient.consentCheckbox')}
                       </span>
                     </label>
                   </div>
@@ -353,13 +349,13 @@ export default function PatientIntakePage() {
               {step === 2 && (
                 <div className="space-y-5">
                   <div className="space-y-1">
-                    <h2 className="text-lg font-bold text-slate-900">Step 2: Language & Reason for Visit</h2>
-                    <p className="text-xs text-slate-500">Specify your preferred language and main symptom.</p>
+                    <h2 className="text-lg font-bold text-slate-900">{t('patient.step2Title')}</h2>
+                    <p className="text-xs text-slate-500">{t('patient.step2Subtitle')}</p>
                   </div>
 
                   <div className="space-y-4">
                     <div className="space-y-1">
-                      <label className="text-xs font-semibold text-slate-700">Preferred Language</label>
+                      <label className="text-xs font-semibold text-slate-700">{t('patient.preferredLanguage')}</label>
                       <select
                         name="language"
                         value={formData.language}
@@ -368,18 +364,26 @@ export default function PatientIntakePage() {
                       >
                         <option value="en">English</option>
                         <option value="hi">Hindi (हिन्दी)</option>
-                        <option value="other">Other Regional Language</option>
+                        <option value="or">Odia (ଓଡ଼ିଆ)</option>
+                        <option value="bn">Bengali (বাংলা)</option>
+                        <option value="ta">Tamil (தமிழ்)</option>
+                        <option value="te">Telugu (తెలుగు)</option>
+                        <option value="mr">Marathi (मराठी)</option>
+                        <option value="kn">Kannada (ಕನ್ನಡ)</option>
+                        <option value="ml">Malayalam (മലയാളം)</option>
+                        <option value="pa">Punjabi (ਪੰਜਾਬੀ)</option>
+                        <option value="gu">Gujarati (ગુજરાતી)</option>
                       </select>
                     </div>
 
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-slate-700">
-                        Primary Symptom / Main Reason for Visit <span className="text-red-500">*</span>
+                        {t('patient.primarySymptom')} <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
                         name="primarySymptom"
-                        placeholder="e.g. Chest tightness, High fever, Severe knee pain"
+                        placeholder={t('patient.primarySymptomPlaceholder')}
                         value={formData.primarySymptom}
                         onChange={handleInputChange}
                         className="w-full text-xs p-2.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -388,12 +392,12 @@ export default function PatientIntakePage() {
 
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-slate-700">
-                        Detailed Symptom Description <span className="text-red-500">*</span>
+                        {t('patient.symptomDescription')} <span className="text-red-500">*</span>
                       </label>
                       <textarea
                         name="symptomDescription"
                         rows={4}
-                        placeholder="Describe how you feel, what worsens the symptom, and any relevant background..."
+                        placeholder={t('patient.symptomDescriptionPlaceholder')}
                         value={formData.symptomDescription}
                         onChange={handleInputChange}
                         className="w-full text-xs p-2.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -407,19 +411,19 @@ export default function PatientIntakePage() {
               {step === 3 && (
                 <div className="space-y-5">
                   <div className="space-y-1">
-                    <h2 className="text-lg font-bold text-slate-900">Step 3: Symptom Details & Timeline</h2>
-                    <p className="text-xs text-slate-500">Provide timeline details and patient-reported severity.</p>
+                    <h2 className="text-lg font-bold text-slate-900">{t('patient.step3Title')}</h2>
+                    <p className="text-xs text-slate-500">{t('patient.step3Subtitle')}</p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-slate-700">
-                        When did symptoms start? (Onset) <span className="text-red-500">*</span>
+                        {t('patient.onset')} <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
                         name="onset"
-                        placeholder="e.g. 2 days ago, Yesterday morning"
+                        placeholder={t('patient.onsetPlaceholder')}
                         value={formData.onset}
                         onChange={handleInputChange}
                         className="w-full text-xs p-2.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -427,11 +431,11 @@ export default function PatientIntakePage() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-xs font-semibold text-slate-700">Duration (Optional)</label>
+                      <label className="text-xs font-semibold text-slate-700">{t('patient.duration')}</label>
                       <input
                         type="text"
                         name="duration"
-                        placeholder="e.g. Constant for 4 hours, Intermittent"
+                        placeholder={t('patient.durationPlaceholder')}
                         value={formData.duration}
                         onChange={handleInputChange}
                         className="w-full text-xs p-2.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -442,7 +446,7 @@ export default function PatientIntakePage() {
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <label className="text-xs font-semibold text-slate-700">
-                        How severe does this feel to you? (1 to 10 scale)
+                        {t('patient.severity')}
                       </label>
                       <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
                         {formData.severity} / 10
@@ -458,19 +462,19 @@ export default function PatientIntakePage() {
                       className="w-full accent-blue-600"
                     />
                     <div className="flex justify-between text-[10px] text-slate-400">
-                      <span>1 (Very Mild)</span>
+                      <span>1 (Mild)</span>
                       <span>5 (Moderate)</span>
-                      <span>10 (Severe Pain/Discomfort)</span>
+                      <span>10 (Severe)</span>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="text-xs font-semibold text-slate-700">Body Location / Site</label>
+                      <label className="text-xs font-semibold text-slate-700">{t('patient.bodyLocation')}</label>
                       <input
                         type="text"
                         name="bodyLocation"
-                        placeholder="e.g. Lower back, Right forearm, Chest"
+                        placeholder={t('patient.bodyLocationPlaceholder')}
                         value={formData.bodyLocation}
                         onChange={handleInputChange}
                         className="w-full text-xs p-2.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -478,16 +482,16 @@ export default function PatientIntakePage() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-xs font-semibold text-slate-700">Symptom Progress Course</label>
+                      <label className="text-xs font-semibold text-slate-700">{t('patient.course')}</label>
                       <select
                         name="course"
                         value={formData.course}
                         onChange={handleInputChange}
                         className="w-full text-xs p-2.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
                       >
-                        <option value="UNCHANGED">Unchanged</option>
-                        <option value="WORSENING">Worsening</option>
-                        <option value="IMPROVING">Improving</option>
+                        <option value="UNCHANGED">{t('patient.unchanged')}</option>
+                        <option value="WORSENING">{t('patient.worsening')}</option>
+                        <option value="IMPROVING">{t('patient.improving')}</option>
                       </select>
                     </div>
                   </div>
@@ -498,44 +502,44 @@ export default function PatientIntakePage() {
               {step === 4 && (
                 <div className="space-y-5">
                   <div className="space-y-1">
-                    <h2 className="text-lg font-bold text-slate-900">Step 4: Review & Submit Intake</h2>
-                    <p className="text-xs text-slate-500">Inspect your entered information before submitting.</p>
+                    <h2 className="text-lg font-bold text-slate-900">{t('patient.step4Title')}</h2>
+                    <p className="text-xs text-slate-500">{t('patient.step4Subtitle')}</p>
                   </div>
 
                   <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 text-xs space-y-3">
                     <div className="flex justify-between border-b pb-2">
-                      <span className="text-slate-500 font-medium">Consent Status:</span>
+                      <span className="text-slate-500 font-medium">{t('patient.consentStatus')}:</span>
                       <span className="text-green-700 font-semibold flex items-center space-x-1">
                         <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>Affirmative Granted ({formData.consentVersion})</span>
+                        <span>{t('patient.consentGranted')} ({formData.consentVersion})</span>
                       </span>
                     </div>
                     <div className="flex justify-between border-b pb-2">
-                      <span className="text-slate-500 font-medium">Preferred Language:</span>
+                      <span className="text-slate-500 font-medium">{t('patient.preferredLanguage')}:</span>
                       <span className="text-slate-800 uppercase font-mono">{formData.language}</span>
                     </div>
                     <div className="border-b pb-2 space-y-1">
-                      <span className="text-slate-500 font-medium">Primary Symptom:</span>
+                      <span className="text-slate-500 font-medium">{t('patient.primarySymptom')}:</span>
                       <p className="text-slate-900 font-semibold">{formData.primarySymptom}</p>
                     </div>
                     <div className="border-b pb-2 space-y-1">
-                      <span className="text-slate-500 font-medium">Detailed Description:</span>
+                      <span className="text-slate-500 font-medium">{t('patient.symptomDescription')}:</span>
                       <p className="text-slate-800 leading-relaxed">{formData.symptomDescription}</p>
                     </div>
                     <div className="grid grid-cols-2 gap-2 pt-1 text-slate-700">
                       <div>
-                        <span className="text-slate-500">Onset:</span> {formData.onset}
+                        <span className="text-slate-500">{t('patient.onset')}:</span> {formData.onset}
                       </div>
                       <div>
-                        <span className="text-slate-500">Patient Severity:</span> {formData.severity} / 10
+                        <span className="text-slate-500">{t('patient.severity')}:</span> {formData.severity} / 10
                       </div>
                       {formData.bodyLocation && (
                         <div>
-                          <span className="text-slate-500">Location:</span> {formData.bodyLocation}
+                          <span className="text-slate-500">{t('patient.bodyLocation')}:</span> {formData.bodyLocation}
                         </div>
                       )}
                       <div>
-                        <span className="text-slate-500">Course:</span> {formData.course}
+                        <span className="text-slate-500">{t('patient.course')}:</span> {formData.course}
                       </div>
                     </div>
                   </div>
@@ -547,7 +551,7 @@ export default function PatientIntakePage() {
             <CardFooter className="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-between">
               {step > 1 ? (
                 <Button variant="outline" size="sm" onClick={prevStep} disabled={isSubmitting}>
-                  <ChevronLeft className="w-4 h-4 mr-1" /> Previous
+                  <ChevronLeft className="w-4 h-4 mr-1" /> {t('common.previous')}
                 </Button>
               ) : (
                 <div />
@@ -555,7 +559,7 @@ export default function PatientIntakePage() {
 
               {step < 4 ? (
                 <Button size="sm" onClick={nextStep} disabled={step === 1 && !formData.consent}>
-                  Next Step <ChevronRight className="w-4 h-4 ml-1" />
+                  {t('common.next')} <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               ) : (
                 <Button
@@ -566,10 +570,10 @@ export default function PatientIntakePage() {
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Submitting...
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" /> {t('patient.submitting')}
                     </>
                   ) : (
-                    'Submit Intake'
+                    t('patient.submitIntake')
                   )}
                 </Button>
               )}

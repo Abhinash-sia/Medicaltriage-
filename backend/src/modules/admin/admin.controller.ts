@@ -4,6 +4,7 @@ import { AdminService } from './admin.service.js';
 import { UserRole } from '../users/user.types.js';
 import { AuthenticatedRequest } from '../auth/auth.types.js';
 import { AppError } from '../../middleware/error-handler.js';
+import { createStaffUserSchema } from './admin.schemas.js';
 
 const adminUsersQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),
@@ -35,6 +36,37 @@ export const listUsers = async (
       success: true,
       data: data.users,
       pagination: data.pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createStaffUser = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.user || !req.user.id) {
+      const error: AppError = new Error('Authentication token required');
+      error.statusCode = 401;
+      error.code = 'AUTH_TOKEN_MISSING';
+      return next(error);
+    }
+
+    const parseResult = createStaffUserSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      const error: AppError = new Error(parseResult.error.errors[0]?.message || 'Validation error');
+      error.statusCode = 400;
+      error.code = 'ADMIN_VALIDATION_ERROR';
+      return next(error);
+    }
+
+    const newUser = await AdminService.createStaffUser(parseResult.data, req.user.id, req.requestId);
+    res.status(201).json({
+      success: true,
+      data: newUser,
     });
   } catch (error) {
     next(error);

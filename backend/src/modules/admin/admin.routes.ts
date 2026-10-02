@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   listUsers,
+  createStaffUser,
   deactivateUser,
   reactivateUser,
   getDashboardMetrics,
@@ -13,8 +14,8 @@ export const adminRouter = Router();
 adminRouter.use(authenticateJwt);
 adminRouter.use(requireRole(UserRole.ADMIN));
 
-
 adminRouter.get('/users', listUsers);
+adminRouter.post('/users', createStaffUser);
 adminRouter.post('/users/:userId/deactivate', deactivateUser);
 adminRouter.post('/users/:userId/reactivate', reactivateUser);
 adminRouter.get('/dashboard', getDashboardMetrics);

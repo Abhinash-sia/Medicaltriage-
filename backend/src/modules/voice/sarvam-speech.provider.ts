@@ -10,7 +10,7 @@ export class SarvamSpeechProvider implements SpeechToTextProvider {
   private apiKey?: string;
 
   constructor(apiKey?: string) {
-    this.apiKey = apiKey || env.SARVAM_API_KEY;
+    this.apiKey = apiKey !== undefined ? apiKey : env.SARVAM_API_KEY;
   }
 
   public async transcribe(options: SpeechToTextOptions): Promise<SpeechToTextResult> {

@@ -20,17 +20,21 @@ export const errorHandler = (
       ? 'An unexpected error occurred.'
       : err.message || 'An unexpected error occurred.';
 
-  logger.error(
-    {
-      err: {
-        message: err.message,
-        stack: env.NODE_ENV === 'development' ? err.stack : undefined,
+  if (statusCode >= 500) {
+    logger.error(
+      {
+        err: {
+          message: err.message,
+          stack: err.stack,
+        },
+        requestId: req.id,
+        statusCode,
       },
-      requestId: req.id,
-      statusCode,
-    },
-    'Handled application error'
-  );
+      `Server Error [${statusCode}]: ${err.message}`
+    );
+  } else {
+    logger.warn(`[${statusCode}] ${req.method} ${req.path} -> ${err.message}`);
+  }
 
   res.status(statusCode).json({
     success: false,

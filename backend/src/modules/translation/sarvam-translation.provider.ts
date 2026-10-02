@@ -21,7 +21,7 @@ export class SarvamTranslationProvider implements TranslationProvider {
   private apiKey?: string;
 
   constructor(apiKey?: string) {
-    this.apiKey = apiKey || env.SARVAM_API_KEY;
+    this.apiKey = apiKey !== undefined ? apiKey : env.SARVAM_API_KEY;
   }
 
   public async translate(request: TranslationRequest): Promise<TranslationResult> {

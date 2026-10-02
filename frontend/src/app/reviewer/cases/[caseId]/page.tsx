@@ -30,6 +30,7 @@ import {
 import { ReferralHistoryView } from '@/components/reviewer/ReferralHistoryView';
 import { AuditTrailModal } from '@/components/reviewer/AuditTrailModal';
 import { DemoBanner } from '@/components/ui/DemoBanner';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface ReviewerCaseSymptom {
   id: string;
@@ -87,6 +88,7 @@ interface ReviewerCaseDetails {
 }
 
 export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ caseId: string }> }) {
+  const { t } = useLanguage();
   const resolvedParams = use(params);
   const caseId = resolvedParams.caseId;
 
@@ -1028,7 +1030,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div className="text-center space-y-3">
           <Loader2 className="w-8 h-8 animate-spin mx-auto text-indigo-600" />
-          <p className="text-xs text-slate-600 font-medium">Loading case details...</p>
+          <p className="text-xs text-slate-600 font-medium">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -1040,13 +1042,13 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
         <div className="max-w-2xl mx-auto space-y-4">
           <Link href="/reviewer">
             <Button variant="outline" size="sm" className="text-xs">
-              <ChevronLeft className="w-4 h-4 mr-1" /> Back to Queue
+              <ChevronLeft className="w-4 h-4 mr-1" /> {t('common.back')}
             </Button>
           </Link>
           <Card className="bg-white border-red-200">
             <CardHeader className="text-center">
               <AlertCircle className="w-10 h-10 text-red-500 mx-auto mb-2" />
-              <CardTitle className="text-base text-slate-900">Case Not Found or Access Error</CardTitle>
+              <CardTitle className="text-base text-slate-900">{t('common.error')}</CardTitle>
               <CardDescription className="text-xs text-slate-600">
                 {error || 'Unable to retrieve case details.'}
               </CardDescription>
@@ -1070,7 +1072,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
           <div className="flex items-center space-x-2">
             <Link href="/reviewer">
               <Button variant="outline" size="sm" className="text-xs bg-white text-slate-700 border-slate-300">
-                <ChevronLeft className="w-4 h-4 mr-1" /> Back to Reviewer Queue
+                <ChevronLeft className="w-4 h-4 mr-1" /> {t('common.back')} - {t('reviewer.queueTitle')}
               </Button>
             </Link>
             <Button

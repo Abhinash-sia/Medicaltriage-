@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   ShieldAlert,
   ArrowLeft,
@@ -18,8 +19,11 @@ import { RetentionPurgePanel } from '@/components/admin/RetentionPurgePanel';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { Button } from '@/components/ui/button';
 import { DemoBanner } from '@/components/ui/DemoBanner';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 export default function AdminPage() {
+  const router = useRouter();
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'facilities' | 'retention'>(
     'dashboard'
   );
@@ -29,19 +33,25 @@ export default function AdminPage() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('accessToken') || '';
+      if (!token) {
+        router.push('/login');
+        return;
+      }
       setAuthToken(token);
-      if (token) {
-        try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          if (payload && payload.role) {
-            setCurrentUserRole(payload.role);
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload && payload.role) {
+          setCurrentUserRole(payload.role);
+          if (payload.role !== 'ADMIN') {
+            router.push(payload.role === 'PATIENT' ? '/patient/intake' : '/reviewer');
           }
-        } catch {
-          // Token decode fallback
         }
+      } catch {
+        localStorage.removeItem('accessToken');
+        router.push('/login');
       }
     }
-  }, []);
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col">
@@ -54,12 +64,12 @@ export default function AdminPage() {
             className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-1.5 text-xs font-medium"
           >
             <ArrowLeft className="w-4 h-4" />
-            Reviewer Queue
+            {t('admin.reviewerQueueLink')}
           </Link>
           <div className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
           <div className="flex items-center gap-2">
             <ShieldAlert className="w-5 h-5 text-blue-600" />
-            <h1 className="text-base font-bold tracking-tight">Admin & Operations Portal</h1>
+            <h1 className="text-base font-bold tracking-tight">{t('admin.dashboardTitle')}</h1>
           </div>
         </div>
 
@@ -67,7 +77,7 @@ export default function AdminPage() {
           <NotificationBell />
           {currentUserRole && (
             <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-              Role: {currentUserRole}
+              {t('admin.roleLabel')}: {currentUserRole}
             </span>
           )}
         </div>
@@ -84,7 +94,7 @@ export default function AdminPage() {
             className="text-xs flex items-center gap-1.5"
           >
             <LayoutDashboard className="w-3.5 h-3.5" />
-            Operational Dashboard
+            {t('admin.dashboardTab')}
           </Button>
           <Button
             variant={activeTab === 'users' ? 'default' : 'ghost'}
@@ -93,7 +103,7 @@ export default function AdminPage() {
             className="text-xs flex items-center gap-1.5"
           >
             <Users className="w-3.5 h-3.5" />
-            User Management
+            {t('admin.usersTab')}
           </Button>
           <Button
             variant={activeTab === 'facilities' ? 'default' : 'ghost'}
@@ -102,7 +112,7 @@ export default function AdminPage() {
             className="text-xs flex items-center gap-1.5"
           >
             <Building2 className="w-3.5 h-3.5" />
-            Facilities & Languages
+            {t('admin.facilitiesTab')}
           </Button>
           <Button
             variant={activeTab === 'retention' ? 'default' : 'ghost'}
@@ -111,7 +121,7 @@ export default function AdminPage() {
             className="text-xs flex items-center gap-1.5"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            Retention & Data Purge
+            {t('admin.retentionTab')}
           </Button>
         </div>
 
@@ -124,7 +134,7 @@ export default function AdminPage() {
 
       {/* Footer Disclaimer */}
       <footer className="border-t border-slate-200 dark:border-slate-800 px-4 py-4 text-center text-xs text-slate-400 bg-white dark:bg-slate-900">
-        This system is designed for India-oriented triage workflow support and administrative operations. It is not presented as a legal, regulatory, clinical, or healthcare certification/compliance system.
+        {t('landing.footerDisclaimer')}
       </footer>
     </div>
   );

@@ -1,5 +1,7 @@
 import pino from 'pino';
 
+const isDev = process.env.NODE_ENV !== 'production';
+
 // Create structured pino logger
 export const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
@@ -7,6 +9,17 @@ export const logger = pino({
     level: (label) => ({ level: label }),
   },
   timestamp: pino.stdTimeFunctions.isoTime,
+  transport: isDev
+    ? {
+        target: 'pino-pretty',
+        options: {
+          colorize: true,
+          translateTime: 'HH:MM:ss',
+          ignore: 'pid,hostname',
+          singleLine: true,
+        },
+      }
+    : undefined,
   // Sensitive field redacting to enforce healthcare privacy and security logging guidelines
   redact: {
     paths: [
