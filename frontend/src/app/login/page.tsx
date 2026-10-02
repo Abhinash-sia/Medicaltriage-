@@ -81,9 +81,10 @@ export default function LoginPage() {
         throw new Error(json.error?.message || 'Authentication failed');
       }
 
-      const { token, user } = json.data;
+      const accessToken = json.data.accessToken || json.data.token;
+      const user = json.data.user;
       if (typeof window !== 'undefined') {
-        localStorage.setItem('accessToken', token);
+        localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('user', JSON.stringify(user));
       }
 
