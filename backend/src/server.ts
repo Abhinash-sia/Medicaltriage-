@@ -2,10 +2,14 @@ import { createApp } from './app.js';
 import { env } from './config/env.js';
 import { connectDatabase, disconnectDatabase } from './config/database.js';
 import { logger } from './lib/logger.js';
+import { bootstrapInitialAdmin } from './modules/admin/admin.bootstrap.js';
 
 const startServer = async () => {
   // Connect to MongoDB
   await connectDatabase();
+
+  // Ensure initial Root Hospital Administrator is provisioned
+  await bootstrapInitialAdmin();
 
   const app = createApp();
   const server = app.listen(env.PORT, () => {

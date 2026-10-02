@@ -16,6 +16,10 @@ const envSchema = z.object({
   JWT_SECRET: z.string().default('dev_jwt_secret_change_in_production_min_32_chars'),
   JWT_EXPIRES_IN: z.string().default('15m'),
 
+  // Initial Root Administrator Bootstrap Configuration
+  INITIAL_ADMIN_EMAIL: z.string().email().default('admin@hospital.org'),
+  INITIAL_ADMIN_PASSWORD: z.string().min(8).default('HospitalAdmin2026!'),
+
   // Future AI & External Service Integration Credentials (Optional in Phase 1)
   GEMINI_API_KEY: z.string().optional(),
   SARVAM_API_KEY: z.string().optional(),

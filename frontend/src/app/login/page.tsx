@@ -37,8 +37,8 @@ const SYNTHETIC_DEMO_ACCOUNTS = [
   },
   {
     roleLabel: 'System Administrator',
-    email: 'admin.demo.001@example.test',
-    password: 'Password123!',
+    email: 'admin@hospital.org',
+    password: 'HospitalAdmin2026!',
     role: 'ADMIN',
     targetRoute: '/admin',
     color: 'bg-slate-100 border-slate-300 text-slate-900 hover:bg-slate-200',

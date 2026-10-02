@@ -8,11 +8,13 @@ import { NotificationStatus } from '../notifications/notification.types.js';
 import { Facility } from '../facilities/facility.model.js';
 import { AuditLog } from '../audit/audit-log.model.js';
 import { AuditEventType } from '../audit/audit-log.types.js';
+import { hashPassword } from '../auth/auth.utils.js';
 import {
   AdminUsersQuery,
   PaginatedAdminUsersResponse,
   AdminUserItem,
   AdminDashboardMetrics,
+  CreateStaffUserInput,
 } from './admin.types.js';
 import { AppError } from '../../middleware/error-handler.js';
 
@@ -256,6 +258,86 @@ export class AdminService {
       unreadNotifications,
       activeReviewers,
       activeFacilities,
+    };
+  }
+
+  /**
+   * Provisions a clinical or administrative staff user (Doctor, Nurse, Medical Officer, Admin).
+   * Hashes the password, persists user, and records an audit log.
+   */
+  static async createStaffUser(
+    input: CreateStaffUserInput,
+    adminId: string,
+    requestId?: string
+  ): Promise<AdminUserItem> {
+    const email = input.email && input.email.trim() ? input.email.trim().toLowerCase() : undefined;
+    const phone = input.phone && input.phone.trim() ? input.phone.trim() : undefined;
+
+    if (email) {
+      const existingEmail = await User.findOne({ email, isDeleted: false });
+      if (existingEmail) {
+        const error: AppError = new Error(`A user with email '${email}' already exists.`);
+        error.statusCode = 409;
+        error.code = 'USER_ALREADY_EXISTS';
+        throw error;
+      }
+    }
+
+    if (phone) {
+      const existingPhone = await User.findOne({ phone, isDeleted: false });
+      if (existingPhone) {
+        const error: AppError = new Error(`A user with phone '${phone}' already exists.`);
+        error.statusCode = 409;
+        error.code = 'USER_ALREADY_EXISTS';
+        throw error;
+      }
+    }
+
+    const passwordHash = await hashPassword(input.password);
+
+    const newUser = await User.create({
+      name: input.name.trim(),
+      email,
+      phone,
+      passwordHash,
+      role: input.role,
+      facilityId: input.facilityId && input.facilityId.trim() ? input.facilityId.trim() : undefined,
+      preferredLanguage: input.preferredLanguage || 'en',
+      isActive: true,
+      isDeleted: false,
+    });
+
+    const audit = new AuditLog({
+      actorId: adminId,
+      actorRole: UserRole.ADMIN,
+      action: AuditEventType.USER_PROVISIONED,
+      resourceType: 'User',
+      resourceId: newUser._id.toString(),
+      requestId: requestId || null,
+      timestamp: new Date(),
+      source: 'ADMIN_SERVICE',
+      outcome: 'SUCCESS',
+      metadata: {
+        provisionedUserId: newUser._id.toString(),
+        provisionedRole: newUser.role,
+        provisionedEmail: newUser.email,
+        facilityId: newUser.facilityId,
+      },
+    });
+    await audit.save().catch(() => {});
+
+    return {
+      id: newUser._id.toString(),
+      name: newUser.name,
+      email: newUser.email,
+      phone: newUser.phone,
+      role: newUser.role,
+      facilityId: newUser.facilityId,
+      preferredLanguage: newUser.preferredLanguage,
+      isActive: newUser.isActive,
+      isDeleted: newUser.isDeleted,
+      createdAt: newUser.createdAt,
+      updatedAt: newUser.updatedAt,
     };
   }
 }

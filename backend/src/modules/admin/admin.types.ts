@@ -42,3 +42,13 @@ export interface AdminDashboardMetrics {
   activeReviewers: number;
   activeFacilities: number;
 }
+
+export interface CreateStaffUserInput {
+  name: string;
+  email?: string;
+  phone?: string;
+  password: string;
+  role: UserRole;
+  facilityId?: string;
+  preferredLanguage?: string;
+}
