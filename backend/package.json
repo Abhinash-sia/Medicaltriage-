@@ -21,6 +21,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google-cloud/vision": "^6.1.1",
     "@google/genai": "^2.24.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",

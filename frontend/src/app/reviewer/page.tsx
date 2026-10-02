@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { DemoBanner } from '@/components/ui/DemoBanner';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface ReviewerQueueItem {
   id: string;
@@ -71,6 +72,7 @@ const SUPPORTED_LANGUAGES = [
 ];
 
 export default function ReviewerQueuePage() {
+  const { t } = useLanguage();
   const [cases, setCases] = useState<ReviewerQueueItem[]>([]);
   const [pagination, setPagination] = useState<PaginationMeta>({ page: 1, limit: 20, total: 0, totalPages: 1 });
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -265,13 +267,13 @@ export default function ReviewerQueuePage() {
           <div>
             <div className="inline-flex items-center space-x-2 bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-2">
               <HeartPulse className="w-3.5 h-3.5" />
-              <span>Healthcare Reviewer Portal</span>
+              <span>{t('reviewer.portalTitle')}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-              Triage Intake Case Queue & Ownership
+              {t('reviewer.queueTitle')}
             </h1>
             <p className="text-sm text-slate-600 mt-1">
-              Review patient-submitted healthcare intake records and manage reviewer case assignments.
+              {t('reviewer.queueSubtitle')}
             </p>
           </div>
 
@@ -286,7 +288,7 @@ export default function ReviewerQueuePage() {
                   className="border-blue-300 text-blue-800 bg-blue-50 hover:bg-blue-100 font-medium text-xs flex items-center gap-1.5"
                 >
                   <ShieldAlert className="w-3.5 h-3.5" />
-                  Admin Operations
+                  {t('reviewer.adminOps')}
                 </Button>
               </Link>
             )}
@@ -300,7 +302,7 @@ export default function ReviewerQueuePage() {
                 className="border-purple-300 text-purple-800 bg-purple-50 hover:bg-purple-100 font-medium text-xs"
               >
                 <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${isProcessingSla ? 'animate-spin' : ''}`} />
-                Process Overdue SLAs
+                {t('reviewer.processSla')}
               </Button>
             )}
 
@@ -312,7 +314,7 @@ export default function ReviewerQueuePage() {
               className="border-slate-300 text-slate-700 bg-white"
             >
               <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-              Refresh Queue
+              {t('reviewer.refreshQueue')}
             </Button>
           </div>
         </div>
@@ -321,9 +323,9 @@ export default function ReviewerQueuePage() {
         <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-900 text-xs flex items-start space-x-3 shadow-sm">
           <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <p className="font-semibold">Reviewer Operational Notice & Ownership Semantics:</p>
+            <p className="font-semibold">{t('reviewer.safetyNoticeTitle')}</p>
             <p className="leading-relaxed">
-              Case assignment represents operational staff workload ownership only. It does not imply medical diagnosis, clinical approval, or urgency reclassification. Initial queue categories (ROUTINE) represent unassessed intake states. Operational SLA status tracks review timeliness and does not indicate medical urgency.
+              {t('reviewer.safetyNoticeDesc')}
             </p>
           </div>
         </div>
@@ -339,7 +341,7 @@ export default function ReviewerQueuePage() {
           <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-3">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 block">Assigned Workload</label>
+                <label className="text-xs font-semibold text-slate-700 block">{t('reviewer.filterWorkload')}</label>
                 <select
                   value={assignedToFilter}
                   onChange={(e) => {
@@ -348,14 +350,14 @@ export default function ReviewerQueuePage() {
                   }}
                   className="text-xs p-2 border border-slate-300 rounded-md bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 >
-                  <option value="">All Cases</option>
-                  <option value="me">Assigned to Me</option>
-                  <option value="unassigned">Unassigned (Unclaimed)</option>
+                  <option value="">{t('reviewer.allCases')}</option>
+                  <option value="me">{t('reviewer.assignedToMe')}</option>
+                  <option value="unassigned">{t('reviewer.unassigned')}</option>
                 </select>
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 block">Workflow Status</label>
+                <label className="text-xs font-semibold text-slate-700 block">{t('reviewer.filterStatus')}</label>
                 <select
                   value={statusFilter}
                   onChange={(e) => {
@@ -364,15 +366,15 @@ export default function ReviewerQueuePage() {
                   }}
                   className="text-xs p-2 border border-slate-300 rounded-md bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 >
-                  <option value="">All Statuses</option>
-                  <option value="OPEN">OPEN (Unreviewed)</option>
-                  <option value="IN_REVIEW">IN_REVIEW</option>
-                  <option value="RESOLVED">RESOLVED</option>
+                  <option value="">{t('reviewer.allStatuses')}</option>
+                  <option value="OPEN">{t('reviewer.statusOpen')}</option>
+                  <option value="IN_REVIEW">{t('reviewer.statusInReview')}</option>
+                  <option value="RESOLVED">{t('reviewer.statusResolved')}</option>
                 </select>
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 block">Queue Category</label>
+                <label className="text-xs font-semibold text-slate-700 block">{t('reviewer.filterCategory')}</label>
                 <select
                   value={priorityFilter}
                   onChange={(e) => {
@@ -381,7 +383,7 @@ export default function ReviewerQueuePage() {
                   }}
                   className="text-xs p-2 border border-slate-300 rounded-md bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 >
-                  <option value="">All Categories</option>
+                  <option value="">{t('reviewer.allPriorities')}</option>
                   <option value="ROUTINE">ROUTINE (Unassessed)</option>
                   <option value="PRIORITY">PRIORITY</option>
                   <option value="URGENT">URGENT</option>
@@ -513,17 +515,17 @@ export default function ReviewerQueuePage() {
                         {isAssignedToMe ? (
                           <Badge className="bg-green-600 text-white border-green-700 text-[11px] flex items-center space-x-1">
                             <UserCheck className="w-3 h-3" />
-                            <span>Assigned to You</span>
+                            <span>{t('reviewer.assignedToMe')}</span>
                           </Badge>
                         ) : c.isAssigned ? (
                           <Badge variant="outline" className="bg-indigo-50 text-indigo-800 border-indigo-200 text-[11px] flex items-center space-x-1">
                             <User className="w-3 h-3 text-indigo-600" />
-                            <span>Assigned: {c.assignedReviewerName || 'Reviewer'}</span>
+                            <span>{c.assignedReviewerName || 'Reviewer'}</span>
                           </Badge>
                         ) : (
                           <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200 text-[11px] flex items-center space-x-1">
                             <UserX className="w-3 h-3 text-amber-600" />
-                            <span>Unassigned</span>
+                            <span>{t('reviewer.unassigned')}</span>
                           </Badge>
                         )}
                       </div>
@@ -557,7 +559,7 @@ export default function ReviewerQueuePage() {
                           ) : (
                             <UserCheck className="w-3.5 h-3.5 mr-1" />
                           )}
-                          Claim
+                          {t('reviewer.claimCase')}
                         </Button>
                       )}
 
@@ -574,13 +576,13 @@ export default function ReviewerQueuePage() {
                           ) : (
                             <UserX className="w-3.5 h-3.5 mr-1 text-slate-500" />
                           )}
-                          Release
+                          {t('reviewer.releaseCase')}
                         </Button>
                       )}
 
                       <Link href={`/reviewer/cases/${c.id}`}>
                         <Button size="sm" variant="outline" className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 text-xs">
-                          Inspect <ArrowUpRight className="w-4 h-4 ml-1" />
+                          {t('reviewer.reviewCase')} <ArrowUpRight className="w-4 h-4 ml-1" />
                         </Button>
                       </Link>
                     </div>
@@ -600,7 +602,7 @@ export default function ReviewerQueuePage() {
               onClick={() => setPage((p) => Math.max(p - 1, 1))}
               disabled={page === 1 || isLoading}
             >
-              <ChevronLeft className="w-4 h-4 mr-1" /> Previous
+              <ChevronLeft className="w-4 h-4 mr-1" /> {t('common.previous')}
             </Button>
 
             <span className="text-slate-600 font-medium">
@@ -613,7 +615,7 @@ export default function ReviewerQueuePage() {
               onClick={() => setPage((p) => Math.min(p + 1, pagination.totalPages))}
               disabled={page >= pagination.totalPages || isLoading}
             >
-              Next <ChevronRight className="w-4 h-4 ml-1" />
+              {t('common.next')} <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           </div>
         )}

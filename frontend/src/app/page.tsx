@@ -6,15 +6,11 @@ import {
   ShieldAlert,
   HeartPulse,
   Users,
-  Activity,
   ArrowRight,
   Sparkles,
   CheckCircle2,
-  Clock,
   FileText,
   Mic,
-  FileSearch,
-  Eye,
   Globe,
   Building2,
   Lock,
@@ -24,7 +20,7 @@ import {
   LogIn,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { LanguageSelector } from '@/components/ui/LanguageSelector';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -44,26 +40,26 @@ export default function PublicLandingPage() {
             <div>
               <span className="text-xl font-bold tracking-tight text-slate-900">MedicalTriage</span>
               <span className="ml-2 text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium border border-slate-200">
-                PROTOTYPE
+                {t('landing.prototype')}
               </span>
             </div>
           </div>
 
           <nav className="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-600">
             <a href="#how-it-works" className="hover:text-blue-600 transition-colors">
-              How It Works
+              {t('landing.navHowItWorks')}
             </a>
             <a href="#capabilities" className="hover:text-blue-600 transition-colors">
-              Capabilities
+              {t('landing.navCapabilities')}
             </a>
             <a href="#safety" className="hover:text-blue-600 transition-colors">
-              Safety Boundary
+              {t('landing.navSafety')}
             </a>
             <a href="#india-context" className="hover:text-blue-600 transition-colors">
-              India Context
+              {t('landing.navIndiaContext')}
             </a>
             <a href="#demo" className="hover:text-blue-600 transition-colors">
-              Demo Access
+              {t('landing.navDemo')}
             </a>
           </nav>
 
@@ -90,46 +86,46 @@ export default function PublicLandingPage() {
           <div className="text-center max-w-3xl mx-auto space-y-6">
             <div className="inline-flex items-center space-x-2 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide uppercase shadow-xs">
               <Sparkles className="w-4 h-4 text-blue-600" />
-              <span>Human-in-the-Loop Clinical Triage Assistant</span>
+              <span>{t('landing.badgeAssistant')}</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight">
-              Human-in-the-loop triage, <br />
+              {t('landing.heroTitleLine1')} <br />
               <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                built for faster clinical review.
+                {t('landing.heroTitleLine2')}
               </span>
             </h1>
 
             <p className="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-              Organize symptoms, voice transcripts, lab OCR reports, visual observations, and timelines into structured information for qualified healthcare professionals.
+              {t('landing.heroSubtitle')}
             </p>
 
             {/* Non-Diagnostic Key Badges */}
             <div className="pt-2 flex flex-wrap justify-center gap-2 text-xs font-semibold">
               <Badge variant="outline" className="bg-white/80 border-slate-300 text-slate-700 px-3 py-1">
-                <ShieldAlert className="w-3.5 h-3.5 mr-1.5 text-amber-600" /> Non-Diagnostic
+                <ShieldAlert className="w-3.5 h-3.5 mr-1.5 text-amber-600" /> {t('landing.badgeNonDiagnostic')}
               </Badge>
               <Badge variant="outline" className="bg-white/80 border-slate-300 text-slate-700 px-3 py-1">
-                <Stethoscope className="w-3.5 h-3.5 mr-1.5 text-blue-600" /> Qualified Human Review
+                <Stethoscope className="w-3.5 h-3.5 mr-1.5 text-blue-600" /> {t('landing.badgeHumanReview')}
               </Badge>
               <Badge variant="outline" className="bg-white/80 border-slate-300 text-slate-700 px-3 py-1">
-                <Lock className="w-3.5 h-3.5 mr-1.5 text-emerald-600" /> Privacy-Conscious
+                <Lock className="w-3.5 h-3.5 mr-1.5 text-emerald-600" /> {t('landing.badgePrivacy')}
               </Badge>
               <Badge variant="outline" className="bg-white/80 border-slate-300 text-slate-700 px-3 py-1">
-                <Globe className="w-3.5 h-3.5 mr-1.5 text-indigo-600" /> Multilingual India-Ready
+                <Globe className="w-3.5 h-3.5 mr-1.5 text-indigo-600" /> {t('landing.badgeMultilingual')}
               </Badge>
             </div>
 
             <div className="pt-6 flex flex-col sm:flex-row justify-center gap-4">
               <Link href="/patient/intake">
                 <Button size="lg" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-6 text-base shadow-md">
-                  Get Started (Patient Intake)
+                  {t('landing.getStarted')}
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
               <Link href="/reviewer">
                 <Button size="lg" variant="outline" className="w-full sm:w-auto border-slate-300 text-slate-800 font-semibold px-8 py-6 text-base hover:bg-white shadow-xs">
-                  Reviewer Workspace Queue
+                  {t('landing.reviewerQueue')}
                 </Button>
               </Link>
             </div>
@@ -138,17 +134,17 @@ export default function PublicLandingPage() {
       </section>
 
       {/* Prominent Non-Diagnostic Safety Disclaimer Banner */}
-      <section className="bg-amber-500/10 border-y border-amber-300/60 py-6 px-4">
+      <section id="safety" className="bg-amber-500/10 border-y border-amber-300/60 py-6 px-4">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <div className="bg-amber-100 text-amber-800 p-2.5 rounded-xl border border-amber-300 shrink-0">
             <ShieldAlert className="w-6 h-6" />
           </div>
           <div className="space-y-1 text-slate-800">
             <h3 className="font-bold text-sm text-amber-900 tracking-wide uppercase">
-              Strict Non-Diagnostic & Human-in-the-Loop Safety Boundary
+              {t('landing.disclaimerTitle')}
             </h3>
             <p className="text-xs sm:text-sm leading-relaxed text-slate-700">
-              MedicalTriage is built to assist — not replace — qualified healthcare professionals. It organizes and surfaces structured patient information, timelines, and safety signals. It does <strong>not</strong> diagnose medical conditions, prescribe treatment, or independently make clinical decisions.
+              {t('landing.disclaimerBody')}
             </p>
           </div>
         </div>
@@ -158,9 +154,9 @@ export default function PublicLandingPage() {
       <section id="how-it-works" className="py-20 bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           <div className="text-center max-w-2xl mx-auto space-y-4">
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900">How The System Works</h2>
+            <h2 className="text-3xl font-bold tracking-tight text-slate-900">{t('landing.howItWorksTitle')}</h2>
             <p className="text-slate-600 text-sm sm:text-base">
-              A continuous, transparent workflow connecting patient intake to clinician decision-support and referral escalation.
+              {t('landing.howItWorksSubtitle')}
             </p>
           </div>
 
@@ -168,43 +164,43 @@ export default function PublicLandingPage() {
             {[
               {
                 step: '01',
-                title: 'Patient Intake',
-                desc: 'Text, voice transcript, lab PDF, or visual observations.',
+                title: t('landing.step1Title'),
+                desc: t('landing.step1Desc'),
                 icon: FileText,
                 color: 'text-blue-600 bg-blue-50 border-blue-200',
               },
               {
                 step: '02',
-                title: 'AI Extraction',
-                desc: 'Structured symptom normalization & provenance hash.',
+                title: t('landing.step2Title'),
+                desc: t('landing.step2Desc'),
                 icon: Workflow,
                 color: 'text-indigo-600 bg-indigo-50 border-indigo-200',
               },
               {
                 step: '03',
-                title: 'Timeline & Gaps',
-                desc: 'Chronological timeline & missing information prompts.',
+                title: t('landing.step3Title'),
+                desc: t('landing.step3Desc'),
                 icon: History,
                 color: 'text-purple-600 bg-purple-50 border-purple-200',
               },
               {
                 step: '04',
-                title: 'Safety Signals',
-                desc: '22-rule urgency evaluation (URGENT/PRIORITY/ROUTINE).',
+                title: t('landing.step4Title'),
+                desc: t('landing.step4Desc'),
                 icon: ShieldAlert,
                 color: 'text-amber-600 bg-amber-50 border-amber-200',
               },
               {
                 step: '05',
-                title: 'Reviewer Queue',
-                desc: 'Facility isolation queue with operational SLA tracking.',
+                title: t('landing.step5Title'),
+                desc: t('landing.step5Desc'),
                 icon: Users,
                 color: 'text-emerald-600 bg-emerald-50 border-emerald-200',
               },
               {
                 step: '06',
-                title: 'Human Action',
-                desc: 'Clinician verification, priority override, or tertiary referral.',
+                title: t('landing.step6Title'),
+                desc: t('landing.step6Desc'),
                 icon: CheckCircle2,
                 color: 'text-rose-600 bg-rose-50 border-rose-200',
               },
@@ -235,42 +231,42 @@ export default function PublicLandingPage() {
       <section id="capabilities" className="py-20 bg-slate-50 border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           <div className="text-center max-w-2xl mx-auto space-y-4">
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900">Core Capabilities</h2>
+            <h2 className="text-3xl font-bold tracking-tight text-slate-900">{t('landing.capabilitiesTitle')}</h2>
             <p className="text-slate-600 text-sm sm:text-base">
-              Comprehensive decision-support tools engineered for high-volume healthcare settings.
+              {t('landing.capabilitiesSubtitle')}
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               {
-                title: 'Multimodal Intake',
-                desc: 'Supports text narratives, audio voice intake, PDF laboratory OCR reports, and visual clinical observations.',
+                title: t('landing.cap1Title'),
+                desc: t('landing.cap1Desc'),
                 icon: Mic,
               },
               {
-                title: '22-Rule Safety Engine',
-                desc: 'Deterministic safety rules categorizing cases into URGENT, PRIORITY, or ROUTINE based on clinical red flags.',
+                title: t('landing.cap2Title'),
+                desc: t('landing.cap2Desc'),
                 icon: ShieldAlert,
               },
               {
-                title: 'Multilingual India Support',
-                desc: 'Instant translation across 8 regional languages including Hindi, Odia, Bengali, Tamil, Telugu, Marathi, Gujarati.',
+                title: t('landing.cap3Title'),
+                desc: t('landing.cap3Desc'),
                 icon: Globe,
               },
               {
-                title: 'Structured Triage Notes',
-                desc: 'Auto-generated notes highlighting chief complaints, pertinent positives, pertinent negatives, and red flags.',
+                title: t('landing.cap4Title'),
+                desc: t('landing.cap4Desc'),
                 icon: FileText,
               },
               {
-                title: 'Timeline & Gap Analysis',
-                desc: 'Chronological clinical event timelines and automated missing information follow-up detection.',
+                title: t('landing.cap5Title'),
+                desc: t('landing.cap5Desc'),
                 icon: History,
               },
               {
-                title: 'Facility Isolation & Referrals',
-                desc: 'Strict facility queue boundary with authorized cross-facility referral state machine (Pending -> Accepted -> Completed).',
+                title: t('landing.cap6Title'),
+                desc: t('landing.cap6Desc'),
                 icon: Building2,
               },
             ].map((cap, idx) => {
@@ -298,26 +294,26 @@ export default function PublicLandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           <div className="max-w-3xl mx-auto text-center space-y-4">
             <Badge variant="outline" className="bg-indigo-50 border-indigo-200 text-indigo-800">
-              India Healthcare Setting Context
+              {t('landing.indiaBadge')}
             </Badge>
             <h2 className="text-3xl font-bold tracking-tight text-slate-900">
-              Designed for Constrained Public Healthcare Environments
+              {t('landing.indiaTitle')}
             </h2>
             <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
-              Tailored for high-throughput public health settings across district hospitals, rural health centers, and community health camps.
+              {t('landing.indiaSubtitle')}
             </p>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
             {[
-              'Government Hospitals',
-              'Primary Health Centres (PHCs)',
-              'Public Health Camps',
-              'Campus Clinics',
-              'Occupational Health Units',
-              'Referral Workflows',
-              'Multilingual Populations',
-              'Human-in-the-loop Review',
+              t('landing.facilityGovtHospitals'),
+              t('landing.facilityPhcs'),
+              t('landing.facilityCamps'),
+              t('landing.facilityClinics'),
+              t('landing.facilityOccupational'),
+              t('landing.facilityReferrals'),
+              t('landing.facilityMultilingual'),
+              t('landing.facilityHumanReview'),
             ].map((item, idx) => (
               <div key={idx} className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center font-medium text-xs text-slate-800 flex items-center justify-center space-x-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -333,15 +329,15 @@ export default function PublicLandingPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8 relative z-10">
           <div className="inline-flex items-center space-x-2 bg-slate-800 border border-slate-700 text-emerald-400 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider">
             <Sparkles className="w-4 h-4" />
-            <span>Interactive Synthetic Demo</span>
+            <span>{t('landing.demoBadge')}</span>
           </div>
 
           <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
-            Explore the Workflow with Deterministic Synthetic Cases
+            {t('landing.demoTitle')}
           </h2>
 
           <p className="text-slate-300 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
-            See how a synthetic patient case moves seamlessly from intake narrative to structured extraction, timeline generation, 22-rule safety evaluation, and clinical reviewer escalation.
+            {t('landing.demoSubtitle')}
           </p>
 
           {/* Persona 1-Click Launch Grid */}
@@ -349,30 +345,30 @@ export default function PublicLandingPage() {
             <Link href="/patient/intake">
               <div className="p-4 bg-slate-800/90 border border-slate-700 rounded-xl hover:border-blue-500 transition-colors cursor-pointer space-y-2">
                 <div className="flex items-center justify-between text-blue-400 font-bold text-sm">
-                  <span>Patient Intake Demo</span>
+                  <span>{t('landing.demoPatientTitle')}</span>
                   <ArrowRight className="w-4 h-4" />
                 </div>
-                <p className="text-xs text-slate-400">Submit multi-step intake with symptoms, voice, or PDF reports.</p>
+                <p className="text-xs text-slate-400">{t('landing.demoPatientDesc')}</p>
               </div>
             </Link>
 
             <Link href="/reviewer">
               <div className="p-4 bg-slate-800/90 border border-slate-700 rounded-xl hover:border-emerald-500 transition-colors cursor-pointer space-y-2">
                 <div className="flex items-center justify-between text-emerald-400 font-bold text-sm">
-                  <span>Reviewer Workspace</span>
+                  <span>{t('landing.demoReviewerTitle')}</span>
                   <ArrowRight className="w-4 h-4" />
                 </div>
-                <p className="text-xs text-slate-400">Explore reviewer queue, SLA timers, triage notes & overrides.</p>
+                <p className="text-xs text-slate-400">{t('landing.demoReviewerDesc')}</p>
               </div>
             </Link>
 
             <Link href="/admin">
               <div className="p-4 bg-slate-800/90 border border-slate-700 rounded-xl hover:border-purple-500 transition-colors cursor-pointer space-y-2">
                 <div className="flex items-center justify-between text-purple-400 font-bold text-sm">
-                  <span>Admin Operations</span>
+                  <span>{t('landing.demoAdminTitle')}</span>
                   <ArrowRight className="w-4 h-4" />
                 </div>
-                <p className="text-xs text-slate-400">View facility management, retention overview, and audit logs.</p>
+                <p className="text-xs text-slate-400">{t('landing.demoAdminDesc')}</p>
               </div>
             </Link>
           </div>
@@ -392,20 +388,19 @@ export default function PublicLandingPage() {
               <span>MedicalTriage</span>
             </div>
             <p className="max-w-md text-slate-500">
-              Human-in-the-loop decision-support assistant. Prototype built for evaluation purposes only. Not for medical diagnosis or independent clinical decisions.
+              {t('landing.footerDisclaimer')}
             </p>
           </div>
 
           <div className="flex flex-wrap justify-center gap-6 text-slate-400 font-medium">
-            <a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a>
-            <a href="#capabilities" className="hover:text-white transition-colors">Capabilities</a>
-            <a href="#safety" className="hover:text-white transition-colors">Safety Boundary</a>
-            <Link href="/patient/intake" className="hover:text-white transition-colors">Patient Intake</Link>
-            <Link href="/reviewer" className="hover:text-white transition-colors">Reviewer Workspace</Link>
+            <a href="#how-it-works" className="hover:text-white transition-colors">{t('landing.navHowItWorks')}</a>
+            <a href="#capabilities" className="hover:text-white transition-colors">{t('landing.navCapabilities')}</a>
+            <a href="#safety" className="hover:text-white transition-colors">{t('landing.navSafety')}</a>
+            <Link href="/patient/intake" className="hover:text-white transition-colors">{t('landing.patientPortal')}</Link>
+            <Link href="/reviewer" className="hover:text-white transition-colors">{t('landing.reviewerPortal')}</Link>
           </div>
         </div>
       </footer>
     </div>
   );
 }
-

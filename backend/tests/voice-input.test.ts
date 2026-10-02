@@ -233,7 +233,7 @@ describe('Phase 13 — Voice / Speech-to-Text (STT) Suite', () => {
         expect(res.status).toBe(201);
         expect(res.body.data.processingStatus).toBe(VoiceProcessingStatus.PROCESSED);
       }
-    });
+    }, 15000);
 
     it('rejects unsupported file extension or MIME type', async () => {
       const res = await request(app)

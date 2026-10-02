@@ -17,7 +17,7 @@ export function DemoBanner() {
             {t('common.demoDataNotice')}
           </span>
           <span className="text-slate-300 font-medium hidden sm:inline">
-            All patient profiles, narratives, and records shown here are fictional and created exclusively for software evaluation.
+            {t('common.demoBannerNotice')}
           </span>
         </div>
         <div className="flex items-center space-x-3 text-[11px] text-slate-400">

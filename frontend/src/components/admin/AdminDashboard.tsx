@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../ui/card';
 import { Button } from '../ui/button';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface DashboardMetrics {
   openCases: number;
@@ -27,6 +28,7 @@ interface DashboardMetrics {
 }
 
 export function AdminDashboard() {
+  const { t } = useLanguage();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,10 +77,10 @@ export function AdminDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            Operational Dashboard
+            {t('admin.dashboardTab')}
           </h2>
           <p className="text-sm text-slate-500">
-            Real-time workload, reviewer capacity, and SLA tracking counts
+            {t('admin.portalSubtitle')}
           </p>
         </div>
         <Button
@@ -89,7 +91,7 @@ export function AdminDashboard() {
           className="flex items-center gap-1.5 text-xs"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-          Refresh Stats
+          {t('common.refresh')}
         </Button>
       </div>
 
@@ -102,7 +104,7 @@ export function AdminDashboard() {
           <Card className="border-l-4 border-l-blue-500">
             <CardHeader className="p-4 pb-1">
               <CardDescription className="text-xs flex items-center justify-between">
-                <span>Open Cases</span>
+                <span>{t('reviewer.openCases')}</span>
                 <FolderOpen className="w-4 h-4 text-blue-500" />
               </CardDescription>
               <CardTitle className="text-2xl font-bold text-blue-700 dark:text-blue-400">
@@ -117,7 +119,7 @@ export function AdminDashboard() {
           <Card className="border-l-4 border-l-indigo-500">
             <CardHeader className="p-4 pb-1">
               <CardDescription className="text-xs flex items-center justify-between">
-                <span>In-Review Cases</span>
+                <span>{t('reviewer.inReviewCases')}</span>
                 <Activity className="w-4 h-4 text-indigo-500" />
               </CardDescription>
               <CardTitle className="text-2xl font-bold text-indigo-700 dark:text-indigo-400">
@@ -132,7 +134,7 @@ export function AdminDashboard() {
           <Card className="border-l-4 border-l-red-500">
             <CardHeader className="p-4 pb-1">
               <CardDescription className="text-xs flex items-center justify-between">
-                <span>Escalated Cases</span>
+                <span>{t('reviewer.escalatedCases')}</span>
                 <AlertTriangle className="w-4 h-4 text-red-500" />
               </CardDescription>
               <CardTitle className="text-2xl font-bold text-red-700 dark:text-red-400">
@@ -147,7 +149,7 @@ export function AdminDashboard() {
           <Card className="border-l-4 border-l-purple-500">
             <CardHeader className="p-4 pb-1">
               <CardDescription className="text-xs flex items-center justify-between">
-                <span>Referred Cases</span>
+                <span>{t('reviewer.referral')}</span>
                 <Send className="w-4 h-4 text-purple-500" />
               </CardDescription>
               <CardTitle className="text-2xl font-bold text-purple-700 dark:text-purple-400">
@@ -162,7 +164,7 @@ export function AdminDashboard() {
           <Card className="border-l-4 border-l-amber-500">
             <CardHeader className="p-4 pb-1">
               <CardDescription className="text-xs flex items-center justify-between">
-                <span>Overdue Cases</span>
+                <span>{t('reviewer.overdueCases')}</span>
                 <Clock className="w-4 h-4 text-amber-500" />
               </CardDescription>
               <CardTitle className="text-2xl font-bold text-amber-700 dark:text-amber-400">
@@ -177,7 +179,7 @@ export function AdminDashboard() {
           <Card className="border-l-4 border-l-teal-500">
             <CardHeader className="p-4 pb-1">
               <CardDescription className="text-xs flex items-center justify-between">
-                <span>Active Reviewers</span>
+                <span>{t('admin.activeUsers')}</span>
                 <Users className="w-4 h-4 text-teal-500" />
               </CardDescription>
               <CardTitle className="text-2xl font-bold text-teal-700 dark:text-teal-400">
@@ -192,7 +194,7 @@ export function AdminDashboard() {
           <Card className="border-l-4 border-l-emerald-500">
             <CardHeader className="p-4 pb-1">
               <CardDescription className="text-xs flex items-center justify-between">
-                <span>Active Facilities</span>
+                <span>{t('admin.facilitiesTab')}</span>
                 <Building2 className="w-4 h-4 text-emerald-500" />
               </CardDescription>
               <CardTitle className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">

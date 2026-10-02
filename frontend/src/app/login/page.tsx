@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { HeartPulse, ShieldAlert, LogIn, Loader2, User, Lock, CheckCircle2, ArrowRight } from 'lucide-react';
+import { HeartPulse, ShieldAlert, LogIn, Loader2, User, Lock, CheckCircle2, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { LanguageSelector } from '@/components/ui/LanguageSelector';
 import { useLanguage } from '@/i18n/LanguageContext';
 
@@ -50,6 +50,7 @@ export default function LoginPage() {
   const { t } = useLanguage();
   const [email, setEmail] = useState<string>('doctor.demo.001@example.test');
   const [password, setPassword] = useState<string>('Password123!');
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,14 +59,24 @@ export default function LoginPage() {
     setIsLoading(true);
     setError(null);
 
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '/api';
+
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(`${apiBaseUrl}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
-      const json = await res.json();
+      const contentType = res.headers.get('content-type');
+      let json: any = null;
+      if (contentType && contentType.includes('application/json')) {
+        json = await res.json();
+      } else {
+        const text = await res.text();
+        throw new Error(text || 'Received non-JSON response from server.');
+      }
+
       if (!res.ok || !json.success) {
         throw new Error(json.error?.message || 'Authentication failed');
       }
@@ -120,7 +131,7 @@ export default function LoginPage() {
           <CardHeader className="space-y-1">
             <CardTitle className="text-lg font-bold text-slate-900">{t('auth.title')}</CardTitle>
             <CardDescription className="text-xs text-slate-500">
-              Enter credentials or select a 1-click synthetic demo persona below.
+              {t('auth.personaSubtitle')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -133,7 +144,7 @@ export default function LoginPage() {
 
             <form onSubmit={handleLogin} className="space-y-3">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700">Email Address</label>
+                <label className="text-xs font-semibold text-slate-700">{t('auth.email')}</label>
                 <div className="relative">
                   <User className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                   <input
@@ -148,23 +159,31 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700">Password</label>
+                <label className="text-xs font-semibold text-slate-700">{t('auth.password')}</label>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-9 pr-10 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="••••••••"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 focus:outline-none"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
 
               <Button type="submit" disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold">
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <LogIn className="w-4 h-4 mr-2" />}
-                Sign In
+                {t('auth.signIn')}
               </Button>
             </form>
 
@@ -173,7 +192,7 @@ export default function LoginPage() {
                 <div className="w-full border-t border-slate-200" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-slate-500 font-semibold">1-Click Synthetic Persona Presets</span>
+                <span className="bg-white px-2 text-slate-500 font-semibold">{t('auth.quickRoles')}</span>
               </div>
             </div>
 
@@ -187,7 +206,15 @@ export default function LoginPage() {
                   className={`p-2.5 rounded-lg border text-left flex items-center justify-between text-xs transition-colors ${acc.color}`}
                 >
                   <div>
-                    <span className="font-bold block">{acc.roleLabel}</span>
+                    <span className="font-bold block">
+                      {acc.role === 'DOCTOR'
+                        ? t('auth.doctorRole')
+                        : acc.role === 'NURSE'
+                        ? t('auth.nurseRole')
+                        : acc.role === 'PATIENT'
+                        ? t('auth.patientRole')
+                        : t('auth.adminRole')}
+                    </span>
                     <span className="text-[10px] opacity-80">{acc.email}</span>
                   </div>
                   <CheckCircle2 className="w-4 h-4 text-slate-600" />
@@ -197,7 +224,7 @@ export default function LoginPage() {
           </CardContent>
           <CardFooter className="bg-slate-50 border-t border-slate-100 p-4 text-center">
             <p className="text-xs text-slate-500 w-full">
-              Non-diagnostic prototype for research and evaluation purposes only.
+              {t('auth.footerNotice')}
             </p>
           </CardFooter>
         </Card>
