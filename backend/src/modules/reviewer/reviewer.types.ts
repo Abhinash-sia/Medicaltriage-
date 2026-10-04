@@ -21,6 +21,8 @@ export interface ReviewerQueueItem {
   patientName?: string;
   patientEmail?: string;
   patientPhone?: string;
+  patientAge?: number;
+  patientGender?: string;
   status: CaseStatus;
   priority: CasePriority;
   chiefComplaint: string;
@@ -91,6 +93,8 @@ export interface ReviewerCaseDetails {
     name: string;
     email?: string;
     phone?: string;
+    age?: number;
+    gender?: string;
   };
   consent: ReviewerCaseConsent | null;
   symptoms: ReviewerCaseSymptom[];

@@ -82,6 +82,8 @@ interface ReviewerCaseDetails {
     name: string;
     email?: string;
     phone?: string;
+    age?: number;
+    gender?: string;
   };
   consent: ReviewerCaseConsent | null;
   symptoms: ReviewerCaseSymptom[];
@@ -2930,6 +2932,20 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                 <div>
                   <span className="text-slate-400 block text-[10px]">Full Name</span>
                   <span className="font-semibold text-slate-900">{caseDetails.patient.name}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 border-t border-slate-100 pt-2">
+                  <div>
+                    <span className="text-slate-400 block text-[10px]">Age</span>
+                    <span className="font-semibold text-slate-900">
+                      {caseDetails.patient.age !== undefined && caseDetails.patient.age !== null ? `${caseDetails.patient.age} yrs` : 'Not specified'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[10px]">Biological Sex</span>
+                    <span className="font-semibold text-slate-900">
+                      {caseDetails.patient.gender || 'Not specified'}
+                    </span>
+                  </div>
                 </div>
                 {caseDetails.patient.email && (
                   <div>

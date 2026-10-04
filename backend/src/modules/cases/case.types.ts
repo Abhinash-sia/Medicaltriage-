@@ -33,6 +33,9 @@ export interface ICase {
   priority: CasePriority;
   intakeSource: IntakeSource;
   language: string;
+  patientAge?: number;
+  patientAgeMonths?: number;
+  patientGender?: string;
   consentId?: Types.ObjectId;
   chiefComplaint: string;
   slaDueAt?: Date | null;

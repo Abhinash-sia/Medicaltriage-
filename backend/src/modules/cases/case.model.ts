@@ -53,6 +53,22 @@ const CaseSchema = new Schema<ICaseDocument>(
       default: 'en',
       trim: true,
     },
+    patientAge: {
+      type: Number,
+      min: 0,
+      max: 130,
+      default: null,
+    },
+    patientAgeMonths: {
+      type: Number,
+      min: 0,
+      default: null,
+    },
+    patientGender: {
+      type: String,
+      enum: ['MALE', 'FEMALE', 'OTHER'],
+      default: null,
+    },
     consentId: {
       type: Schema.Types.ObjectId,
       ref: 'Consent',

@@ -54,6 +54,8 @@ interface PatientCaseDetail {
   priority: string;
   chiefComplaint: string;
   language: string;
+  patientAge?: number;
+  patientGender?: string;
   consent?: {
     status: string;
     version: string;
@@ -716,6 +718,16 @@ export default function PatientDashboardPage() {
                       <span className="text-slate-500 block mb-0.5">{t('patient.reviewStatus')}</span>
                       <div>{renderStatusBadge(caseDetail.status)}</div>
                     </div>
+                    {(caseDetail.patientAge !== undefined || caseDetail.patientGender) && (
+                      <div>
+                        <span className="text-slate-500 block mb-0.5">Demographics</span>
+                        <span className="font-semibold text-slate-800">
+                          {caseDetail.patientAge !== undefined ? `${caseDetail.patientAge} yrs` : ''}
+                          {caseDetail.patientAge !== undefined && caseDetail.patientGender ? ' • ' : ''}
+                          {caseDetail.patientGender || ''}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Chief Complaint */}

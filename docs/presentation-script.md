@@ -185,14 +185,12 @@
 > *"One-click demo login — no time wasted typing passwords."*
 
 Fill in:
-- **Age:** 45
-- **Gender:** Male
+- **Consent:** Affirmatively checked on Step 1
+- **Demographics:** Age 45, Male
 - **Chief Complaint:** *"Severe shortness of breath and chest pressure after climbing stairs"*
 - **Duration:** 2 hours
 
-> *[Upload a sample lab report]*
->
-> *"They upload a scanned blood report. Hit submit. Notice — explicit consent is captured before submission."*
+> *"Explicit consent is captured up front, followed by demographics, language, and clinical complaint. Review and submit — and they can attach an optional scanned lab report or voice note right on the confirmation card."*
 
 ---
 
@@ -200,7 +198,7 @@ Fill in:
 
 **[Log out → Click "Log in as Doctor" quick-fill button]**
 
-> *"Now we're Dr. Aris Thorne. This is the Reviewer Queue."*
+> *"Now we log in as the attending physician. This is the Reviewer Queue."*
 
 ---
 
@@ -286,7 +284,7 @@ Point out:
 
 > *"We're a team of 4. We built 24 backend modules, 35 documentation files, a full Next.js frontend with 4 role-specific portals, a provider abstraction layer that lets us swap between Gemini, Sarvam, Google Vision, and mock providers with a single environment variable."*
 
-> *"We argued for two days about what 'Routine' should mean. We rewrote the safety engine three times because the first two versions let edge cases slip through. We built a synthetic data seeder that generates 23 fictional patient cases across 3 facilities — because we refuse to use real patient data, even for a demo."*
+> *"We argued for two days about what 'Routine' should mean. We rewrote the safety engine three times because the first two versions let edge cases slip through. We built a synthetic data seeder that generates 22 fictional patient cases across 3 facilities — because we refuse to use real patient data, even for a demo."*
 
 ### The Final Line:
 

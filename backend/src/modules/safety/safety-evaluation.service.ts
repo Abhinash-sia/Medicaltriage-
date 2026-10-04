@@ -71,18 +71,24 @@ export class SafetyEvaluationService {
         isActive: true,
       }).lean();
 
-      // Check patient age if user model exists
+      // Check patient age from case intake or user model
       let patientAgeMonths: number | undefined;
       try {
-        const UserModel = mongoose.models.User;
-        if (UserModel && caseDoc.patientId) {
-          const patientUser = await UserModel.findById(caseDoc.patientId).lean();
-          if (patientUser && (patientUser as any).ageMonths !== undefined) {
-            patientAgeMonths = (patientUser as any).ageMonths;
-          } else if (patientUser && (patientUser as any).dateOfBirth) {
-            const dob = new Date((patientUser as any).dateOfBirth);
-            const now = new Date();
-            patientAgeMonths = (now.getFullYear() - dob.getFullYear()) * 12 + (now.getMonth() - dob.getMonth());
+        if (caseDoc.patientAgeMonths !== undefined && caseDoc.patientAgeMonths !== null) {
+          patientAgeMonths = caseDoc.patientAgeMonths;
+        } else if (caseDoc.patientAge !== undefined && caseDoc.patientAge !== null) {
+          patientAgeMonths = caseDoc.patientAge * 12;
+        } else {
+          const UserModel = mongoose.models.User;
+          if (UserModel && caseDoc.patientId) {
+            const patientUser = await UserModel.findById(caseDoc.patientId).lean();
+            if (patientUser && (patientUser as any).ageMonths !== undefined) {
+              patientAgeMonths = (patientUser as any).ageMonths;
+            } else if (patientUser && (patientUser as any).dateOfBirth) {
+              const dob = new Date((patientUser as any).dateOfBirth);
+              const now = new Date();
+              patientAgeMonths = (now.getFullYear() - dob.getFullYear()) * 12 + (now.getMonth() - dob.getMonth());
+            }
           }
         }
       } catch (_) {}

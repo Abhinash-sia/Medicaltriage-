@@ -135,6 +135,8 @@ export class ReviewerService {
           patientName: patient?.name || 'Unknown Patient',
           patientEmail: patient?.email || undefined,
           patientPhone: patient?.phone || undefined,
+          patientAge: c.patientAge,
+          patientGender: c.patientGender,
           status: c.status,
           priority: c.priority,
           chiefComplaint: c.chiefComplaint,
@@ -227,6 +229,8 @@ export class ReviewerService {
         name: patient?.name || 'Patient',
         email: patient?.email || undefined,
         phone: patient?.phone || undefined,
+        age: caseDoc.patientAge,
+        gender: caseDoc.patientGender,
       },
       consent: consent
         ? {
