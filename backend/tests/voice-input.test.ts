@@ -72,6 +72,7 @@ describe('Phase 13 — Voice / Speech-to-Text (STT) Suite', () => {
     if (fs.existsSync(testStorageDir)) {
       fs.rmSync(testStorageDir, { recursive: true, force: true });
     }
+    await mongoose.connection.close();
   });
 
   beforeEach(async () => {
@@ -82,9 +83,10 @@ describe('Phase 13 — Voice / Speech-to-Text (STT) Suite', () => {
 
     facilityAId = new mongoose.Types.ObjectId();
     facilityBId = new mongoose.Types.ObjectId();
+    const runId = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 
     patientAUser = await User.create({
-      email: 'patientA.voice@test.com',
+      email: `patientA_${runId}@test.com`,
       passwordHash: 'hash',
       name: 'Patient A Voice',
       role: UserRole.PATIENT,
@@ -92,7 +94,7 @@ describe('Phase 13 — Voice / Speech-to-Text (STT) Suite', () => {
     });
 
     patientBUser = await User.create({
-      email: 'patientB.voice@test.com',
+      email: `patientB_${runId}@test.com`,
       passwordHash: 'hash',
       name: 'Patient B Voice',
       role: UserRole.PATIENT,
@@ -100,20 +102,20 @@ describe('Phase 13 — Voice / Speech-to-Text (STT) Suite', () => {
     });
 
     reviewerFacilityA = await User.create({
-      email: 'reviewer.facA.voice@test.com',
+      email: `reviewer.facA_${runId}@test.com`,
       passwordHash: 'hash',
       name: 'Dr. Facility A Voice',
       role: UserRole.DOCTOR,
-      facilityId: facilityAId,
+      facilityId: facilityAId.toString(),
       isEmailVerified: true,
     });
 
     reviewerFacilityB = await User.create({
-      email: 'reviewer.facB.voice@test.com',
+      email: `reviewer.facB_${runId}@test.com`,
       passwordHash: 'hash',
       name: 'Dr. Facility B Voice',
       role: UserRole.DOCTOR,
-      facilityId: facilityBId,
+      facilityId: facilityBId.toString(),
       isEmailVerified: true,
     });
 
@@ -131,24 +133,24 @@ describe('Phase 13 — Voice / Speech-to-Text (STT) Suite', () => {
     });
 
     caseFacilityA = await Case.create({
-      caseNumber: 'CASE-VOICE-FAC-A',
+      caseNumber: `CASE-VOICE-FAC-A-${runId}`,
       patientId: patientAUser._id,
-      facilityId: facilityAId,
+      facilityId: facilityAId.toString(),
       chiefComplaint: 'Chest tightness and cough',
-      status: CaseStatus.INTAKE_COMPLETED,
-      priority: CasePriority.MEDIUM,
-      intakeSource: IntakeSource.PATIENT_PORTAL,
+      status: CaseStatus.OPEN,
+      priority: CasePriority.PRIORITY,
+      intakeSource: IntakeSource.VOICE,
       language: 'hi-IN',
     });
 
     caseFacilityB = await Case.create({
-      caseNumber: 'CASE-VOICE-FAC-B',
+      caseNumber: `CASE-VOICE-FAC-B-${runId}`,
       patientId: patientBUser._id,
-      facilityId: facilityBId,
+      facilityId: facilityBId.toString(),
       chiefComplaint: 'Fever and sore throat',
-      status: CaseStatus.INTAKE_COMPLETED,
-      priority: CasePriority.LOW,
-      intakeSource: IntakeSource.PATIENT_PORTAL,
+      status: CaseStatus.OPEN,
+      priority: CasePriority.ROUTINE,
+      intakeSource: IntakeSource.VOICE,
       language: 'en-IN',
     });
   });

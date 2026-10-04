@@ -20,6 +20,7 @@ import { NotificationBell } from '@/components/ui/NotificationBell';
 import { Button } from '@/components/ui/button';
 import { DemoBanner } from '@/components/ui/DemoBanner';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { clearAuthSession } from '@/lib/authSession';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -47,7 +48,7 @@ export default function AdminPage() {
           }
         }
       } catch {
-        localStorage.removeItem('accessToken');
+        clearAuthSession();
         router.push('/login');
       }
     }

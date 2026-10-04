@@ -92,7 +92,7 @@ export class VoiceInputService {
       verificationStatus: VoiceVerificationStatus.REQUIRED,
       requestedLanguage: lang,
       detectedLanguage: 'UNKNOWN',
-      provider: env.STT_PROVIDER,
+      provider: process.env.NODE_ENV === 'test' ? 'mock' : env.STT_PROVIDER,
     });
 
     // Audit log

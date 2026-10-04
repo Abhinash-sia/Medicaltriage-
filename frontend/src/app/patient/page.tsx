@@ -34,6 +34,7 @@ import { DemoBanner } from '@/components/ui/DemoBanner';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { LanguageSelector } from '@/components/ui/LanguageSelector';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { clearAuthSession, authFetch } from '@/lib/authSession';
 
 interface PatientCaseSummary {
   id: string;
@@ -132,17 +133,15 @@ export default function PatientDashboardPage() {
       }
 
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '/api';
-      const response = await fetch(`${apiBaseUrl}/intake/my-cases`, {
+      const response = await authFetch(`${apiBaseUrl}/intake/my-cases`, {
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
 
       if (response.status === 401) {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('user');
-        router.push('/login');
+        clearAuthSession();
+        router.push('/login?expired=true');
         return;
       }
 
@@ -164,10 +163,7 @@ export default function PatientDashboardPage() {
   }, [fetchCases]);
 
   const handleLogout = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('user');
-    }
+    clearAuthSession();
     router.push('/login');
   };
 

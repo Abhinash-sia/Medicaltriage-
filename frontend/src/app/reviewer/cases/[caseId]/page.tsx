@@ -31,6 +31,7 @@ import { ReferralHistoryView } from '@/components/reviewer/ReferralHistoryView';
 import { AuditTrailModal } from '@/components/reviewer/AuditTrailModal';
 import { DemoBanner } from '@/components/ui/DemoBanner';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { clearAuthSession } from '@/lib/authSession';
 
 interface ReviewerCaseSymptom {
   id: string;
@@ -212,6 +213,11 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
+
+      if (response.status === 401) {
+        clearAuthSession(true);
+        return;
+      }
 
       const result = await response.json();
 

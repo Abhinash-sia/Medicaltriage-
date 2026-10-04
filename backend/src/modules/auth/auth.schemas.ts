@@ -43,7 +43,12 @@ export const updatePreferencesSchema = z.object({
   preferredLanguage: z.string().trim().min(2, 'Language code must be at least 2 characters'),
 });
 
+export const refreshTokenSchema = z.object({
+  refreshToken: z.string().min(1, 'Refresh token is required'),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>;
+export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
 

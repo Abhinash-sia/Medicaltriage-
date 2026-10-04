@@ -22,3 +22,20 @@ export const signToken = (payload: JwtPayload): string => {
 export const verifyToken = (token: string): JwtPayload => {
   return jwt.verify(token, env.JWT_SECRET) as JwtPayload;
 };
+
+export interface RefreshTokenPayload {
+  id: string;
+  tokenType: 'refresh';
+  iat?: number;
+  exp?: number;
+}
+
+export const signRefreshToken = (userId: string, expiresIn?: string | number): string => {
+  return jwt.sign({ id: userId, tokenType: 'refresh' }, env.JWT_REFRESH_SECRET, {
+    expiresIn: (expiresIn || env.JWT_REFRESH_EXPIRES_IN) as jwt.SignOptions['expiresIn'],
+  });
+};
+
+export const verifyRefreshToken = (token: string): RefreshTokenPayload => {
+  return jwt.verify(token, env.JWT_REFRESH_SECRET) as RefreshTokenPayload;
+};

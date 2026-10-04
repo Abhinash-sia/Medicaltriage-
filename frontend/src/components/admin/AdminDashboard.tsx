@@ -15,6 +15,7 @@ import {
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../ui/card';
 import { Button } from '../ui/button';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { clearAuthSession } from '@/lib/authSession';
 
 interface DashboardMetrics {
   openCases: number;
@@ -54,11 +55,7 @@ export function AdminDashboard() {
         },
       });
       if (res.status === 401) {
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('user');
-          window.location.href = '/login?expired=true';
-        }
+        clearAuthSession(true);
         return;
       }
 
@@ -113,7 +110,7 @@ export function AdminDashboard() {
           <Card className="border-l-4 border-l-blue-500">
             <CardHeader className="p-4 pb-1">
               <CardDescription className="text-xs flex items-center justify-between">
-                <span>{t('reviewer.openCases')}</span>
+                <span>{t('admin.openCases')}</span>
                 <FolderOpen className="w-4 h-4 text-blue-500" />
               </CardDescription>
               <CardTitle className="text-2xl font-bold text-blue-700 dark:text-blue-400">
@@ -128,7 +125,7 @@ export function AdminDashboard() {
           <Card className="border-l-4 border-l-indigo-500">
             <CardHeader className="p-4 pb-1">
               <CardDescription className="text-xs flex items-center justify-between">
-                <span>{t('reviewer.inReviewCases')}</span>
+                <span>{t('admin.inReviewCases')}</span>
                 <Activity className="w-4 h-4 text-indigo-500" />
               </CardDescription>
               <CardTitle className="text-2xl font-bold text-indigo-700 dark:text-indigo-400">
@@ -143,7 +140,7 @@ export function AdminDashboard() {
           <Card className="border-l-4 border-l-red-500">
             <CardHeader className="p-4 pb-1">
               <CardDescription className="text-xs flex items-center justify-between">
-                <span>{t('reviewer.escalatedCases')}</span>
+                <span>{t('admin.escalatedCases')}</span>
                 <AlertTriangle className="w-4 h-4 text-red-500" />
               </CardDescription>
               <CardTitle className="text-2xl font-bold text-red-700 dark:text-red-400">
@@ -158,7 +155,7 @@ export function AdminDashboard() {
           <Card className="border-l-4 border-l-purple-500">
             <CardHeader className="p-4 pb-1">
               <CardDescription className="text-xs flex items-center justify-between">
-                <span>{t('reviewer.referral')}</span>
+                <span>{t('admin.referredCases')}</span>
                 <Send className="w-4 h-4 text-purple-500" />
               </CardDescription>
               <CardTitle className="text-2xl font-bold text-purple-700 dark:text-purple-400">
@@ -173,7 +170,7 @@ export function AdminDashboard() {
           <Card className="border-l-4 border-l-amber-500">
             <CardHeader className="p-4 pb-1">
               <CardDescription className="text-xs flex items-center justify-between">
-                <span>{t('reviewer.overdueCases')}</span>
+                <span>{t('admin.overdueCases')}</span>
                 <Clock className="w-4 h-4 text-amber-500" />
               </CardDescription>
               <CardTitle className="text-2xl font-bold text-amber-700 dark:text-amber-400">
@@ -188,7 +185,7 @@ export function AdminDashboard() {
           <Card className="border-l-4 border-l-teal-500">
             <CardHeader className="p-4 pb-1">
               <CardDescription className="text-xs flex items-center justify-between">
-                <span>{t('admin.activeUsers')}</span>
+                <span>{t('admin.activeReviewers')}</span>
                 <Users className="w-4 h-4 text-teal-500" />
               </CardDescription>
               <CardTitle className="text-2xl font-bold text-teal-700 dark:text-teal-400">
@@ -203,7 +200,7 @@ export function AdminDashboard() {
           <Card className="border-l-4 border-l-emerald-500">
             <CardHeader className="p-4 pb-1">
               <CardDescription className="text-xs flex items-center justify-between">
-                <span>{t('admin.facilitiesTab')}</span>
+                <span>{t('admin.activeFacilities')}</span>
                 <Building2 className="w-4 h-4 text-emerald-500" />
               </CardDescription>
               <CardTitle className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">
@@ -218,7 +215,7 @@ export function AdminDashboard() {
           <Card className="border-l-4 border-l-sky-500">
             <CardHeader className="p-4 pb-1">
               <CardDescription className="text-xs flex items-center justify-between">
-                <span>Operational Alerts</span>
+                <span>{t('admin.operationalAlerts')}</span>
                 <Bell className="w-4 h-4 text-sky-500" />
               </CardDescription>
               <CardTitle className="text-2xl font-bold text-sky-700 dark:text-sky-400">
