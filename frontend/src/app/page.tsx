@@ -18,389 +18,380 @@ import {
   Workflow,
   Stethoscope,
   LogIn,
+  Activity,
+  Cpu,
+  Layers,
+  FileCheck2,
+  ShieldCheck,
+  Terminal,
+  ExternalLink,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { LanguageSelector } from '@/components/ui/LanguageSelector';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { SmoothScroll } from '@/components/landing/SmoothScroll';
+import { TriageConstellation } from '@/components/landing/TriageConstellation';
+import { TriageSimulator } from '@/components/landing/TriageSimulator';
+import { StorytellingPipeline } from '@/components/landing/StorytellingPipeline';
 
 export default function PublicLandingPage() {
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      {/* Top Navigation */}
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-2 rounded-xl text-white shadow-md">
-              <HeartPulse className="w-6 h-6" />
-            </div>
-            <div>
-              <span className="text-xl font-bold tracking-tight text-slate-900">MedicalTriage</span>
-              <span className="ml-2 text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium border border-slate-200">
-                {t('landing.prototype')}
-              </span>
-            </div>
-          </div>
-
-          <nav className="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-600">
-            <a href="#how-it-works" className="hover:text-blue-600 transition-colors">
-              {t('landing.navHowItWorks')}
-            </a>
-            <a href="#capabilities" className="hover:text-blue-600 transition-colors">
-              {t('landing.navCapabilities')}
-            </a>
-            <a href="#safety" className="hover:text-blue-600 transition-colors">
-              {t('landing.navSafety')}
-            </a>
-            <a href="#india-context" className="hover:text-blue-600 transition-colors">
-              {t('landing.navIndiaContext')}
-            </a>
-            <a href="#demo" className="hover:text-blue-600 transition-colors">
-              {t('landing.navDemo')}
-            </a>
-          </nav>
-
-          <div className="flex items-center space-x-3">
-            <LanguageSelector variant="full" />
-            <Link href="/login">
-              <Button variant="outline" size="sm" className="hidden sm:inline-flex items-center gap-1.5">
-                <LogIn className="w-4 h-4" />
-                {t('common.login')}
-              </Button>
-            </Link>
-            <Link href="/patient/intake">
-              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
-                {t('landing.patientPortal')}
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-white via-slate-50 to-blue-50/30 pt-16 pb-20 sm:pt-24 sm:pb-28">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center max-w-3xl mx-auto space-y-6">
-            <div className="inline-flex items-center space-x-2 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide uppercase shadow-xs">
-              <Sparkles className="w-4 h-4 text-blue-600" />
-              <span>{t('landing.badgeAssistant')}</span>
+    <SmoothScroll>
+      <div className="min-h-screen bg-[#080E11] text-[#E6EEF0] flex flex-col font-sans selection:bg-[#38D9C8]/20 selection:text-[#38D9C8]">
+        {/* Top Floating Glass Navigation */}
+        <header className="sticky top-0 z-50 bg-[#080E11]/80 backdrop-blur-xl border-b border-white/10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="bg-gradient-to-br from-[#0F6F73] to-[#0A4B4E] p-2 rounded-lg text-white border border-[#38D9C8]/30 shadow-md">
+                <HeartPulse className="w-5 h-5 text-[#38D9C8]" />
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-lg font-bold tracking-tight text-white font-mono">MedicalTriage</span>
+                <span className="text-[10px] font-mono bg-white/[0.05] text-[#38D9C8] px-2 py-0.5 rounded-full font-medium border border-[#38D9C8]/20">
+                  {t('landing.prototype')}
+                </span>
+              </div>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight">
-              {t('landing.heroTitleLine1')} <br />
-              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                {t('landing.heroTitleLine2')}
-              </span>
-            </h1>
+            <nav className="hidden md:flex items-center space-x-6 text-xs font-medium text-muted-foreground">
+              <a href="#how-it-works" className="hover:text-white transition-colors">
+                {t('landing.navHowItWorks')}
+              </a>
+              <a href="#simulator" className="hover:text-white transition-colors">
+                Live Simulator
+              </a>
+              <a href="#capabilities" className="hover:text-white transition-colors">
+                {t('landing.navCapabilities')}
+              </a>
+              <a href="#safety" className="hover:text-white transition-colors">
+                {t('landing.navSafety')}
+              </a>
+              <a href="#india-context" className="hover:text-white transition-colors">
+                {t('landing.navIndiaContext')}
+              </a>
+            </nav>
 
-            <p className="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-              {t('landing.heroSubtitle')}
-            </p>
-
-            {/* Non-Diagnostic Key Badges */}
-            <div className="pt-2 flex flex-wrap justify-center gap-2 text-xs font-semibold">
-              <Badge variant="outline" className="bg-white/80 border-slate-300 text-slate-700 px-3 py-1">
-                <ShieldAlert className="w-3.5 h-3.5 mr-1.5 text-amber-600" /> {t('landing.badgeNonDiagnostic')}
-              </Badge>
-              <Badge variant="outline" className="bg-white/80 border-slate-300 text-slate-700 px-3 py-1">
-                <Stethoscope className="w-3.5 h-3.5 mr-1.5 text-blue-600" /> {t('landing.badgeHumanReview')}
-              </Badge>
-              <Badge variant="outline" className="bg-white/80 border-slate-300 text-slate-700 px-3 py-1">
-                <Lock className="w-3.5 h-3.5 mr-1.5 text-emerald-600" /> {t('landing.badgePrivacy')}
-              </Badge>
-              <Badge variant="outline" className="bg-white/80 border-slate-300 text-slate-700 px-3 py-1">
-                <Globe className="w-3.5 h-3.5 mr-1.5 text-indigo-600" /> {t('landing.badgeMultilingual')}
-              </Badge>
-            </div>
-
-            <div className="pt-6 flex flex-col sm:flex-row justify-center gap-4">
+            <div className="flex items-center space-x-3">
+              <LanguageSelector variant="full" />
+              <ThemeToggle />
+              <Link href="/login">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="hidden sm:inline-flex items-center gap-1.5 border-white/10 bg-white/[0.03] text-foreground hover:bg-white/[0.08] text-xs h-8"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  {t('common.login')}
+                </Button>
+              </Link>
               <Link href="/patient/intake">
-                <Button size="lg" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-6 text-base shadow-md">
-                  {t('landing.getStarted')}
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
-              </Link>
-              <Link href="/reviewer">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto border-slate-300 text-slate-800 font-semibold px-8 py-6 text-base hover:bg-white shadow-xs">
-                  {t('landing.reviewerQueue')}
+                <Button
+                  size="sm"
+                  className="bg-[#0F6F73] hover:bg-[#148388] text-white text-xs h-8 px-3.5 shadow-sm border border-[#38D9C8]/30 font-semibold"
+                >
+                  {t('landing.patientPortal')}
                 </Button>
               </Link>
             </div>
           </div>
-        </div>
-      </section>
+        </header>
 
-      {/* Prominent Non-Diagnostic Safety Disclaimer Banner */}
-      <section id="safety" className="bg-amber-500/10 border-y border-amber-300/60 py-6 px-4">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <div className="bg-amber-100 text-amber-800 p-2.5 rounded-xl border border-amber-300 shrink-0">
-            <ShieldAlert className="w-6 h-6" />
-          </div>
-          <div className="space-y-1 text-slate-800">
-            <h3 className="font-bold text-sm text-amber-900 tracking-wide uppercase">
-              {t('landing.disclaimerTitle')}
-            </h3>
-            <p className="text-xs sm:text-sm leading-relaxed text-slate-700">
-              {t('landing.disclaimerBody')}
-            </p>
-          </div>
-        </div>
-      </section>
+        {/* Hero Section with Live Three.js 3D Constellation */}
+        <section className="relative overflow-hidden pt-20 pb-24 sm:pt-28 sm:pb-36 border-b border-white/10">
+          <TriageConstellation />
 
-      {/* How It Works Section */}
-      <section id="how-it-works" className="py-20 bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-          <div className="text-center max-w-2xl mx-auto space-y-4">
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900">{t('landing.howItWorksTitle')}</h2>
-            <p className="text-slate-600 text-sm sm:text-base">
-              {t('landing.howItWorksSubtitle')}
-            </p>
-          </div>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="text-center max-w-3xl mx-auto space-y-6">
+              {/* Badge */}
+              <div className="inline-flex items-center space-x-2 bg-white/[0.04] border border-[#38D9C8]/30 text-[#38D9C8] px-3.5 py-1.5 rounded-full text-xs font-mono tracking-wider uppercase backdrop-blur-md shadow-lg">
+                <span className="h-2 w-2 rounded-full bg-[#38D9C8] animate-pulse" />
+                <span>HUMAN-IN-THE-LOOP CLINICAL TRIAGE ASSISTANT</span>
+              </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {[
-              {
-                step: '01',
-                title: t('landing.step1Title'),
-                desc: t('landing.step1Desc'),
-                icon: FileText,
-                color: 'text-blue-600 bg-blue-50 border-blue-200',
-              },
-              {
-                step: '02',
-                title: t('landing.step2Title'),
-                desc: t('landing.step2Desc'),
-                icon: Workflow,
-                color: 'text-indigo-600 bg-indigo-50 border-indigo-200',
-              },
-              {
-                step: '03',
-                title: t('landing.step3Title'),
-                desc: t('landing.step3Desc'),
-                icon: History,
-                color: 'text-purple-600 bg-purple-50 border-purple-200',
-              },
-              {
-                step: '04',
-                title: t('landing.step4Title'),
-                desc: t('landing.step4Desc'),
-                icon: ShieldAlert,
-                color: 'text-amber-600 bg-amber-50 border-amber-200',
-              },
-              {
-                step: '05',
-                title: t('landing.step5Title'),
-                desc: t('landing.step5Desc'),
-                icon: Users,
-                color: 'text-emerald-600 bg-emerald-50 border-emerald-200',
-              },
-              {
-                step: '06',
-                title: t('landing.step6Title'),
-                desc: t('landing.step6Desc'),
-                icon: CheckCircle2,
-                color: 'text-rose-600 bg-rose-50 border-rose-200',
-              },
-            ].map((s, idx) => {
-              const Icon = s.icon;
-              return (
-                <Card key={idx} className="border border-slate-200 shadow-xs relative hover:shadow-md transition-shadow">
-                  <CardHeader className="p-4 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-extrabold text-slate-400">{s.step}</span>
-                      <div className={`p-2 rounded-lg border ${s.color}`}>
-                        <Icon className="w-4 h-4" />
+              {/* H1 Heading */}
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.15]">
+                Human-in-the-loop triage, <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#38D9C8] via-[#7AE8DC] to-[#E6EEF0]">
+                  engineered for clinical certainty.
+                </span>
+              </h1>
+
+              {/* Subtitle */}
+              <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                Organize symptoms, voice transcripts, lab OCR reports, visual observations, and timelines into structured information for qualified healthcare professionals.
+              </p>
+
+              {/* Non-Diagnostic Key Badges */}
+              <div className="pt-2 flex flex-wrap justify-center gap-2 text-xs font-medium font-mono">
+                <Badge variant="outline" className="bg-white/[0.03] border-white/10 text-foreground px-3 py-1">
+                  <ShieldAlert className="w-3.5 h-3.5 mr-1.5 text-[#E8A33A]" />
+                  Non-Diagnostic
+                </Badge>
+                <Badge variant="outline" className="bg-white/[0.03] border-white/10 text-foreground px-3 py-1">
+                  <Stethoscope className="w-3.5 h-3.5 mr-1.5 text-[#38D9C8]" />
+                  Qualified Human Review
+                </Badge>
+                <Badge variant="outline" className="bg-white/[0.03] border-white/10 text-foreground px-3 py-1">
+                  <Lock className="w-3.5 h-3.5 mr-1.5 text-[#2E9E6B]" />
+                  Privacy-Conscious
+                </Badge>
+                <Badge variant="outline" className="bg-white/[0.03] border-white/10 text-foreground px-3 py-1">
+                  <Globe className="w-3.5 h-3.5 mr-1.5 text-[#7AE8DC]" />
+                  Multilingual India-Ready
+                </Badge>
+              </div>
+
+              {/* CTAs */}
+              <div className="pt-6 flex flex-col sm:flex-row justify-center gap-4">
+                <Link href="/patient/intake">
+                  <Button
+                    size="lg"
+                    className="w-full sm:w-auto bg-[#0F6F73] hover:bg-[#148388] text-white font-semibold px-8 py-6 text-sm border border-[#38D9C8]/40 shadow-xl shadow-[#0F6F73]/20"
+                  >
+                    Get Started (Patient Intake)
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+                <Link href="/reviewer">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="w-full sm:w-auto border-white/15 bg-white/[0.03] text-foreground font-semibold px-8 py-6 text-sm hover:bg-white/[0.08]"
+                  >
+                    Reviewer Workspace Queue
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Strict Non-Diagnostic & Safety Boundary Banner */}
+        <section id="safety" className="bg-[#E8A33A]/5 border-y border-[#E8A33A]/20 py-6 px-4">
+          <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="bg-[#E8A33A]/10 text-[#E8A33A] p-2.5 rounded-xl border border-[#E8A33A]/30 shrink-0">
+              <ShieldAlert className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-bold font-mono text-xs text-[#E8A33A] tracking-wider uppercase">
+                STRICT NON-DIAGNOSTIC & HUMAN-IN-THE-LOOP SAFETY BOUNDARY
+              </h3>
+              <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground">
+                MedicalTriage is built to assist — not replace — qualified healthcare professionals. It organizes and surfaces structured patient information, timelines, and safety signals. It does not diagnose medical conditions, prescribe treatment, or independently make clinical decisions.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Live Interactive Triage Sandbox (21st.dev Style Bento) */}
+        <section id="simulator" className="py-24 px-4 sm:px-6 lg:px-8 border-b border-white/10 bg-gradient-to-b from-[#080E11] to-[#0A1216]">
+          <div className="max-w-7xl mx-auto space-y-12">
+            <div className="text-center max-w-2xl mx-auto space-y-3">
+              <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-[#38D9C8] uppercase tracking-wider bg-[#38D9C8]/10 px-3 py-1 rounded-md border border-[#38D9C8]/20">
+                <Cpu className="w-3.5 h-3.5" />
+                <span>Interactive Demonstration</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
+                Experience the Triage Engine Live
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Select clinical presentations below to observe real-time red-flag evaluation, SLA countdown computation, and verified provenance synthesis.
+              </p>
+            </div>
+
+            <TriageSimulator />
+          </div>
+        </section>
+
+        {/* Storytelling Pipeline: How The System Works */}
+        <section id="how-it-works" className="py-24 px-4 sm:px-6 lg:px-8 border-b border-white/10 bg-[#080E11]">
+          <div className="max-w-7xl mx-auto space-y-16">
+            <div className="text-center max-w-2xl mx-auto space-y-3">
+              <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-[#38D9C8] uppercase tracking-wider bg-[#38D9C8]/10 px-3 py-1 rounded-md border border-[#38D9C8]/20">
+                <Workflow className="w-3.5 h-3.5" />
+                <span>End-to-End Clinical Flow</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
+                How The System Works
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                A continuous, transparent workflow connecting patient intake to clinician decision-support and referral escalation.
+              </p>
+            </div>
+
+            <StorytellingPipeline />
+          </div>
+        </section>
+
+        {/* Core Capabilities Section (Bento Grid) */}
+        <section id="capabilities" className="py-24 px-4 sm:px-6 lg:px-8 border-b border-white/10 bg-gradient-to-b from-[#080E11] via-[#0B1519] to-[#080E11]">
+          <div className="max-w-7xl mx-auto space-y-16">
+            <div className="text-center max-w-2xl mx-auto space-y-3">
+              <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-[#38D9C8] uppercase tracking-wider bg-[#38D9C8]/10 px-3 py-1 rounded-md border border-[#38D9C8]/20">
+                <Layers className="w-3.5 h-3.5" />
+                <span>Clinical Capabilities</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
+                Engineered for High-Acuity Reliability
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Built specifically to solve high-pressure triage bottlenecks in busy hospitals, rural clinics, and emergency departments.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                {
+                  title: 'Multimodal Ingestion',
+                  desc: 'Ingest voice recordings in Indian regional languages, lab PDF reports via edge OCR, and guided intake forms seamlessly.',
+                  icon: Mic,
+                  badge: 'Voice + OCR + Vitals',
+                },
+                {
+                  title: 'Safety & Urgency Engine',
+                  desc: 'Evaluates 22 hardcoded clinical red flags before generating recommendations. Triages cases into URGENT, PRIORITY, or ROUTINE.',
+                  icon: ShieldCheck,
+                  badge: '22 Deterministic Rules',
+                },
+                {
+                  title: 'Side-by-Side Provenance',
+                  desc: 'Displays verbatim original patient statements and OCR report spans next to translated clinical notes for zero-hallucination verification.',
+                  icon: FileText,
+                  badge: '100% Grounded Citations',
+                },
+                {
+                  title: 'SLA Countdown Monitor',
+                  desc: 'Enforces clinical review SLA deadlines based on calculated urgency with audible alerts and continuous queue prioritization.',
+                  icon: Activity,
+                  badge: '15m / 60m / 240m SLA',
+                },
+                {
+                  title: 'Immutable Audit Trail',
+                  desc: 'Cryptographic SHA-256 hashed audit events record intake, extraction, review modifications, and referral authorizations.',
+                  icon: History,
+                  badge: 'Tamper-Evident Logs',
+                },
+                {
+                  title: 'Facility Directory & Referrals',
+                  desc: 'One-click referral escalation to specialized healthcare facilities with automated QR code verification cards.',
+                  icon: Building2,
+                  badge: 'Direct Facility Handoff',
+                },
+              ].map((cap, idx) => {
+                const Icon = cap.icon;
+                return (
+                  <div
+                    key={idx}
+                    className="p-6 rounded-2xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-300 hover:border-[#38D9C8]/30 flex flex-col justify-between group"
+                  >
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="p-3 bg-[#0F6F73]/30 text-[#38D9C8] rounded-xl border border-[#38D9C8]/20 group-hover:scale-105 transition-transform">
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <span className="font-mono text-[10px] text-muted-foreground bg-white/[0.04] px-2 py-0.5 rounded border border-white/5">
+                          {cap.badge}
+                        </span>
                       </div>
+                      <h3 className="text-lg font-bold text-white tracking-tight">{cap.title}</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                        {cap.desc}
+                      </p>
                     </div>
-                    <CardTitle className="text-sm font-bold text-slate-900">{s.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-0">
-                    <p className="text-xs text-slate-600 leading-normal">{s.desc}</p>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Core Capabilities Section */}
-      <section id="capabilities" className="py-20 bg-slate-50 border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-          <div className="text-center max-w-2xl mx-auto space-y-4">
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900">{t('landing.capabilitiesTitle')}</h2>
-            <p className="text-slate-600 text-sm sm:text-base">
-              {t('landing.capabilitiesSubtitle')}
-            </p>
-          </div>
+        {/* India Context Section */}
+        <section id="india-context" className="py-24 px-4 sm:px-6 lg:px-8 border-b border-white/10 bg-[#080E11]">
+          <div className="max-w-7xl mx-auto space-y-12">
+            <div className="max-w-3xl mx-auto text-center space-y-3">
+              <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-[#7AE8DC] uppercase tracking-wider bg-[#7AE8DC]/10 px-3 py-1 rounded-md border border-[#7AE8DC]/20">
+                <Globe className="w-3.5 h-3.5" />
+                <span>Regional Healthcare Infrastructure</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
+                Built for the Realities of Indian Healthcare
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Engineered from the ground up for diverse languages, varying network bandwidth, and ABDM-aligned public healthcare systems.
+              </p>
+            </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                title: t('landing.cap1Title'),
-                desc: t('landing.cap1Desc'),
-                icon: Mic,
-              },
-              {
-                title: t('landing.cap2Title'),
-                desc: t('landing.cap2Desc'),
-                icon: ShieldAlert,
-              },
-              {
-                title: t('landing.cap3Title'),
-                desc: t('landing.cap3Desc'),
-                icon: Globe,
-              },
-              {
-                title: t('landing.cap4Title'),
-                desc: t('landing.cap4Desc'),
-                icon: FileText,
-              },
-              {
-                title: t('landing.cap5Title'),
-                desc: t('landing.cap5Desc'),
-                icon: History,
-              },
-              {
-                title: t('landing.cap6Title'),
-                desc: t('landing.cap6Desc'),
-                icon: Building2,
-              },
-            ].map((cap, idx) => {
-              const Icon = cap.icon;
-              return (
-                <Card key={idx} className="bg-white border border-slate-200 shadow-xs hover:border-slate-300 transition-colors">
-                  <CardHeader className="space-y-2">
-                    <div className="p-2.5 bg-blue-50 text-blue-700 w-fit rounded-xl border border-blue-100">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                {
+                  title: 'English, Hindi & Odia Native',
+                  desc: 'Immediate real-time language switching with persistent locale preservation for both patient intake and clinical reviewer dashboards.',
+                  icon: Globe,
+                },
+                {
+                  title: 'Low-Bandwidth Resilience',
+                  desc: 'Optimized asset delivery, local offline audio recording, and minimal JSON payload payloads engineered for 2G/3G rural networks.',
+                  icon: Cpu,
+                },
+                {
+                  title: 'ABDM-Ready Architecture',
+                  desc: 'Aligned with Ayushman Bharat Digital Mission (ABDM) standards, FHIR resource schemas, and privacy-conscious data retention protocols.',
+                  icon: Building2,
+                },
+              ].map((item, idx) => {
+                const Icon = item.icon;
+                return (
+                  <div
+                    key={idx}
+                    className="p-6 rounded-xl border border-white/10 bg-white/[0.02] space-y-3"
+                  >
+                    <div className="p-2.5 bg-[#0F6F73]/20 text-[#38D9C8] w-fit rounded-lg border border-[#38D9C8]/20">
                       <Icon className="w-5 h-5" />
                     </div>
-                    <CardTitle className="text-base font-bold text-slate-900">{cap.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">{cap.desc}</p>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* India Context Section */}
-      <section id="india-context" className="py-20 bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-          <div className="max-w-3xl mx-auto text-center space-y-4">
-            <Badge variant="outline" className="bg-indigo-50 border-indigo-200 text-indigo-800">
-              {t('landing.indiaBadge')}
-            </Badge>
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900">
-              {t('landing.indiaTitle')}
-            </h2>
-            <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
-              {t('landing.indiaSubtitle')}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-            {[
-              t('landing.facilityGovtHospitals'),
-              t('landing.facilityPhcs'),
-              t('landing.facilityCamps'),
-              t('landing.facilityClinics'),
-              t('landing.facilityOccupational'),
-              t('landing.facilityReferrals'),
-              t('landing.facilityMultilingual'),
-              t('landing.facilityHumanReview'),
-            ].map((item, idx) => (
-              <div key={idx} className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center font-medium text-xs text-slate-800 flex items-center justify-center space-x-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>{item}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Synthetic Demo Access CTA */}
-      <section id="demo" className="py-20 bg-slate-900 text-white relative overflow-hidden">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8 relative z-10">
-          <div className="inline-flex items-center space-x-2 bg-slate-800 border border-slate-700 text-emerald-400 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider">
-            <Sparkles className="w-4 h-4" />
-            <span>{t('landing.demoBadge')}</span>
-          </div>
-
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
-            {t('landing.demoTitle')}
-          </h2>
-
-          <p className="text-slate-300 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
-            {t('landing.demoSubtitle')}
-          </p>
-
-          {/* Persona 1-Click Launch Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto text-left pt-4">
-            <Link href="/patient/intake">
-              <div className="p-4 bg-slate-800/90 border border-slate-700 rounded-xl hover:border-blue-500 transition-colors cursor-pointer space-y-2">
-                <div className="flex items-center justify-between text-blue-400 font-bold text-sm">
-                  <span>{t('landing.demoPatientTitle')}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </div>
-                <p className="text-xs text-slate-400">{t('landing.demoPatientDesc')}</p>
-              </div>
-            </Link>
-
-            <Link href="/reviewer">
-              <div className="p-4 bg-slate-800/90 border border-slate-700 rounded-xl hover:border-emerald-500 transition-colors cursor-pointer space-y-2">
-                <div className="flex items-center justify-between text-emerald-400 font-bold text-sm">
-                  <span>{t('landing.demoReviewerTitle')}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </div>
-                <p className="text-xs text-slate-400">{t('landing.demoReviewerDesc')}</p>
-              </div>
-            </Link>
-
-            <Link href="/admin">
-              <div className="p-4 bg-slate-800/90 border border-slate-700 rounded-xl hover:border-purple-500 transition-colors cursor-pointer space-y-2">
-                <div className="flex items-center justify-between text-purple-400 font-bold text-sm">
-                  <span>{t('landing.demoAdminTitle')}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </div>
-                <p className="text-xs text-slate-400">{t('landing.demoAdminDesc')}</p>
-              </div>
-            </Link>
-          </div>
-
-          <div className="pt-4 text-xs text-slate-400">
-            <span className="font-semibold text-slate-300">Seed Command:</span> Execute <code>npm run seed:test-data</code> in the backend to populate standard synthetic demo records.
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-slate-950 text-slate-400 border-t border-slate-800 py-12 px-4">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left text-xs">
-          <div className="space-y-2">
-            <div className="flex items-center justify-center md:justify-start space-x-2 text-white font-bold text-sm">
-              <HeartPulse className="w-4 h-4 text-blue-500" />
-              <span>MedicalTriage</span>
+                    <h3 className="text-base font-bold text-white">{item.title}</h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                  </div>
+                );
+              })}
             </div>
-            <p className="max-w-md text-slate-500">
-              {t('landing.footerDisclaimer')}
-            </p>
           </div>
+        </section>
 
-          <div className="flex flex-wrap justify-center gap-6 text-slate-400 font-medium">
-            <a href="#how-it-works" className="hover:text-white transition-colors">{t('landing.navHowItWorks')}</a>
-            <a href="#capabilities" className="hover:text-white transition-colors">{t('landing.navCapabilities')}</a>
-            <a href="#safety" className="hover:text-white transition-colors">{t('landing.navSafety')}</a>
-            <Link href="/patient/intake" className="hover:text-white transition-colors">{t('landing.patientPortal')}</Link>
-            <Link href="/reviewer" className="hover:text-white transition-colors">{t('landing.reviewerPortal')}</Link>
+        {/* Operational Footer */}
+        <footer className="bg-[#05090B] border-t border-white/10 py-12 px-4 sm:px-6 lg:px-8 text-muted-foreground">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center space-x-3">
+              <div className="bg-[#0F6F73] p-1.5 rounded text-white">
+                <HeartPulse className="w-4 h-4 text-[#38D9C8]" />
+              </div>
+              <span className="font-mono text-sm font-bold text-white">MedicalTriage Clinical OS</span>
+            </div>
+
+            <p className="text-xs text-muted-foreground text-center">
+              A clinical decision-support and triage preparation tool. Strictly non-diagnostic. Human clinical oversight mandatory.
+            </p>
+
+            <div className="flex items-center space-x-4 text-xs font-mono">
+              <Link href="/patient/intake" className="hover:text-white transition-colors">
+                Patient Intake
+              </Link>
+              <span>•</span>
+              <Link href="/reviewer" className="hover:text-white transition-colors">
+                Reviewer Portal
+              </Link>
+              <span>•</span>
+              <Link href="/admin" className="hover:text-white transition-colors">
+                Admin
+              </Link>
+            </div>
           </div>
-        </div>
-      </footer>
-    </div>
+        </footer>
+      </div>
+    </SmoothScroll>
   );
 }
