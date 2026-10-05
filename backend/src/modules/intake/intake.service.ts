@@ -66,6 +66,9 @@ export class IntakeService {
       priority: CasePriority.ROUTINE, // Default initial workflow category awaiting safety evaluation
       intakeSource: IntakeSource.TEXT,
       language: input.language || 'en',
+      patientAge: input.age !== undefined ? input.age : null,
+      patientAgeMonths: input.age !== undefined ? input.age * 12 : null,
+      patientGender: input.gender || null,
       chiefComplaint: `${input.primarySymptom}: ${input.symptomDescription}`,
       slaDueAt,
       isDeleted: false,
@@ -130,6 +133,8 @@ export class IntakeService {
       chiefComplaint: newCase.chiefComplaint,
       primarySymptom: input.primarySymptom,
       language: newCase.language,
+      patientAge: newCase.patientAge || undefined,
+      patientGender: newCase.patientGender || undefined,
       consentStatus: ConsentStatus.GRANTED,
       createdAt: newCase.createdAt || new Date(),
     };
@@ -180,6 +185,8 @@ export class IntakeService {
       priority: caseDoc.priority,
       chiefComplaint: caseDoc.chiefComplaint,
       language: caseDoc.language,
+      patientAge: caseDoc.patientAge || undefined,
+      patientGender: caseDoc.patientGender || undefined,
       consent: consent
         ? {
             status: consent.status,

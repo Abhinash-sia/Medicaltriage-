@@ -368,7 +368,7 @@ FAILED (API error/timeout)        → Mark FAILED, trigger UNCERTAINTY rule → 
 
 > *"We're a team of 4. We built 24 backend modules, 35 documentation files, a full Next.js frontend with 4 role-specific portals, and a provider abstraction layer that lets us swap between Gemini, Sarvam, Google Vision, and mock providers with a single environment variable."*
 
-> *"We argued for two days about what 'Routine' should mean. We rewrote the safety engine three times because the first two versions let edge cases slip through. We built a synthetic data seeder that generates 23 fictional patient cases across 3 facilities — because we refuse to use real patient data, even for a prototype."*
+> *"We argued for two days about what 'Routine' should mean. We rewrote the safety engine three times because the first two versions let edge cases slip through. We built a synthetic data seeder that generates 22 fictional patient cases across 3 facilities — because we refuse to use real patient data, even for a prototype."*
 
 ### The Final Line:
 

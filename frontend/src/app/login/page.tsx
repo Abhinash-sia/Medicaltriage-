@@ -32,7 +32,7 @@ const SYNTHETIC_DEMO_ACCOUNTS = [
     email: 'patient.demo.001@example.test',
     password: 'Password123!',
     role: 'PATIENT',
-    targetRoute: '/patient/intake',
+    targetRoute: '/patient',
     color: 'bg-purple-50 border-purple-200 text-purple-800 hover:bg-purple-100',
   },
   {
@@ -45,6 +45,8 @@ const SYNTHETIC_DEMO_ACCOUNTS = [
   },
 ];
 
+import { setAuthSession } from '@/lib/authSession';
+
 export default function LoginPage() {
   const router = useRouter();
   const { t } = useLanguage();
@@ -53,11 +55,22 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [sessionExpiredNotice, setSessionExpiredNotice] = useState<boolean>(false);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('expired') === 'true') {
+        setSessionExpiredNotice(true);
+      }
+    }
+  }, []);
 
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setIsLoading(true);
     setError(null);
+    setSessionExpiredNotice(false);
 
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '/api';
 
@@ -82,14 +95,12 @@ export default function LoginPage() {
       }
 
       const accessToken = json.data.accessToken || json.data.token;
+      const refreshToken = json.data.refreshToken;
       const user = json.data.user;
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('user', JSON.stringify(user));
-      }
+      setAuthSession({ accessToken, refreshToken, user });
 
       if (user.role === 'PATIENT') {
-        router.push('/patient/intake');
+        router.push('/patient');
       } else if (user.role === 'ADMIN') {
         router.push('/admin');
       } else {
@@ -136,6 +147,13 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {sessionExpiredNotice && !error && (
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-start space-x-2">
+                <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <span>Your session has expired. Please log in again to continue.</span>
+              </div>
+            )}
+
             {error && (
               <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-800 flex items-start space-x-2">
                 <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />

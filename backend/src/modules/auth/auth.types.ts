@@ -4,6 +4,9 @@ import { UserRole } from '../users/user.types.js';
 export interface JwtPayload {
   id: string;
   role: UserRole;
+  facilityId?: string;
+  name?: string;
+  email?: string;
   iat?: number;
   exp?: number;
 }

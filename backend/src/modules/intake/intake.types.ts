@@ -16,6 +16,8 @@ export interface IntakeSubmitInput {
   consent: boolean;
   consentVersion?: string;
   language?: PatientLanguagePreference | string;
+  age?: number;
+  gender?: 'MALE' | 'FEMALE' | 'OTHER' | string;
   primarySymptom: string;
   symptomDescription: string;
   onset: string;
@@ -36,6 +38,8 @@ export interface IntakeResponseData {
   chiefComplaint: string;
   primarySymptom: string;
   language: string;
+  patientAge?: number;
+  patientGender?: string;
   consentStatus: string;
   createdAt: Date;
 }

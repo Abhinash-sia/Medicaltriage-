@@ -1,7 +1,7 @@
 import { User } from '../users/user.model.js';
 import { UserRole, IUser } from '../users/user.types.js';
 import { RegisterInput, LoginInput } from './auth.schemas.js';
-import { hashPassword, comparePassword, signToken } from './auth.utils.js';
+import { hashPassword, comparePassword, signToken, signRefreshToken, verifyRefreshToken } from './auth.utils.js';
 import { isLanguageSupported, normalizeLanguageCode } from '../translation/translation.languages.js';
 import { AppError } from '../../middleware/error-handler.js';
 
@@ -17,6 +17,7 @@ export interface AuthResponse {
     createdAt?: Date;
   };
   accessToken: string;
+  refreshToken?: string;
 }
 
 export class AuthService {
@@ -52,6 +53,7 @@ export class AuthService {
       id: newUser._id.toString(),
       role: newUser.role,
     });
+    const refreshToken = signRefreshToken(newUser._id.toString());
 
     return {
       user: {
@@ -65,6 +67,7 @@ export class AuthService {
         createdAt: newUser.createdAt,
       },
       accessToken: token,
+      refreshToken,
     };
   }
 
@@ -104,6 +107,8 @@ export class AuthService {
       id: user._id.toString(),
       role: user.role,
     });
+    const refreshExpiry = user.role === 'PATIENT' ? '7d' : '12h';
+    const refreshToken = signRefreshToken(user._id.toString(), refreshExpiry);
 
     return {
       user: {
@@ -117,6 +122,57 @@ export class AuthService {
         createdAt: user.createdAt,
       },
       accessToken: token,
+      refreshToken,
+    };
+  }
+
+  static async refreshSession(refreshTokenStr: string): Promise<AuthResponse> {
+    let payload;
+    try {
+      payload = verifyRefreshToken(refreshTokenStr);
+    } catch (err: unknown) {
+      const isExpired = err instanceof Error && err.name === 'TokenExpiredError';
+      const error: AppError = new Error(isExpired ? 'Refresh token expired' : 'Invalid refresh token');
+      error.statusCode = 401;
+      error.code = isExpired ? 'AUTH_TOKEN_EXPIRED' : 'AUTH_TOKEN_INVALID';
+      throw error;
+    }
+
+    if (!payload || !payload.id || payload.tokenType !== 'refresh') {
+      const error: AppError = new Error('Invalid refresh token');
+      error.statusCode = 401;
+      error.code = 'AUTH_TOKEN_INVALID';
+      throw error;
+    }
+
+    const user = await User.findOne({ _id: payload.id, isDeleted: false, isActive: true });
+    if (!user) {
+      const error: AppError = new Error('Account inactive or deleted');
+      error.statusCode = 401;
+      error.code = 'AUTH_ACCOUNT_INACTIVE';
+      throw error;
+    }
+
+    const newAccessToken = signToken({
+      id: user._id.toString(),
+      role: user.role,
+    });
+    const refreshExpiry = user.role === 'PATIENT' ? '7d' : '12h';
+    const newRefreshToken = signRefreshToken(user._id.toString(), refreshExpiry);
+
+    return {
+      user: {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        facilityId: user.facilityId,
+        preferredLanguage: user.preferredLanguage || 'en',
+        createdAt: user.createdAt,
+      },
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
     };
   }
 

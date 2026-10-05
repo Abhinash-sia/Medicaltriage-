@@ -15,6 +15,8 @@ const envSchema = z.object({
   FRONTEND_URL: z.string().default('http://localhost:3000'),
   JWT_SECRET: z.string().default('dev_jwt_secret_change_in_production_min_32_chars'),
   JWT_EXPIRES_IN: z.string().default('15m'),
+  JWT_REFRESH_SECRET: z.string().default('dev_refresh_jwt_secret_change_in_production_min_32_chars'),
+  JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
 
   // Initial Root Administrator Bootstrap Configuration
   INITIAL_ADMIN_EMAIL: z.string().email().default('admin@hospital.org'),

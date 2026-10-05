@@ -1,5 +1,5 @@
 import { Response, NextFunction } from 'express';
-import { registerSchema, loginSchema, updatePreferencesSchema } from './auth.schemas.js';
+import { registerSchema, loginSchema, updatePreferencesSchema, refreshTokenSchema } from './auth.schemas.js';
 import { AuthService } from './auth.service.js';
 import { AuthenticatedRequest } from './auth.types.js';
 import { AppError } from '../../middleware/error-handler.js';
@@ -43,6 +43,30 @@ export const login = async (
     }
 
     const authData = await AuthService.loginUser(parseResult.data);
+    res.status(200).json({
+      success: true,
+      data: authData,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const refresh = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const parseResult = refreshTokenSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      const error: AppError = new Error(parseResult.error.errors[0]?.message || 'Refresh token is required');
+      error.statusCode = 400;
+      error.code = 'AUTH_VALIDATION_ERROR';
+      return next(error);
+    }
+
+    const authData = await AuthService.refreshSession(parseResult.data.refreshToken);
     res.status(200).json({
       success: true,
       data: authData,

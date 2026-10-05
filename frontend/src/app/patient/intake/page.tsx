@@ -1,17 +1,21 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, CheckCircle2, ShieldCheck, HeartPulse, ChevronRight, ChevronLeft, Loader2 } from 'lucide-react';
 import { DemoBanner } from '@/components/ui/DemoBanner';
+import { LanguageSelector } from '@/components/ui/LanguageSelector';
 import { useLanguage } from '@/i18n/LanguageContext';
 
 interface IntakeFormData {
   consent: boolean;
   consentVersion: string;
   language: string;
+  age: number | string;
+  gender: 'MALE' | 'FEMALE' | 'OTHER' | '';
   primarySymptom: string;
   symptomDescription: string;
   onset: string;
@@ -25,6 +29,8 @@ const initialForm: IntakeFormData = {
   consent: false,
   consentVersion: 'v1.0-hackathon',
   language: 'en',
+  age: '',
+  gender: '',
   primarySymptom: '',
   symptomDescription: '',
   onset: '',
@@ -45,6 +51,8 @@ export default function PatientIntakePage() {
     caseNumber: string;
     status: string;
     priority: string;
+    patientAge?: number;
+    patientGender?: string;
     createdAt: string;
   } | null>(null);
 
@@ -101,6 +109,8 @@ export default function PatientIntakePage() {
           consent: formData.consent,
           consentVersion: formData.consentVersion,
           language: formData.language,
+          age: formData.age !== '' ? Number(formData.age) : undefined,
+          gender: formData.gender || undefined,
           primarySymptom: formData.primarySymptom,
           symptomDescription: formData.symptomDescription,
           onset: formData.onset,
@@ -122,6 +132,8 @@ export default function PatientIntakePage() {
         caseNumber: result.data.caseNumber,
         status: result.data.status,
         priority: result.data.priority,
+        patientAge: result.data.patientAge,
+        patientGender: result.data.patientGender,
         createdAt: result.data.createdAt,
       });
     } catch (err: unknown) {
@@ -135,10 +147,22 @@ export default function PatientIntakePage() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans flex flex-col">
       <DemoBanner />
-      <div className="py-10 px-4 sm:px-6 lg:px-8 flex-1">
+      <div className="py-8 px-4 sm:px-6 lg:px-8 flex-1">
         <div className="max-w-2xl mx-auto space-y-6">
-        {/* Header Branding */}
-        <div className="text-center space-y-2">
+          {/* Top Bar Navigation */}
+          <div className="flex items-center justify-between">
+            <Link
+              href="/patient"
+              className="inline-flex items-center text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-2xs hover:bg-slate-50 transition-colors"
+            >
+              <ChevronLeft className="w-3.5 h-3.5 mr-1" />
+              <span>{t('patient.backToDashboard')}</span>
+            </Link>
+            <LanguageSelector />
+          </div>
+
+          {/* Header Branding */}
+          <div className="text-center space-y-2">
           <div className="inline-flex items-center space-x-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase">
             <HeartPulse className="w-3.5 h-3.5" />
             <span>{t('patient.portalTitle')}</span>
@@ -194,6 +218,16 @@ export default function PatientIntakePage() {
                   <span className="text-slate-500">{t('patient.submissionTime')}</span>
                   <span className="text-slate-700">{new Date(submittedCase.createdAt).toLocaleString()}</span>
                 </div>
+                {(submittedCase.patientAge !== undefined || submittedCase.patientGender) && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500">Demographics</span>
+                    <span className="text-slate-700 font-semibold">
+                      {submittedCase.patientAge !== undefined ? `${submittedCase.patientAge} yrs` : ''}
+                      {submittedCase.patientAge !== undefined && submittedCase.patientGender ? ' • ' : ''}
+                      {submittedCase.patientGender || ''}
+                    </span>
+                  </div>
+                )}
               </div>
               <p className="text-xs text-slate-500 text-center">
                 {t('patient.noticeCaseNumber')}
@@ -275,9 +309,15 @@ export default function PatientIntakePage() {
                 />
               </div>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex flex-col sm:flex-row gap-3">
+              <Link href="/patient" className="w-full sm:w-1/2">
+                <Button variant="outline" className="w-full text-xs font-semibold">
+                  <ChevronLeft className="w-4 h-4 mr-1.5" />
+                  {t('patient.backToDashboard')}
+                </Button>
+              </Link>
               <Button
-                className="w-full"
+                className="w-full sm:w-1/2 bg-blue-600 hover:bg-blue-700 text-xs font-semibold"
                 onClick={() => {
                   setSubmittedCase(null);
                   setFormData(initialForm);
@@ -374,6 +414,42 @@ export default function PatientIntakePage() {
                         <option value="pa">Punjabi (ਪੰਜਾਬੀ)</option>
                         <option value="gu">Gujarati (ગુજરાતી)</option>
                       </select>
+                    </div>
+
+                    {/* Patient Demographics */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-slate-700">
+                          {t('patient.age')}
+                        </label>
+                        <input
+                          type="number"
+                          name="age"
+                          min="0"
+                          max="130"
+                          placeholder={t('patient.agePlaceholder')}
+                          value={formData.age}
+                          onChange={handleInputChange}
+                          className="w-full text-xs p-2.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-slate-700">
+                          {t('patient.gender')}
+                        </label>
+                        <select
+                          name="gender"
+                          value={formData.gender}
+                          onChange={handleInputChange}
+                          className="w-full text-xs p-2.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        >
+                          <option value="">{t('patient.genderSelect')}</option>
+                          <option value="MALE">{t('patient.male')}</option>
+                          <option value="FEMALE">{t('patient.female')}</option>
+                          <option value="OTHER">{t('patient.other')}</option>
+                        </select>
+                      </div>
                     </div>
 
                     <div className="space-y-1">
@@ -517,6 +593,20 @@ export default function PatientIntakePage() {
                     <div className="flex justify-between border-b pb-2">
                       <span className="text-slate-500 font-medium">{t('patient.preferredLanguage')}:</span>
                       <span className="text-slate-800 uppercase font-mono">{formData.language}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 border-b pb-2">
+                      <div>
+                        <span className="text-slate-500 font-medium">{t('patient.age')}:</span>{' '}
+                        <span className="text-slate-800 font-semibold">
+                          {formData.age ? `${formData.age} yrs` : 'Not specified'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 font-medium">{t('patient.gender')}:</span>{' '}
+                        <span className="text-slate-800 font-semibold">
+                          {formData.gender ? (formData.gender === 'MALE' ? t('patient.male') : formData.gender === 'FEMALE' ? t('patient.female') : t('patient.other')) : 'Not specified'}
+                        </span>
+                      </div>
                     </div>
                     <div className="border-b pb-2 space-y-1">
                       <span className="text-slate-500 font-medium">{t('patient.primarySymptom')}:</span>

@@ -6,7 +6,7 @@ import { createApp } from '../src/app.js';
 import { env } from '../src/config/env.js';
 import { User } from '../src/modules/users/user.model.js';
 import { UserRole, IUser } from '../src/modules/users/user.types.js';
-import { signToken, hashPassword } from '../src/modules/auth/auth.utils.js';
+import { signToken, signRefreshToken, hashPassword } from '../src/modules/auth/auth.utils.js';
 
 describe('Phase 3 Authentication & Authorization API Tests', () => {
   const app = createApp();
@@ -484,6 +484,75 @@ describe('Phase 3 Authentication & Authorization API Tests', () => {
       expect(response.status).toBe(429);
       expect(response.body.success).toBe(false);
       expect(response.body.error.code).toBe('AUTH_TOO_MANY_ATTEMPTS');
+    });
+  });
+
+  describe('POST /api/auth/refresh', () => {
+    it('should refresh access token using valid refresh token', async () => {
+      const userId = new mongoose.Types.ObjectId();
+      mockDbUsers.set(userId.toString(), {
+        _id: userId,
+        name: 'Refresh Test User',
+        email: 'refresh@example.com',
+        role: UserRole.PATIENT,
+        isActive: true,
+        isDeleted: false,
+      });
+
+      const refreshToken = signRefreshToken(userId.toString());
+
+      const response = await request(app)
+        .post('/api/auth/refresh')
+        .send({ refreshToken });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('accessToken');
+      expect(response.body.data).toHaveProperty('refreshToken');
+      expect(response.body.data.user.id).toBe(userId.toString());
+      expect(response.body.data.user.email).toBe('refresh@example.com');
+    });
+
+    it('should return 400 when refreshToken is missing', async () => {
+      const response = await request(app)
+        .post('/api/auth/refresh')
+        .send({});
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe('AUTH_VALIDATION_ERROR');
+    });
+
+    it('should return 401 when refreshToken is invalid or forged', async () => {
+      const response = await request(app)
+        .post('/api/auth/refresh')
+        .send({ refreshToken: 'invalid.jwt.token' });
+
+      expect(response.status).toBe(401);
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe('AUTH_TOKEN_INVALID');
+    });
+
+    it('should return 401 when user account is inactive', async () => {
+      const userId = new mongoose.Types.ObjectId();
+      mockDbUsers.set(userId.toString(), {
+        _id: userId,
+        name: 'Inactive User',
+        email: 'inactive@example.com',
+        role: UserRole.PATIENT,
+        isActive: false,
+        isDeleted: false,
+      });
+
+      const refreshToken = signRefreshToken(userId.toString());
+
+      const response = await request(app)
+        .post('/api/auth/refresh')
+        .send({ refreshToken });
+
+      expect(response.status).toBe(401);
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe('AUTH_ACCOUNT_INACTIVE');
     });
   });
 });

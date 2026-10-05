@@ -12,6 +12,13 @@ export const intakeSubmitSchema = z
       }),
     consentVersion: z.string().trim().default('v1.0-hackathon'),
     language: z.string().trim().default('en'),
+    age: z
+      .number({ invalid_type_error: 'Age must be a number' })
+      .int('Age must be a whole number')
+      .min(0, 'Age must be 0 or greater')
+      .max(130, 'Age cannot exceed 130')
+      .optional(),
+    gender: z.enum(['MALE', 'FEMALE', 'OTHER']).optional(),
     primarySymptom: z
       .string({
         required_error: 'Primary symptom or reason for visit is required',

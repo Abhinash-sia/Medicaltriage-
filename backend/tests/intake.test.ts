@@ -98,7 +98,7 @@ describe('Phase 4 Patient Intake Workflow API Tests', () => {
       return Promise.resolve(caseDoc || null) as unknown as ReturnType<typeof Case.findById>;
     });
 
-    vi.spyOn(Case, 'find').mockImplementation((query: unknown) => {
+    vi.spyOn(Case, 'find').mockImplementation(((query: unknown) => {
       const q = query as { patientId?: mongoose.Types.ObjectId };
       const matched: ICase[] = [];
       for (const c of mockCases.values()) {
@@ -112,7 +112,7 @@ describe('Phase 4 Patient Intake Workflow API Tests', () => {
         then: (resolve: (val: unknown) => void) => resolve(matched),
       };
       return chain as unknown as ReturnType<typeof Case.find>;
-    });
+    }) as any);
 
     vi.spyOn(Case.prototype, 'save').mockImplementation(function (this: ICase) {
       if (!this._id) this._id = new mongoose.Types.ObjectId();
@@ -136,13 +136,13 @@ describe('Phase 4 Patient Intake Workflow API Tests', () => {
       return Promise.resolve(this);
     });
 
-    vi.spyOn(Symptom, 'find').mockImplementation((query: unknown) => {
+    vi.spyOn(Symptom, 'find').mockImplementation(((query: unknown) => {
       const q = query as { caseId?: mongoose.Types.ObjectId };
       const list = Array.from(mockSymptoms.values()).filter(
         (s) => s.caseId.toString() === q.caseId?.toString()
       );
       return Promise.resolve(list) as unknown as ReturnType<typeof Symptom.find>;
-    });
+    }) as any);
 
     vi.spyOn(AuditLog.prototype, 'save').mockImplementation(function (this: IAuditLog) {
       if (!this._id) this._id = new mongoose.Types.ObjectId();
@@ -289,6 +289,34 @@ describe('Phase 4 Patient Intake Workflow API Tests', () => {
       expect(response.status).toBe(400); // Rejected by strict Zod schema validation
       expect(response.body.success).toBe(false);
     });
+
+    it('should reject invalid age (>130) or invalid gender option', async () => {
+      const resAge = await request(app)
+        .post('/api/intake')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          consent: true,
+          primarySymptom: 'Fever',
+          symptomDescription: 'High fever with chills',
+          onset: '2 days ago',
+          age: 150, // Invalid age
+        });
+      expect(resAge.status).toBe(400);
+      expect(resAge.body.success).toBe(false);
+
+      const resGender = await request(app)
+        .post('/api/intake')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          consent: true,
+          primarySymptom: 'Fever',
+          symptomDescription: 'High fever with chills',
+          onset: '2 days ago',
+          gender: 'INVALID_SEX', // Invalid gender enum
+        });
+      expect(resGender.status).toBe(400);
+      expect(resGender.body.success).toBe(false);
+    });
   });
 
   describe('POST /api/intake - Successful Intake Persistence & Data Integrity', () => {
@@ -299,6 +327,8 @@ describe('Phase 4 Patient Intake Workflow API Tests', () => {
         .send({
           consent: true,
           language: 'hi',
+          age: 45,
+          gender: 'MALE',
           primarySymptom: 'Shortness of breath',
           symptomDescription: 'Difficulty breathing after climbing stairs',
           onset: '3 days ago',
@@ -314,11 +344,16 @@ describe('Phase 4 Patient Intake Workflow API Tests', () => {
       expect(data.patientId).toBe(patientUser._id?.toString());
       expect(data.status).toBe(CaseStatus.OPEN);
       expect(data.priority).toBe(CasePriority.ROUTINE); // Default initial workflow category
+      expect(data.patientAge).toBe(45);
+      expect(data.patientGender).toBe('MALE');
 
       // Verify Case record
       const createdCase = mockCases.get(data.caseId);
       expect(createdCase).toBeDefined();
       expect(createdCase?.patientId.toString()).toBe(patientUser._id?.toString());
+      expect(createdCase?.patientAge).toBe(45);
+      expect(createdCase?.patientAgeMonths).toBe(540);
+      expect(createdCase?.patientGender).toBe('MALE');
 
       // Verify Consent record
       const createdConsent = Array.from(mockConsents.values()).find(
@@ -374,7 +409,7 @@ describe('Phase 4 Patient Intake Workflow API Tests', () => {
       expect(response.body.data.id).toBe(patientCaseId);
     });
 
-    it('18. should prevent another patient from viewing a case they do not own (404 Not Found)', async () => {
+    it('19. should prevent another patient from viewing a case they do not own (404 Not Found)', async () => {
       const otherPatientToken = signToken({
         id: otherPatientUser._id?.toString() || '',
         role: UserRole.PATIENT,

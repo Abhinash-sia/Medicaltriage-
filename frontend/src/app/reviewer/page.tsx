@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +26,7 @@ import {
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { DemoBanner } from '@/components/ui/DemoBanner';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { getAccessToken, clearAuthSession } from '@/lib/authSession';
 
 interface ReviewerQueueItem {
   id: string;
@@ -72,6 +74,7 @@ const SUPPORTED_LANGUAGES = [
 ];
 
 export default function ReviewerQueuePage() {
+  const router = useRouter();
   const { t } = useLanguage();
   const [cases, setCases] = useState<ReviewerQueueItem[]>([]);
   const [pagination, setPagination] = useState<PaginationMeta>({ page: 1, limit: 20, total: 0, totalPages: 1 });
@@ -93,20 +96,23 @@ export default function ReviewerQueuePage() {
   useEffect(() => {
     // Read current user token / ID from window if available
     if (typeof window !== 'undefined') {
-      const storedToken = localStorage.getItem('accessToken');
-      if (storedToken) {
-        try {
-          const payload = JSON.parse(atob(storedToken.split('.')[1]));
-          if (payload) {
-            if (payload.id) setCurrentUserId(payload.id);
-            if (payload.role) setCurrentUserRole(payload.role);
-          }
-        } catch {
-          // Token decode fallback
+      const storedToken = getAccessToken();
+      if (!storedToken) {
+        router.push('/login');
+        return;
+      }
+      try {
+        const payload = JSON.parse(atob(storedToken.split('.')[1]));
+        if (payload) {
+          if (payload.id) setCurrentUserId(payload.id);
+          if (payload.role) setCurrentUserRole(payload.role);
         }
+      } catch {
+        clearAuthSession();
+        router.push('/login');
       }
     }
-  }, []);
+  }, [router]);
 
   const fetchCases = useCallback(async () => {
     setIsLoading(true);
@@ -131,6 +137,11 @@ export default function ReviewerQueuePage() {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
+
+      if (response.status === 401) {
+        clearAuthSession(true);
+        return;
+      }
 
       const result = await response.json();
 
