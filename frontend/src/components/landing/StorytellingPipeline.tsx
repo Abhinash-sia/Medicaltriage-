@@ -3,19 +3,12 @@
 import React, { useState } from 'react';
 import {
   Mic,
-  FileScan,
   ShieldCheck,
   Stethoscope,
-  Sparkles,
+  Layers,
   ArrowRight,
   CheckCircle2,
-  Lock,
-  Layers,
-  FileSpreadsheet,
-  QrCode,
-  Languages,
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 
 interface StepDetail {
   step: string;
@@ -128,9 +121,9 @@ export function StorytellingPipeline() {
   const IconComponent = active.icon;
 
   return (
-    <div className="w-full space-y-12">
+    <div className="w-full space-y-10">
       {/* Stepper Navigation Pills */}
-      <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4">
+      <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
         {STEPS.map((s, idx) => {
           const StepIcon = s.icon;
           const isActive = idx === activeStepIndex;
@@ -140,8 +133,8 @@ export function StorytellingPipeline() {
               onClick={() => setActiveStepIndex(idx)}
               className={`flex items-center space-x-2.5 px-4 py-3 rounded-xl border transition-all duration-200 text-left ${
                 isActive
-                  ? 'bg-primary text-white border-accent/40 shadow-lg shadow-primary/20 scale-[1.02]'
-                  : 'bg-card/60 hover:bg-card text-muted-foreground hover:text-foreground border-border'
+                  ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20 scale-[1.02]'
+                  : 'bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border'
               }`}
             >
               <span className={`font-mono text-xs font-bold ${isActive ? 'text-accent' : 'text-muted-foreground'}`}>
@@ -157,18 +150,18 @@ export function StorytellingPipeline() {
       </div>
 
       {/* Active Step Showcase Card */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-card/40 border border-border rounded-2xl p-6 sm:p-10 backdrop-blur-xl shadow-xl">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-card/60 dark:bg-card/40 border border-border rounded-2xl p-6 sm:p-10 backdrop-blur-xl shadow-lg transition-colors">
         {/* Left Narrative Column */}
         <div className="lg:col-span-7 space-y-6">
           <div className="space-y-2">
-            <div className="inline-flex items-center space-x-2 font-mono text-xs text-accent uppercase tracking-wider bg-accent/10 px-3 py-1 rounded-md border border-accent/20">
+            <div className="inline-flex items-center space-x-2 font-mono text-xs text-primary dark:text-accent uppercase tracking-wider bg-primary/10 dark:bg-accent/10 px-3 py-1 rounded-md border border-primary/20 dark:border-accent/20">
               <IconComponent className="w-3.5 h-3.5" />
               <span>Phase {active.step} • {active.badge}</span>
             </div>
             <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight leading-tight">
               {active.title}
             </h3>
-            <p className="text-sm font-medium text-accent/90">{active.subtitle}</p>
+            <p className="text-sm font-medium text-primary dark:text-accent">{active.subtitle}</p>
           </div>
 
           <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
@@ -177,8 +170,8 @@ export function StorytellingPipeline() {
 
           <div className="space-y-2.5 pt-2">
             {active.highlights.map((h, i) => (
-              <div key={i} className="flex items-start space-x-2.5 text-xs text-foreground/90">
-                <CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+              <div key={i} className="flex items-start space-x-2.5 text-xs text-foreground">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-accent shrink-0 mt-0.5" />
                 <span>{h}</span>
               </div>
             ))}
@@ -187,7 +180,7 @@ export function StorytellingPipeline() {
           <div className="pt-4 flex items-center space-x-4">
             <button
               onClick={() => setActiveStepIndex((prev) => (prev + 1) % STEPS.length)}
-              className="inline-flex items-center space-x-2 text-xs font-semibold text-accent hover:text-white transition-colors"
+              className="inline-flex items-center space-x-2 text-xs font-semibold text-primary dark:text-accent hover:underline transition-colors"
             >
               <span>Explore Next Phase ({STEPS[(activeStepIndex + 1) % STEPS.length].badge})</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -196,34 +189,34 @@ export function StorytellingPipeline() {
         </div>
 
         {/* Right Interactive Mock Display */}
-        <div className="lg:col-span-5 bg-[#080E11] border border-white/10 rounded-xl p-5 shadow-2xl space-y-4">
-          <div className="flex items-center justify-between border-b border-white/10 pb-3">
+        <div className="lg:col-span-5 bg-muted/40 dark:bg-[#080E11] border border-border dark:border-white/10 rounded-xl p-5 shadow-lg space-y-4">
+          <div className="flex items-center justify-between border-b border-border dark:border-white/10 pb-3">
             <div className="flex items-center space-x-2">
               <div className="h-2 w-2 rounded-full bg-accent animate-pulse" />
-              <span className="font-mono text-xs font-semibold text-white">{active.mockData.title}</span>
+              <span className="font-mono text-xs font-semibold text-foreground">{active.mockData.title}</span>
             </div>
-            <span className="font-mono text-[10px] text-muted-foreground">LIVE AUDIT FEED</span>
+            <span className="font-mono text-[10px] text-muted-foreground">AUDIT TELEMETRY</span>
           </div>
 
           <div className="space-y-2">
             {active.mockData.items.map((item, idx) => (
               <div
                 key={idx}
-                className="bg-white/[0.03] border border-white/5 p-3 rounded-lg flex flex-col space-y-1"
+                className="bg-card dark:bg-white/[0.03] border border-border dark:border-white/5 p-3 rounded-lg flex flex-col space-y-1"
               >
                 <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
                   {item.k}
                 </span>
-                <span className="font-mono text-xs font-semibold text-foreground/90 tabular-nums">
+                <span className="font-mono text-xs font-semibold text-foreground tabular-nums">
                   {item.v}
                 </span>
               </div>
             ))}
           </div>
 
-          <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] font-mono text-muted-foreground">
+          <div className="pt-2 border-t border-border dark:border-white/5 flex items-center justify-between text-[11px] font-mono text-muted-foreground">
             <span>Cryptographic Integrity</span>
-            <span className="text-emerald-400">SHA-256 Validated</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-semibold">SHA-256 Validated</span>
           </div>
         </div>
       </div>

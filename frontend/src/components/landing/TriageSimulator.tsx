@@ -16,7 +16,6 @@ import {
   Volume2,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 
 interface Scenario {
   id: string;
@@ -87,20 +86,20 @@ export function TriageSimulator() {
   const active = SCENARIOS.find((s) => s.id === selectedId) || SCENARIOS[0];
 
   return (
-    <div className="w-full max-w-6xl mx-auto rounded-2xl border border-white/10 bg-[#0C171B]/90 backdrop-blur-xl shadow-2xl overflow-hidden">
+    <div className="w-full max-w-6xl mx-auto rounded-2xl border border-border bg-card/90 dark:bg-[#0C171B]/90 backdrop-blur-xl shadow-xl overflow-hidden transition-colors">
       {/* Header bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-white/10 px-6 py-4 bg-[#080F12]/60 gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-border px-6 py-4 bg-muted/40 dark:bg-[#080F12]/60 gap-4">
         <div className="flex items-center space-x-3">
           <div className="h-2.5 w-2.5 rounded-full bg-accent animate-pulse" />
           <span className="font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Live Clinical Decision Simulator
           </span>
-          <span className="text-white/20 text-xs font-mono">•</span>
-          <span className="font-mono text-xs text-accent">Deterministic 22-Rule Engine Active</span>
+          <span className="text-muted-foreground/40 text-xs font-mono">•</span>
+          <span className="font-mono text-xs text-primary dark:text-accent font-semibold">22-Rule Safety Engine Active</span>
         </div>
 
         {/* Preset Selector */}
-        <div className="flex items-center space-x-1.5 bg-white/[0.04] p-1 rounded-lg border border-white/10 w-full sm:w-auto overflow-x-auto">
+        <div className="flex items-center space-x-1.5 bg-background dark:bg-white/[0.04] p-1 rounded-lg border border-border w-full sm:w-auto overflow-x-auto">
           {SCENARIOS.map((sc) => (
             <button
               key={sc.id}
@@ -108,7 +107,7 @@ export function TriageSimulator() {
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 shrink-0 ${
                 selectedId === sc.id
                   ? 'bg-primary text-white shadow-xs font-semibold'
-                  : 'text-muted-foreground hover:text-white hover:bg-white/[0.04]'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted dark:hover:bg-white/[0.04]'
               }`}
             >
               {sc.title.split(' ')[0]} {sc.title.split(' ')[1]}
@@ -120,15 +119,15 @@ export function TriageSimulator() {
       {/* Simulator Workspace Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
         {/* Left: Patient Intake Signals */}
-        <div className="lg:col-span-5 p-6 border-b lg:border-b-0 lg:border-r border-white/10 space-y-6">
+        <div className="lg:col-span-5 p-6 border-b lg:border-b-0 lg:border-r border-border space-y-6">
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <span className="font-mono text-xs text-muted-foreground uppercase tracking-wider">Patient Case Intake</span>
-              <span className="font-mono text-xs text-accent bg-accent/10 px-2 py-0.5 rounded border border-accent/20">
+              <span className="font-mono text-xs text-primary dark:text-accent bg-primary/10 dark:bg-accent/10 px-2 py-0.5 rounded border border-primary/20 dark:border-accent/20">
                 {active.intakeChannel}
               </span>
             </div>
-            <h3 className="text-base font-semibold text-white tracking-tight">{active.title}</h3>
+            <h3 className="text-base font-semibold text-foreground tracking-tight">{active.title}</h3>
             <p className="text-xs text-muted-foreground">{active.patientProfile}</p>
           </div>
 
@@ -140,9 +139,9 @@ export function TriageSimulator() {
               { label: 'SpO2', val: active.vitals.spo2, icon: Sparkles },
               { label: 'TEMP', val: active.vitals.temp, icon: Stethoscope },
             ].map((v, i) => (
-              <div key={i} className="bg-white/[0.03] border border-white/5 p-2.5 rounded-lg space-y-1">
+              <div key={i} className="bg-background dark:bg-white/[0.03] border border-border p-2.5 rounded-lg space-y-1">
                 <span className="font-mono text-[10px] text-muted-foreground block">{v.label}</span>
-                <span className="font-mono text-xs font-semibold text-white block tabular-nums">{v.val}</span>
+                <span className="font-mono text-xs font-semibold text-foreground block tabular-nums">{v.val}</span>
               </div>
             ))}
           </div>
@@ -156,9 +155,9 @@ export function TriageSimulator() {
               {active.symptoms.map((sym, idx) => (
                 <div
                   key={idx}
-                  className="flex items-start space-x-2 text-xs text-foreground bg-white/[0.02] border border-white/5 px-3 py-2 rounded-lg"
+                  className="flex items-start space-x-2 text-xs text-foreground bg-background dark:bg-white/[0.02] border border-border px-3 py-2 rounded-lg"
                 >
-                  <ChevronRight className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />
+                  <ChevronRight className="w-3.5 h-3.5 text-primary dark:text-accent mt-0.5 shrink-0" />
                   <span>{sym}</span>
                 </div>
               ))}
@@ -167,7 +166,7 @@ export function TriageSimulator() {
         </div>
 
         {/* Right: Triage Classification & Decision Support */}
-        <div className="lg:col-span-7 p-6 space-y-6 bg-gradient-to-br from-[#0C171B] to-[#080E11]">
+        <div className="lg:col-span-7 p-6 space-y-6 bg-muted/20 dark:bg-gradient-to-br dark:from-[#0C171B] dark:to-[#080E11]">
           {/* Urgency & SLA Card */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div
@@ -175,8 +174,8 @@ export function TriageSimulator() {
                 active.urgency === 'URGENT'
                   ? 'bg-destructive/10 border-destructive/30 text-destructive'
                   : active.urgency === 'PRIORITY'
-                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-                  : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400'
+                  : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
               }`}
             >
               <div className="flex items-center justify-between mb-1">
@@ -189,7 +188,7 @@ export function TriageSimulator() {
                 )}
               </div>
               <div className="text-2xl font-bold tracking-tight">{active.urgency}</div>
-              <p className="text-[11px] mt-1 text-muted-foreground opacity-90">
+              <p className="text-[11px] mt-1 opacity-90">
                 {active.urgency === 'URGENT'
                   ? 'Immediate life-safety escalation'
                   : active.urgency === 'PRIORITY'
@@ -198,12 +197,12 @@ export function TriageSimulator() {
               </p>
             </div>
 
-            <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02] space-y-1">
+            <div className="p-4 rounded-xl border border-border bg-card dark:bg-white/[0.02] space-y-1">
               <div className="flex items-center justify-between text-muted-foreground">
                 <span className="font-mono text-[11px] uppercase tracking-wider font-semibold">SLA Window</span>
-                <Clock className="w-3.5 h-3.5 text-accent" />
+                <Clock className="w-3.5 h-3.5 text-primary dark:text-accent" />
               </div>
-              <div className="text-2xl font-mono font-bold text-white tabular-nums">{active.slaMinutes}m 00s</div>
+              <div className="text-2xl font-mono font-bold text-foreground tabular-nums">{active.slaMinutes}m 00s</div>
               <p className="text-[11px] text-muted-foreground">Deterministic response target</p>
             </div>
           </div>
@@ -214,7 +213,7 @@ export function TriageSimulator() {
               <span className="font-mono text-xs text-muted-foreground uppercase tracking-wider">
                 Safety Engine Evaluation
               </span>
-              <span className="font-mono text-xs text-emerald-400 flex items-center gap-1">
+              <span className="font-mono text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-semibold">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 {active.safetyRulesPassed}/22 Rules Cleared
               </span>
@@ -225,32 +224,32 @@ export function TriageSimulator() {
                 {active.redFlags.map((rf, idx) => (
                   <div
                     key={idx}
-                    className="flex items-start space-x-2 text-xs text-rose-300 bg-rose-950/30 border border-rose-800/40 p-2.5 rounded-lg"
+                    className="flex items-start space-x-2 text-xs text-rose-800 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/40 p-2.5 rounded-lg"
                   >
-                    <AlertTriangle className="w-4 h-4 text-rose-400 mt-0.5 shrink-0" />
+                    <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400 mt-0.5 shrink-0" />
                     <span>{rf}</span>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="flex items-center space-x-2 text-xs text-emerald-300 bg-emerald-950/20 border border-emerald-800/30 p-2.5 rounded-lg">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <div className="flex items-center space-x-2 text-xs text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/30 p-2.5 rounded-lg">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <span>Zero critical red-flags triggered. Normal protocol verified.</span>
               </div>
             )}
           </div>
 
           {/* Clinical Structured Decision */}
-          <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02] space-y-2">
+          <div className="p-4 rounded-xl border border-border bg-card dark:bg-white/[0.02] space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="font-mono text-muted-foreground uppercase tracking-wider">
                 Clinician Decision Support
               </span>
-              <Badge variant="outline" className="font-mono text-[10px] border-accent/30 text-accent">
+              <Badge variant="outline" className="font-mono text-[10px] border-primary/30 text-primary dark:border-accent/30 dark:text-accent">
                 {active.recommendedSpecialty}
               </Badge>
             </div>
-            <p className="text-xs text-foreground/90 leading-relaxed">{active.clinicalSummary}</p>
+            <p className="text-xs text-foreground leading-relaxed">{active.clinicalSummary}</p>
           </div>
         </div>
       </div>

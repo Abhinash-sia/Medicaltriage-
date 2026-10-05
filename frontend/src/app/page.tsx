@@ -23,8 +23,9 @@ import {
   Layers,
   FileCheck2,
   ShieldCheck,
-  Terminal,
-  ExternalLink,
+  Zap,
+  Clock,
+  Compass,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,54 +37,55 @@ import { SmoothScroll } from '@/components/landing/SmoothScroll';
 import { TriageConstellation } from '@/components/landing/TriageConstellation';
 import { TriageSimulator } from '@/components/landing/TriageSimulator';
 import { StorytellingPipeline } from '@/components/landing/StorytellingPipeline';
+import { HeroTelemetryCockpit } from '@/components/landing/HeroTelemetryCockpit';
 
 export default function PublicLandingPage() {
   const { t } = useLanguage();
 
   return (
     <SmoothScroll>
-      <div className="min-h-screen bg-[#080E11] text-[#E6EEF0] flex flex-col font-sans selection:bg-[#38D9C8]/20 selection:text-[#38D9C8]">
+      <div className="min-h-screen bg-background text-foreground flex flex-col font-sans selection:bg-primary/20 selection:text-primary transition-colors duration-300">
         {/* Top Floating Glass Navigation */}
-        <header className="sticky top-0 z-50 bg-[#080E11]/80 backdrop-blur-xl border-b border-white/10">
+        <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="bg-gradient-to-br from-[#0F6F73] to-[#0A4B4E] p-2 rounded-lg text-white border border-[#38D9C8]/30 shadow-md">
-                <HeartPulse className="w-5 h-5 text-[#38D9C8]" />
+              <div className="bg-primary p-2 rounded-lg text-primary-foreground border border-primary/40 shadow-sm">
+                <HeartPulse className="w-5 h-5 text-accent" />
               </div>
               <div className="flex items-center space-x-2">
-                <span className="text-lg font-bold tracking-tight text-white font-mono">MedicalTriage</span>
-                <span className="text-[10px] font-mono bg-white/[0.05] text-[#38D9C8] px-2 py-0.5 rounded-full font-medium border border-[#38D9C8]/20">
+                <span className="text-lg font-bold tracking-tight text-foreground font-mono">MedicalTriage</span>
+                <span className="text-[10px] font-mono bg-muted text-primary dark:text-accent px-2 py-0.5 rounded-full font-semibold border border-border">
                   {t('landing.prototype')}
                 </span>
               </div>
             </div>
 
             <nav className="hidden md:flex items-center space-x-6 text-xs font-medium text-muted-foreground">
-              <a href="#how-it-works" className="hover:text-white transition-colors">
+              <a href="#how-it-works" className="hover:text-foreground transition-colors">
                 {t('landing.navHowItWorks')}
               </a>
-              <a href="#simulator" className="hover:text-white transition-colors">
+              <a href="#simulator" className="hover:text-foreground transition-colors">
                 Live Simulator
               </a>
-              <a href="#capabilities" className="hover:text-white transition-colors">
+              <a href="#capabilities" className="hover:text-foreground transition-colors">
                 {t('landing.navCapabilities')}
               </a>
-              <a href="#safety" className="hover:text-white transition-colors">
+              <a href="#safety" className="hover:text-foreground transition-colors">
                 {t('landing.navSafety')}
               </a>
-              <a href="#india-context" className="hover:text-white transition-colors">
+              <a href="#india-context" className="hover:text-foreground transition-colors">
                 {t('landing.navIndiaContext')}
               </a>
             </nav>
 
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 sm:space-x-3">
               <LanguageSelector variant="full" />
               <ThemeToggle />
               <Link href="/login">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="hidden sm:inline-flex items-center gap-1.5 border-white/10 bg-white/[0.03] text-foreground hover:bg-white/[0.08] text-xs h-8"
+                  className="hidden sm:inline-flex items-center gap-1.5 border-border bg-card text-foreground hover:bg-muted text-xs h-8"
                 >
                   <LogIn className="w-3.5 h-3.5" />
                   {t('common.login')}
@@ -92,7 +94,7 @@ export default function PublicLandingPage() {
               <Link href="/patient/intake">
                 <Button
                   size="sm"
-                  className="bg-[#0F6F73] hover:bg-[#148388] text-white text-xs h-8 px-3.5 shadow-sm border border-[#38D9C8]/30 font-semibold"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs h-8 px-3.5 shadow-sm font-semibold"
                 >
                   {t('landing.patientPortal')}
                 </Button>
@@ -101,102 +103,110 @@ export default function PublicLandingPage() {
           </div>
         </header>
 
-        {/* Hero Section with Live Three.js 3D Constellation */}
-        <section className="relative overflow-hidden pt-20 pb-24 sm:pt-28 sm:pb-36 border-b border-white/10">
+        {/* Hero Section: Asymmetrical Editorial Clinical Layout */}
+        <section className="relative overflow-hidden pt-12 pb-20 sm:pt-20 sm:pb-28 border-b border-border">
           <TriageConstellation />
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="text-center max-w-3xl mx-auto space-y-6">
-              {/* Badge */}
-              <div className="inline-flex items-center space-x-2 bg-white/[0.04] border border-[#38D9C8]/30 text-[#38D9C8] px-3.5 py-1.5 rounded-full text-xs font-mono tracking-wider uppercase backdrop-blur-md shadow-lg">
-                <span className="h-2 w-2 rounded-full bg-[#38D9C8] animate-pulse" />
-                <span>HUMAN-IN-THE-LOOP CLINICAL TRIAGE ASSISTANT</span>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+              {/* Left Column: Mission & Actions */}
+              <div className="lg:col-span-7 space-y-6 text-left">
+                {/* Status Pill */}
+                <div className="inline-flex items-center space-x-2 bg-card border border-border text-primary dark:text-accent px-3 py-1.5 rounded-full text-xs font-mono tracking-wider uppercase shadow-xs">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>HUMAN-IN-THE-LOOP CLINICAL TRIAGE ASSISTANT</span>
+                </div>
+
+                {/* H1 Heading */}
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight leading-[1.12]">
+                  Human-in-the-loop triage, <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-foreground">
+                    engineered for clinical certainty.
+                  </span>
+                </h1>
+
+                {/* Subtitle */}
+                <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-xl">
+                  Organize symptoms, voice transcripts, lab OCR reports, visual observations, and timelines into structured information for qualified healthcare professionals.
+                </p>
+
+                {/* Badges Grid */}
+                <div className="flex flex-wrap gap-2 text-xs font-mono">
+                  <Badge variant="outline" className="bg-card border-border text-foreground px-3 py-1">
+                    <ShieldAlert className="w-3.5 h-3.5 mr-1.5 text-[#E8A33A]" />
+                    Non-Diagnostic
+                  </Badge>
+                  <Badge variant="outline" className="bg-card border-border text-foreground px-3 py-1">
+                    <Stethoscope className="w-3.5 h-3.5 mr-1.5 text-primary dark:text-accent" />
+                    Qualified Human Review
+                  </Badge>
+                  <Badge variant="outline" className="bg-card border-border text-foreground px-3 py-1">
+                    <Lock className="w-3.5 h-3.5 mr-1.5 text-[#2E9E6B]" />
+                    Privacy-Conscious
+                  </Badge>
+                  <Badge variant="outline" className="bg-card border-border text-foreground px-3 py-1">
+                    <Globe className="w-3.5 h-3.5 mr-1.5 text-primary dark:text-accent" />
+                    Multilingual India-Ready
+                  </Badge>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="pt-2 flex flex-col sm:flex-row gap-3.5">
+                  <Link href="/patient/intake">
+                    <Button
+                      size="lg"
+                      className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-7 py-5 text-sm shadow-md"
+                    >
+                      Get Started (Patient Intake)
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </Link>
+                  <Link href="/reviewer">
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="w-full sm:w-auto border-border bg-card text-foreground font-semibold px-7 py-5 text-sm hover:bg-muted"
+                    >
+                      Reviewer Workspace Queue
+                    </Button>
+                  </Link>
+                </div>
               </div>
 
-              {/* H1 Heading */}
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.15]">
-                Human-in-the-loop triage, <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#38D9C8] via-[#7AE8DC] to-[#E6EEF0]">
-                  engineered for clinical certainty.
-                </span>
-              </h1>
-
-              {/* Subtitle */}
-              <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                Organize symptoms, voice transcripts, lab OCR reports, visual observations, and timelines into structured information for qualified healthcare professionals.
-              </p>
-
-              {/* Non-Diagnostic Key Badges */}
-              <div className="pt-2 flex flex-wrap justify-center gap-2 text-xs font-medium font-mono">
-                <Badge variant="outline" className="bg-white/[0.03] border-white/10 text-foreground px-3 py-1">
-                  <ShieldAlert className="w-3.5 h-3.5 mr-1.5 text-[#E8A33A]" />
-                  Non-Diagnostic
-                </Badge>
-                <Badge variant="outline" className="bg-white/[0.03] border-white/10 text-foreground px-3 py-1">
-                  <Stethoscope className="w-3.5 h-3.5 mr-1.5 text-[#38D9C8]" />
-                  Qualified Human Review
-                </Badge>
-                <Badge variant="outline" className="bg-white/[0.03] border-white/10 text-foreground px-3 py-1">
-                  <Lock className="w-3.5 h-3.5 mr-1.5 text-[#2E9E6B]" />
-                  Privacy-Conscious
-                </Badge>
-                <Badge variant="outline" className="bg-white/[0.03] border-white/10 text-foreground px-3 py-1">
-                  <Globe className="w-3.5 h-3.5 mr-1.5 text-[#7AE8DC]" />
-                  Multilingual India-Ready
-                </Badge>
-              </div>
-
-              {/* CTAs */}
-              <div className="pt-6 flex flex-col sm:flex-row justify-center gap-4">
-                <Link href="/patient/intake">
-                  <Button
-                    size="lg"
-                    className="w-full sm:w-auto bg-[#0F6F73] hover:bg-[#148388] text-white font-semibold px-8 py-6 text-sm border border-[#38D9C8]/40 shadow-xl shadow-[#0F6F73]/20"
-                  >
-                    Get Started (Patient Intake)
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
-                <Link href="/reviewer">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="w-full sm:w-auto border-white/15 bg-white/[0.03] text-foreground font-semibold px-8 py-6 text-sm hover:bg-white/[0.08]"
-                  >
-                    Reviewer Workspace Queue
-                  </Button>
-                </Link>
+              {/* Right Column: Live Clinical Telemetry Cockpit */}
+              <div className="lg:col-span-5">
+                <HeroTelemetryCockpit />
               </div>
             </div>
           </div>
         </section>
 
         {/* Strict Non-Diagnostic & Safety Boundary Banner */}
-        <section id="safety" className="bg-[#E8A33A]/5 border-y border-[#E8A33A]/20 py-6 px-4">
+        <section id="safety" className="bg-amber-500/10 border-y border-amber-500/20 py-6 px-4">
           <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <div className="bg-[#E8A33A]/10 text-[#E8A33A] p-2.5 rounded-xl border border-[#E8A33A]/30 shrink-0">
+            <div className="bg-amber-500/20 text-amber-700 dark:text-amber-400 p-2.5 rounded-xl border border-amber-500/30 shrink-0">
               <ShieldAlert className="w-6 h-6" />
             </div>
             <div className="space-y-1">
-              <h3 className="font-bold font-mono text-xs text-[#E8A33A] tracking-wider uppercase">
+              <h3 className="font-bold font-mono text-xs text-amber-800 dark:text-amber-400 tracking-wider uppercase">
                 STRICT NON-DIAGNOSTIC & HUMAN-IN-THE-LOOP SAFETY BOUNDARY
               </h3>
-              <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground">
+              <p className="text-xs sm:text-sm leading-relaxed text-foreground/85">
                 MedicalTriage is built to assist — not replace — qualified healthcare professionals. It organizes and surfaces structured patient information, timelines, and safety signals. It does not diagnose medical conditions, prescribe treatment, or independently make clinical decisions.
               </p>
             </div>
           </div>
         </section>
 
-        {/* Live Interactive Triage Sandbox (21st.dev Style Bento) */}
-        <section id="simulator" className="py-24 px-4 sm:px-6 lg:px-8 border-b border-white/10 bg-gradient-to-b from-[#080E11] to-[#0A1216]">
+        {/* Live Interactive Triage Sandbox (21st.dev Style Bento Playground) */}
+        <section id="simulator" className="py-24 px-4 sm:px-6 lg:px-8 border-b border-border bg-muted/20">
           <div className="max-w-7xl mx-auto space-y-12">
             <div className="text-center max-w-2xl mx-auto space-y-3">
-              <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-[#38D9C8] uppercase tracking-wider bg-[#38D9C8]/10 px-3 py-1 rounded-md border border-[#38D9C8]/20">
+              <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-primary dark:text-accent uppercase tracking-wider bg-primary/10 dark:bg-accent/10 px-3 py-1 rounded-md border border-primary/20 dark:border-accent/20">
                 <Cpu className="w-3.5 h-3.5" />
                 <span>Interactive Demonstration</span>
               </div>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
                 Experience the Triage Engine Live
               </h2>
               <p className="text-sm text-muted-foreground">
@@ -209,14 +219,14 @@ export default function PublicLandingPage() {
         </section>
 
         {/* Storytelling Pipeline: How The System Works */}
-        <section id="how-it-works" className="py-24 px-4 sm:px-6 lg:px-8 border-b border-white/10 bg-[#080E11]">
+        <section id="how-it-works" className="py-24 px-4 sm:px-6 lg:px-8 border-b border-border">
           <div className="max-w-7xl mx-auto space-y-16">
             <div className="text-center max-w-2xl mx-auto space-y-3">
-              <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-[#38D9C8] uppercase tracking-wider bg-[#38D9C8]/10 px-3 py-1 rounded-md border border-[#38D9C8]/20">
+              <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-primary dark:text-accent uppercase tracking-wider bg-primary/10 dark:bg-accent/10 px-3 py-1 rounded-md border border-primary/20 dark:border-accent/20">
                 <Workflow className="w-3.5 h-3.5" />
                 <span>End-to-End Clinical Flow</span>
               </div>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
                 How The System Works
               </h2>
               <p className="text-sm text-muted-foreground">
@@ -229,14 +239,14 @@ export default function PublicLandingPage() {
         </section>
 
         {/* Core Capabilities Section (Bento Grid) */}
-        <section id="capabilities" className="py-24 px-4 sm:px-6 lg:px-8 border-b border-white/10 bg-gradient-to-b from-[#080E11] via-[#0B1519] to-[#080E11]">
+        <section id="capabilities" className="py-24 px-4 sm:px-6 lg:px-8 border-b border-border bg-muted/10">
           <div className="max-w-7xl mx-auto space-y-16">
             <div className="text-center max-w-2xl mx-auto space-y-3">
-              <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-[#38D9C8] uppercase tracking-wider bg-[#38D9C8]/10 px-3 py-1 rounded-md border border-[#38D9C8]/20">
+              <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-primary dark:text-accent uppercase tracking-wider bg-primary/10 dark:bg-accent/10 px-3 py-1 rounded-md border border-primary/20 dark:border-accent/20">
                 <Layers className="w-3.5 h-3.5" />
                 <span>Clinical Capabilities</span>
               </div>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
                 Engineered for High-Acuity Reliability
               </h2>
               <p className="text-sm text-muted-foreground">
@@ -287,18 +297,18 @@ export default function PublicLandingPage() {
                 return (
                   <div
                     key={idx}
-                    className="p-6 rounded-2xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-300 hover:border-[#38D9C8]/30 flex flex-col justify-between group"
+                    className="p-6 rounded-2xl border border-border bg-card hover:border-primary/40 dark:hover:border-accent/40 transition-all duration-300 shadow-xs hover:shadow-md flex flex-col justify-between group"
                   >
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <div className="p-3 bg-[#0F6F73]/30 text-[#38D9C8] rounded-xl border border-[#38D9C8]/20 group-hover:scale-105 transition-transform">
+                        <div className="p-3 bg-primary/10 text-primary dark:text-accent rounded-xl border border-primary/20 group-hover:scale-105 transition-transform">
                           <Icon className="w-5 h-5" />
                         </div>
-                        <span className="font-mono text-[10px] text-muted-foreground bg-white/[0.04] px-2 py-0.5 rounded border border-white/5">
+                        <span className="font-mono text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded border border-border">
                           {cap.badge}
                         </span>
                       </div>
-                      <h3 className="text-lg font-bold text-white tracking-tight">{cap.title}</h3>
+                      <h3 className="text-lg font-bold text-foreground tracking-tight">{cap.title}</h3>
                       <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                         {cap.desc}
                       </p>
@@ -311,14 +321,14 @@ export default function PublicLandingPage() {
         </section>
 
         {/* India Context Section */}
-        <section id="india-context" className="py-24 px-4 sm:px-6 lg:px-8 border-b border-white/10 bg-[#080E11]">
+        <section id="india-context" className="py-24 px-4 sm:px-6 lg:px-8 border-b border-border">
           <div className="max-w-7xl mx-auto space-y-12">
             <div className="max-w-3xl mx-auto text-center space-y-3">
-              <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-[#7AE8DC] uppercase tracking-wider bg-[#7AE8DC]/10 px-3 py-1 rounded-md border border-[#7AE8DC]/20">
+              <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-primary dark:text-accent uppercase tracking-wider bg-primary/10 dark:bg-accent/10 px-3 py-1 rounded-md border border-primary/20 dark:border-accent/20">
                 <Globe className="w-3.5 h-3.5" />
                 <span>Regional Healthcare Infrastructure</span>
               </div>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
                 Built for the Realities of Indian Healthcare
               </h2>
               <p className="text-sm text-muted-foreground">
@@ -348,12 +358,12 @@ export default function PublicLandingPage() {
                 return (
                   <div
                     key={idx}
-                    className="p-6 rounded-xl border border-white/10 bg-white/[0.02] space-y-3"
+                    className="p-6 rounded-xl border border-border bg-card space-y-3 shadow-xs"
                   >
-                    <div className="p-2.5 bg-[#0F6F73]/20 text-[#38D9C8] w-fit rounded-lg border border-[#38D9C8]/20">
+                    <div className="p-2.5 bg-primary/10 text-primary dark:text-accent w-fit rounded-lg border border-primary/20">
                       <Icon className="w-5 h-5" />
                     </div>
-                    <h3 className="text-base font-bold text-white">{item.title}</h3>
+                    <h3 className="text-base font-bold text-foreground">{item.title}</h3>
                     <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
                   </div>
                 );
@@ -363,13 +373,13 @@ export default function PublicLandingPage() {
         </section>
 
         {/* Operational Footer */}
-        <footer className="bg-[#05090B] border-t border-white/10 py-12 px-4 sm:px-6 lg:px-8 text-muted-foreground">
+        <footer className="bg-card border-t border-border py-12 px-4 sm:px-6 lg:px-8 text-muted-foreground">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center space-x-3">
-              <div className="bg-[#0F6F73] p-1.5 rounded text-white">
-                <HeartPulse className="w-4 h-4 text-[#38D9C8]" />
+              <div className="bg-primary p-1.5 rounded text-primary-foreground">
+                <HeartPulse className="w-4 h-4 text-accent" />
               </div>
-              <span className="font-mono text-sm font-bold text-white">MedicalTriage Clinical OS</span>
+              <span className="font-mono text-sm font-bold text-foreground">MedicalTriage Clinical OS</span>
             </div>
 
             <p className="text-xs text-muted-foreground text-center">
@@ -377,15 +387,15 @@ export default function PublicLandingPage() {
             </p>
 
             <div className="flex items-center space-x-4 text-xs font-mono">
-              <Link href="/patient/intake" className="hover:text-white transition-colors">
+              <Link href="/patient/intake" className="hover:text-foreground transition-colors">
                 Patient Intake
               </Link>
               <span>•</span>
-              <Link href="/reviewer" className="hover:text-white transition-colors">
+              <Link href="/reviewer" className="hover:text-foreground transition-colors">
                 Reviewer Portal
               </Link>
               <span>•</span>
-              <Link href="/admin" className="hover:text-white transition-colors">
+              <Link href="/admin" className="hover:text-foreground transition-colors">
                 Admin
               </Link>
             </div>

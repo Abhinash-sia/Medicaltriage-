@@ -28,17 +28,30 @@ export function TriageConstellation() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(renderer.domElement);
 
-    // Node Count & Positions
+    // Particle Count & Positions
     const particleCount = 75;
     const positions = new Float32Array(particleCount * 3);
     const velocities: { x: number; y: number; z: number }[] = [];
     const colors = new Float32Array(particleCount * 3);
 
-    // Palette: Deep Teal (#0F6F73), Ice Cyan (#38D9C8), Soft White (#E6EEF0), Accent Amber (#E8A33A)
-    const colorTeal = new THREE.Color(0x0f6f73);
-    const colorIce = new THREE.Color(0x38d9c8);
-    const colorWhite = new THREE.Color(0xd9e3e6);
-    const colorAmber = new THREE.Color(0xe8a33a);
+    const updateColorsForTheme = (isDark: boolean) => {
+      const color1 = isDark ? new THREE.Color(0x38d9c8) : new THREE.Color(0x0f6f73);
+      const color2 = isDark ? new THREE.Color(0x0f6f73) : new THREE.Color(0x2a7a82);
+      const color3 = isDark ? new THREE.Color(0xd9e3e6) : new THREE.Color(0x5b6f76);
+      const color4 = isDark ? new THREE.Color(0xe8a33a) : new THREE.Color(0xd97706);
+
+      for (let i = 0; i < particleCount; i++) {
+        const i3 = i * 3;
+        const rand = Math.random();
+        const chosen = rand < 0.55 ? color1 : rand < 0.85 ? color2 : rand < 0.95 ? color3 : color4;
+        colors[i3] = chosen.r;
+        colors[i3 + 1] = chosen.g;
+        colors[i3 + 2] = chosen.b;
+      }
+    };
+
+    const isCurrentlyDark = document.documentElement.classList.contains('dark');
+    updateColorsForTheme(isCurrentlyDark);
 
     for (let i = 0; i < particleCount; i++) {
       const i3 = i * 3;
@@ -47,17 +60,10 @@ export function TriageConstellation() {
       positions[i3 + 2] = (Math.random() - 0.5) * 45;
 
       velocities.push({
-        x: (Math.random() - 0.5) * 0.04,
-        y: (Math.random() - 0.5) * 0.04,
+        x: (Math.random() - 0.5) * 0.035,
+        y: (Math.random() - 0.5) * 0.035,
         z: (Math.random() - 0.5) * 0.02,
       });
-
-      // Assign palette color based on cluster
-      const rand = Math.random();
-      const chosenColor = rand < 0.55 ? colorIce : rand < 0.85 ? colorTeal : rand < 0.95 ? colorWhite : colorAmber;
-      colors[i3] = chosenColor.r;
-      colors[i3 + 1] = chosenColor.g;
-      colors[i3 + 2] = chosenColor.b;
     }
 
     const geometry = new THREE.BufferGeometry();
@@ -81,12 +87,11 @@ export function TriageConstellation() {
     const texture = new THREE.CanvasTexture(canvas);
 
     const pointsMaterial = new THREE.PointsMaterial({
-      size: 3.2,
+      size: 3.5,
       vertexColors: true,
       map: texture,
       transparent: true,
-      opacity: 0.85,
-      blending: THREE.AdditiveBlending,
+      opacity: isCurrentlyDark ? 0.85 : 0.65,
       depthWrite: false,
     });
 
@@ -101,17 +106,26 @@ export function TriageConstellation() {
     linesGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
     linesGeometry.setAttribute('color', new THREE.BufferAttribute(lineColors, 3));
 
-    const linesMaterial = new THREE.LineSegments(
-      linesGeometry,
-      new THREE.LineBasicMaterial({
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.35,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-      })
-    );
-    scene.add(linesMaterial);
+    const lineMat = new THREE.LineBasicMaterial({
+      vertexColors: true,
+      transparent: true,
+      opacity: isCurrentlyDark ? 0.35 : 0.25,
+      depthWrite: false,
+    });
+    const lines = new THREE.LineSegments(linesGeometry, lineMat);
+    scene.add(lines);
+
+    // Theme Change Observer
+    const observer = new MutationObserver(() => {
+      const dark = document.documentElement.classList.contains('dark');
+      updateColorsForTheme(dark);
+      if (geometry.attributes.color) {
+        geometry.attributes.color.needsUpdate = true;
+      }
+      pointsMaterial.opacity = dark ? 0.85 : 0.65;
+      lineMat.opacity = dark ? 0.35 : 0.25;
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
     // Mouse Parallax
     let mouseX = 0;
@@ -159,7 +173,6 @@ export function TriageConstellation() {
         posArray[i3 + 1] += velocities[i].y;
         posArray[i3 + 2] += velocities[i].z;
 
-        // Bounce back within bounding box
         if (Math.abs(posArray[i3]) > 55) velocities[i].x *= -1;
         if (Math.abs(posArray[i3 + 1]) > 38) velocities[i].y *= -1;
         if (Math.abs(posArray[i3 + 2]) > 25) velocities[i].z *= -1;
@@ -169,6 +182,7 @@ export function TriageConstellation() {
       // Update Connections
       let lineIndex = 0;
       const connectionDist = 18;
+      const darkNow = document.documentElement.classList.contains('dark');
 
       for (let i = 0; i < particleCount; i++) {
         for (let j = i + 1; j < particleCount; j++) {
@@ -191,21 +205,29 @@ export function TriageConstellation() {
             linePositions[li + 4] = posArray[j * 3 + 1];
             linePositions[li + 5] = posArray[j * 3 + 2];
 
-            // Color gradient along edge
-            lineColors[li] = 0.22 * alpha;
-            lineColors[li + 1] = 0.85 * alpha;
-            lineColors[li + 2] = 0.78 * alpha;
+            if (darkNow) {
+              lineColors[li] = 0.22 * alpha;
+              lineColors[li + 1] = 0.85 * alpha;
+              lineColors[li + 2] = 0.78 * alpha;
 
-            lineColors[li + 3] = 0.06 * alpha;
-            lineColors[li + 4] = 0.43 * alpha;
-            lineColors[li + 5] = 0.45 * alpha;
+              lineColors[li + 3] = 0.06 * alpha;
+              lineColors[li + 4] = 0.43 * alpha;
+              lineColors[li + 5] = 0.45 * alpha;
+            } else {
+              lineColors[li] = 0.06 * alpha;
+              lineColors[li + 1] = 0.43 * alpha;
+              lineColors[li + 2] = 0.45 * alpha;
+
+              lineColors[li + 3] = 0.35 * alpha;
+              lineColors[li + 4] = 0.43 * alpha;
+              lineColors[li + 5] = 0.46 * alpha;
+            }
 
             lineIndex++;
           }
         }
       }
 
-      // Fill remaining lines with zero
       for (let k = lineIndex * 6; k < maxLineConnections * 6; k++) {
         linePositions[k] = 0;
         lineColors[k] = 0;
@@ -215,25 +237,24 @@ export function TriageConstellation() {
       linesGeometry.attributes.color.needsUpdate = true;
       linesGeometry.setDrawRange(0, lineIndex * 2);
 
-      // Smooth camera parallax
-      targetX += (mouseX * 12 - targetX) * 0.04;
-      targetY += (mouseY * 8 - targetY) * 0.04;
+      // Parallax easing
+      targetX += (mouseX * 10 - targetX) * 0.04;
+      targetY += (mouseY * 6 - targetY) * 0.04;
 
       camera.position.x = targetX;
       camera.position.y = targetY;
       camera.lookAt(0, 0, 0);
 
-      // Slow gentle rotation
-      scene.rotation.y += delta * 0.03;
-      scene.rotation.x += delta * 0.015;
+      scene.rotation.y += delta * 0.025;
+      scene.rotation.x += delta * 0.012;
 
       renderer.render(scene, camera);
     };
 
     animate();
 
-    // Teardown
     return () => {
+      observer.disconnect();
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('resize', handleResize);
@@ -243,7 +264,7 @@ export function TriageConstellation() {
       geometry.dispose();
       pointsMaterial.dispose();
       linesGeometry.dispose();
-      linesMaterial.dispose();
+      lineMat.dispose();
       texture.dispose();
       renderer.dispose();
     };
@@ -252,7 +273,7 @@ export function TriageConstellation() {
   return (
     <div
       ref={mountRef}
-      className="absolute inset-0 pointer-events-none z-0 opacity-80 mix-blend-screen overflow-hidden"
+      className="absolute inset-0 pointer-events-none z-0 opacity-70 dark:opacity-80 overflow-hidden"
       aria-hidden="true"
     />
   );
