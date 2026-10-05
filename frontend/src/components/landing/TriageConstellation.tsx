@@ -10,6 +10,15 @@ export function TriageConstellation() {
     const container = mountRef.current;
     if (!container) return;
 
+    let isVisible = true;
+    const observerIntersection = new IntersectionObserver(
+      (entries) => {
+        isVisible = entries[0]?.isIntersecting ?? false;
+      },
+      { threshold: 0.05 }
+    );
+    observerIntersection.observe(container);
+
     // Dimensions
     const width = container.clientWidth || window.innerWidth;
     const height = container.clientHeight || window.innerHeight;
@@ -17,7 +26,7 @@ export function TriageConstellation() {
     // Scene, Camera, Renderer
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 1000);
-    camera.position.z = 85;
+    camera.position.z = 80;
 
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
@@ -25,11 +34,11 @@ export function TriageConstellation() {
       powerPreference: 'high-performance',
     });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     container.appendChild(renderer.domElement);
 
-    // Particle Count & Positions
-    const particleCount = 75;
+    // Optimized Particle Count (50 nodes is ultra-lightweight & silky smooth)
+    const particleCount = 50;
     const positions = new Float32Array(particleCount * 3);
     const velocities: { x: number; y: number; z: number }[] = [];
     const colors = new Float32Array(particleCount * 3);
@@ -55,14 +64,14 @@ export function TriageConstellation() {
 
     for (let i = 0; i < particleCount; i++) {
       const i3 = i * 3;
-      positions[i3] = (Math.random() - 0.5) * 110;
-      positions[i3 + 1] = (Math.random() - 0.5) * 70;
-      positions[i3 + 2] = (Math.random() - 0.5) * 45;
+      positions[i3] = (Math.random() - 0.5) * 105;
+      positions[i3 + 1] = (Math.random() - 0.5) * 65;
+      positions[i3 + 2] = (Math.random() - 0.5) * 40;
 
       velocities.push({
-        x: (Math.random() - 0.5) * 0.035,
-        y: (Math.random() - 0.5) * 0.035,
-        z: (Math.random() - 0.5) * 0.02,
+        x: (Math.random() - 0.5) * 0.03,
+        y: (Math.random() - 0.5) * 0.03,
+        z: (Math.random() - 0.5) * 0.015,
       });
     }
 
@@ -78,7 +87,7 @@ export function TriageConstellation() {
     if (ctx) {
       const grad = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
       grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-      grad.addColorStop(0.3, 'rgba(56, 217, 200, 0.8)');
+      grad.addColorStop(0.35, 'rgba(56, 217, 200, 0.8)');
       grad.addColorStop(0.7, 'rgba(15, 111, 115, 0.2)');
       grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = grad;
@@ -99,7 +108,7 @@ export function TriageConstellation() {
     scene.add(points);
 
     // Dynamic Connections (Lines)
-    const maxLineConnections = 300;
+    const maxLineConnections = 180;
     const linePositions = new Float32Array(maxLineConnections * 6);
     const lineColors = new Float32Array(maxLineConnections * 6);
     const linesGeometry = new THREE.BufferGeometry();
@@ -116,7 +125,7 @@ export function TriageConstellation() {
     scene.add(lines);
 
     // Theme Change Observer
-    const observer = new MutationObserver(() => {
+    const themeObserver = new MutationObserver(() => {
       const dark = document.documentElement.classList.contains('dark');
       updateColorsForTheme(dark);
       if (geometry.attributes.color) {
@@ -125,7 +134,7 @@ export function TriageConstellation() {
       pointsMaterial.opacity = dark ? 0.85 : 0.65;
       lineMat.opacity = dark ? 0.35 : 0.25;
     });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
     // Mouse Parallax
     let mouseX = 0;
@@ -141,7 +150,7 @@ export function TriageConstellation() {
       mouseY = -(clientY / rect.height - 0.5) * 2;
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
 
     // Handle Resize
     const handleResize = () => {
@@ -162,6 +171,8 @@ export function TriageConstellation() {
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
 
+      if (!isVisible) return; // Skip compute when offscreen
+
       const delta = clock.getDelta();
       const posAttr = geometry.attributes.position as THREE.BufferAttribute;
       const posArray = posAttr.array as Float32Array;
@@ -173,15 +184,15 @@ export function TriageConstellation() {
         posArray[i3 + 1] += velocities[i].y;
         posArray[i3 + 2] += velocities[i].z;
 
-        if (Math.abs(posArray[i3]) > 55) velocities[i].x *= -1;
-        if (Math.abs(posArray[i3 + 1]) > 38) velocities[i].y *= -1;
-        if (Math.abs(posArray[i3 + 2]) > 25) velocities[i].z *= -1;
+        if (Math.abs(posArray[i3]) > 52) velocities[i].x *= -1;
+        if (Math.abs(posArray[i3 + 1]) > 35) velocities[i].y *= -1;
+        if (Math.abs(posArray[i3 + 2]) > 22) velocities[i].z *= -1;
       }
       posAttr.needsUpdate = true;
 
       // Update Connections
       let lineIndex = 0;
-      const connectionDist = 18;
+      const connectionDist = 19;
       const darkNow = document.documentElement.classList.contains('dark');
 
       for (let i = 0; i < particleCount; i++) {
@@ -238,15 +249,15 @@ export function TriageConstellation() {
       linesGeometry.setDrawRange(0, lineIndex * 2);
 
       // Parallax easing
-      targetX += (mouseX * 10 - targetX) * 0.04;
-      targetY += (mouseY * 6 - targetY) * 0.04;
+      targetX += (mouseX * 8 - targetX) * 0.04;
+      targetY += (mouseY * 5 - targetY) * 0.04;
 
       camera.position.x = targetX;
       camera.position.y = targetY;
       camera.lookAt(0, 0, 0);
 
-      scene.rotation.y += delta * 0.025;
-      scene.rotation.x += delta * 0.012;
+      scene.rotation.y += delta * 0.02;
+      scene.rotation.x += delta * 0.01;
 
       renderer.render(scene, camera);
     };
@@ -254,7 +265,8 @@ export function TriageConstellation() {
     animate();
 
     return () => {
-      observer.disconnect();
+      observerIntersection.disconnect();
+      themeObserver.disconnect();
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('resize', handleResize);

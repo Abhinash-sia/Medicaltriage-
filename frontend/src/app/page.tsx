@@ -1,7 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
   ShieldAlert,
   HeartPulse,
@@ -33,20 +36,86 @@ import { Badge } from '@/components/ui/badge';
 import { LanguageSelector } from '@/components/ui/LanguageSelector';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { SmoothScroll } from '@/components/landing/SmoothScroll';
-import { TriageConstellation } from '@/components/landing/TriageConstellation';
 import { TriageSimulator } from '@/components/landing/TriageSimulator';
 import { StorytellingPipeline } from '@/components/landing/StorytellingPipeline';
 import { HeroTelemetryCockpit } from '@/components/landing/HeroTelemetryCockpit';
 
+// Dynamically import smooth scroll and 3D constellation to ensure instant first paint
+const SmoothScroll = dynamic(
+  () => import('@/components/landing/SmoothScroll').then((m) => m.SmoothScroll),
+  { ssr: false }
+);
+
+const TriageConstellation = dynamic(
+  () => import('@/components/landing/TriageConstellation').then((m) => m.TriageConstellation),
+  { ssr: false }
+);
+
+gsap.registerPlugin(ScrollTrigger);
+
 export default function PublicLandingPage() {
   const { t } = useLanguage();
+  const mainContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion || !mainContainerRef.current) return;
+
+    const ctx = gsap.context(() => {
+      // Hero Entrance Timeline
+      const heroTl = gsap.timeline({ defaults: { ease: 'power3.out', duration: 0.8 } });
+      heroTl
+        .from('.hero-badge', { opacity: 0, y: 15, delay: 0.1 })
+        .from('.hero-headline', { opacity: 0, y: 25 }, '-=0.5')
+        .from('.hero-subtitle', { opacity: 0, y: 20 }, '-=0.6')
+        .from('.hero-chips', { opacity: 0, y: 15, stagger: 0.05 }, '-=0.5')
+        .from('.hero-cta', { opacity: 0, y: 15, stagger: 0.1 }, '-=0.5')
+        .from('.hero-cockpit', { opacity: 0, scale: 0.96, duration: 1 }, '-=0.8');
+
+      // Scroll reveals for each section
+      gsap.utils.toArray<HTMLElement>('.reveal-section').forEach((section) => {
+        gsap.from(section, {
+          scrollTrigger: {
+            trigger: section,
+            start: 'top 85%',
+            toggleActions: 'play none none none',
+          },
+          opacity: 0,
+          y: 35,
+          duration: 0.8,
+          ease: 'power3.out',
+        });
+      });
+
+      // Bento cards staggered entrance
+      gsap.utils.toArray<HTMLElement>('.bento-grid').forEach((grid) => {
+        const cards = grid.querySelectorAll('.bento-card');
+        gsap.from(cards, {
+          scrollTrigger: {
+            trigger: grid,
+            start: 'top 80%',
+            toggleActions: 'play none none none',
+          },
+          opacity: 0,
+          y: 30,
+          stagger: 0.1,
+          duration: 0.7,
+          ease: 'power3.out',
+        });
+      });
+    }, mainContainerRef);
+
+    return () => ctx.revert();
+  }, []);
 
   return (
     <SmoothScroll>
-      <div className="min-h-screen bg-background text-foreground flex flex-col font-sans selection:bg-primary/20 selection:text-primary transition-colors duration-300">
+      <div
+        ref={mainContainerRef}
+        className="min-h-screen bg-background text-foreground flex flex-col font-sans selection:bg-primary/20 selection:text-primary transition-colors duration-300"
+      >
         {/* Top Floating Glass Navigation */}
-        <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
+        <header className="sticky top-0 z-50 bg-background/70 dark:bg-background/60 backdrop-blur-2xl border-b border-border/80 shadow-xs">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="bg-primary p-2 rounded-lg text-primary-foreground border border-primary/40 shadow-sm">
@@ -54,7 +123,7 @@ export default function PublicLandingPage() {
               </div>
               <div className="flex items-center space-x-2">
                 <span className="text-lg font-bold tracking-tight text-foreground font-mono">MedicalTriage</span>
-                <span className="text-[10px] font-mono bg-muted text-primary dark:text-accent px-2 py-0.5 rounded-full font-semibold border border-border">
+                <span className="text-[10px] font-mono bg-muted/80 text-primary dark:text-accent px-2 py-0.5 rounded-full font-semibold border border-border/80">
                   {t('landing.prototype')}
                 </span>
               </div>
@@ -85,7 +154,7 @@ export default function PublicLandingPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="hidden sm:inline-flex items-center gap-1.5 border-border bg-card text-foreground hover:bg-muted text-xs h-8"
+                  className="hidden sm:inline-flex items-center gap-1.5 border-border/80 bg-card/60 backdrop-blur-md text-foreground hover:bg-muted text-xs h-8"
                 >
                   <LogIn className="w-3.5 h-3.5" />
                   {t('common.login')}
@@ -94,7 +163,7 @@ export default function PublicLandingPage() {
               <Link href="/patient/intake">
                 <Button
                   size="sm"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs h-8 px-3.5 shadow-sm font-semibold"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs h-8 px-3.5 shadow-sm font-semibold border border-primary/30"
                 >
                   {t('landing.patientPortal')}
                 </Button>
@@ -104,7 +173,7 @@ export default function PublicLandingPage() {
         </header>
 
         {/* Hero Section: Asymmetrical Editorial Clinical Layout */}
-        <section className="relative overflow-hidden pt-12 pb-20 sm:pt-20 sm:pb-28 border-b border-border">
+        <section className="relative overflow-hidden pt-12 pb-20 sm:pt-20 sm:pb-28 border-b border-border/80">
           <TriageConstellation />
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -112,13 +181,13 @@ export default function PublicLandingPage() {
               {/* Left Column: Mission & Actions */}
               <div className="lg:col-span-7 space-y-6 text-left">
                 {/* Status Pill */}
-                <div className="inline-flex items-center space-x-2 bg-card border border-border text-primary dark:text-accent px-3 py-1.5 rounded-full text-xs font-mono tracking-wider uppercase shadow-xs">
+                <div className="hero-badge inline-flex items-center space-x-2 bg-card/80 backdrop-blur-xl border border-border text-primary dark:text-accent px-3.5 py-1.5 rounded-full text-xs font-mono tracking-wider uppercase shadow-xs ring-1 ring-white/10">
                   <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                   <span>HUMAN-IN-THE-LOOP CLINICAL TRIAGE ASSISTANT</span>
                 </div>
 
                 {/* H1 Heading */}
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight leading-[1.12]">
+                <h1 className="hero-headline text-4xl sm:text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight leading-[1.12]">
                   Human-in-the-loop triage, <br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-foreground">
                     engineered for clinical certainty.
@@ -126,36 +195,36 @@ export default function PublicLandingPage() {
                 </h1>
 
                 {/* Subtitle */}
-                <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-xl">
+                <p className="hero-subtitle text-base sm:text-lg text-muted-foreground leading-relaxed max-w-xl">
                   Organize symptoms, voice transcripts, lab OCR reports, visual observations, and timelines into structured information for qualified healthcare professionals.
                 </p>
 
                 {/* Badges Grid */}
-                <div className="flex flex-wrap gap-2 text-xs font-mono">
-                  <Badge variant="outline" className="bg-card border-border text-foreground px-3 py-1">
+                <div className="hero-chips flex flex-wrap gap-2 text-xs font-mono">
+                  <Badge variant="outline" className="bg-card/70 backdrop-blur-md border-border text-foreground px-3 py-1 shadow-2xs">
                     <ShieldAlert className="w-3.5 h-3.5 mr-1.5 text-[#E8A33A]" />
                     Non-Diagnostic
                   </Badge>
-                  <Badge variant="outline" className="bg-card border-border text-foreground px-3 py-1">
+                  <Badge variant="outline" className="bg-card/70 backdrop-blur-md border-border text-foreground px-3 py-1 shadow-2xs">
                     <Stethoscope className="w-3.5 h-3.5 mr-1.5 text-primary dark:text-accent" />
                     Qualified Human Review
                   </Badge>
-                  <Badge variant="outline" className="bg-card border-border text-foreground px-3 py-1">
+                  <Badge variant="outline" className="bg-card/70 backdrop-blur-md border-border text-foreground px-3 py-1 shadow-2xs">
                     <Lock className="w-3.5 h-3.5 mr-1.5 text-[#2E9E6B]" />
                     Privacy-Conscious
                   </Badge>
-                  <Badge variant="outline" className="bg-card border-border text-foreground px-3 py-1">
+                  <Badge variant="outline" className="bg-card/70 backdrop-blur-md border-border text-foreground px-3 py-1 shadow-2xs">
                     <Globe className="w-3.5 h-3.5 mr-1.5 text-primary dark:text-accent" />
                     Multilingual India-Ready
                   </Badge>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="pt-2 flex flex-col sm:flex-row gap-3.5">
+                <div className="hero-cta pt-2 flex flex-col sm:flex-row gap-3.5">
                   <Link href="/patient/intake">
                     <Button
                       size="lg"
-                      className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-7 py-5 text-sm shadow-md"
+                      className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-7 py-5 text-sm shadow-lg shadow-primary/20 border border-primary/40"
                     >
                       Get Started (Patient Intake)
                       <ArrowRight className="w-4 h-4 ml-2" />
@@ -165,7 +234,7 @@ export default function PublicLandingPage() {
                     <Button
                       size="lg"
                       variant="outline"
-                      className="w-full sm:w-auto border-border bg-card text-foreground font-semibold px-7 py-5 text-sm hover:bg-muted"
+                      className="w-full sm:w-auto border-border/80 bg-card/60 backdrop-blur-xl text-foreground font-semibold px-7 py-5 text-sm hover:bg-muted/80 shadow-xs"
                     >
                       Reviewer Workspace Queue
                     </Button>
@@ -174,7 +243,7 @@ export default function PublicLandingPage() {
               </div>
 
               {/* Right Column: Live Clinical Telemetry Cockpit */}
-              <div className="lg:col-span-5">
+              <div className="hero-cockpit lg:col-span-5">
                 <HeroTelemetryCockpit />
               </div>
             </div>
@@ -182,7 +251,7 @@ export default function PublicLandingPage() {
         </section>
 
         {/* Strict Non-Diagnostic & Safety Boundary Banner */}
-        <section id="safety" className="bg-amber-500/10 border-y border-amber-500/20 py-6 px-4">
+        <section id="safety" className="reveal-section bg-amber-500/10 backdrop-blur-md border-y border-amber-500/20 py-6 px-4">
           <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="bg-amber-500/20 text-amber-700 dark:text-amber-400 p-2.5 rounded-xl border border-amber-500/30 shrink-0">
               <ShieldAlert className="w-6 h-6" />
@@ -199,7 +268,7 @@ export default function PublicLandingPage() {
         </section>
 
         {/* Live Interactive Triage Sandbox (21st.dev Style Bento Playground) */}
-        <section id="simulator" className="py-24 px-4 sm:px-6 lg:px-8 border-b border-border bg-muted/20">
+        <section id="simulator" className="reveal-section py-24 px-4 sm:px-6 lg:px-8 border-b border-border/80 bg-muted/20">
           <div className="max-w-7xl mx-auto space-y-12">
             <div className="text-center max-w-2xl mx-auto space-y-3">
               <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-primary dark:text-accent uppercase tracking-wider bg-primary/10 dark:bg-accent/10 px-3 py-1 rounded-md border border-primary/20 dark:border-accent/20">
@@ -219,7 +288,7 @@ export default function PublicLandingPage() {
         </section>
 
         {/* Storytelling Pipeline: How The System Works */}
-        <section id="how-it-works" className="py-24 px-4 sm:px-6 lg:px-8 border-b border-border">
+        <section id="how-it-works" className="reveal-section py-24 px-4 sm:px-6 lg:px-8 border-b border-border/80">
           <div className="max-w-7xl mx-auto space-y-16">
             <div className="text-center max-w-2xl mx-auto space-y-3">
               <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-primary dark:text-accent uppercase tracking-wider bg-primary/10 dark:bg-accent/10 px-3 py-1 rounded-md border border-primary/20 dark:border-accent/20">
@@ -239,7 +308,7 @@ export default function PublicLandingPage() {
         </section>
 
         {/* Core Capabilities Section (Bento Grid) */}
-        <section id="capabilities" className="py-24 px-4 sm:px-6 lg:px-8 border-b border-border bg-muted/10">
+        <section id="capabilities" className="reveal-section py-24 px-4 sm:px-6 lg:px-8 border-b border-border/80 bg-muted/10">
           <div className="max-w-7xl mx-auto space-y-16">
             <div className="text-center max-w-2xl mx-auto space-y-3">
               <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-primary dark:text-accent uppercase tracking-wider bg-primary/10 dark:bg-accent/10 px-3 py-1 rounded-md border border-primary/20 dark:border-accent/20">
@@ -254,7 +323,7 @@ export default function PublicLandingPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="bento-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 {
                   title: 'Multimodal Ingestion',
@@ -297,14 +366,14 @@ export default function PublicLandingPage() {
                 return (
                   <div
                     key={idx}
-                    className="p-6 rounded-2xl border border-border bg-card hover:border-primary/40 dark:hover:border-accent/40 transition-all duration-300 shadow-xs hover:shadow-md flex flex-col justify-between group"
+                    className="bento-card p-6 rounded-2xl border border-border/80 bg-card/60 dark:bg-card/40 backdrop-blur-2xl hover:border-primary/40 dark:hover:border-accent/40 transition-all duration-300 shadow-[0_4px_24px_0_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_0_rgba(0,0,0,0.25)] hover:shadow-lg flex flex-col justify-between group ring-1 ring-white/10 dark:ring-white/5"
                   >
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <div className="p-3 bg-primary/10 text-primary dark:text-accent rounded-xl border border-primary/20 group-hover:scale-105 transition-transform">
+                        <div className="p-3 bg-primary/10 text-primary dark:text-accent rounded-xl border border-primary/20 group-hover:scale-105 transition-transform backdrop-blur-md">
                           <Icon className="w-5 h-5" />
                         </div>
-                        <span className="font-mono text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded border border-border">
+                        <span className="font-mono text-[10px] text-muted-foreground bg-muted/80 px-2 py-0.5 rounded border border-border/80">
                           {cap.badge}
                         </span>
                       </div>
@@ -321,7 +390,7 @@ export default function PublicLandingPage() {
         </section>
 
         {/* India Context Section */}
-        <section id="india-context" className="py-24 px-4 sm:px-6 lg:px-8 border-b border-border">
+        <section id="india-context" className="reveal-section py-24 px-4 sm:px-6 lg:px-8 border-b border-border/80">
           <div className="max-w-7xl mx-auto space-y-12">
             <div className="max-w-3xl mx-auto text-center space-y-3">
               <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-primary dark:text-accent uppercase tracking-wider bg-primary/10 dark:bg-accent/10 px-3 py-1 rounded-md border border-primary/20 dark:border-accent/20">
@@ -336,7 +405,7 @@ export default function PublicLandingPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bento-grid grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
                 {
                   title: 'English, Hindi & Odia Native',
@@ -358,9 +427,9 @@ export default function PublicLandingPage() {
                 return (
                   <div
                     key={idx}
-                    className="p-6 rounded-xl border border-border bg-card space-y-3 shadow-xs"
+                    className="bento-card p-6 rounded-2xl border border-border/80 bg-card/60 dark:bg-card/40 backdrop-blur-2xl space-y-3 shadow-[0_4px_24px_0_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_0_rgba(0,0,0,0.25)] ring-1 ring-white/10 dark:ring-white/5"
                   >
-                    <div className="p-2.5 bg-primary/10 text-primary dark:text-accent w-fit rounded-lg border border-primary/20">
+                    <div className="p-2.5 bg-primary/10 text-primary dark:text-accent w-fit rounded-lg border border-primary/20 backdrop-blur-md">
                       <Icon className="w-5 h-5" />
                     </div>
                     <h3 className="text-base font-bold text-foreground">{item.title}</h3>
@@ -373,7 +442,7 @@ export default function PublicLandingPage() {
         </section>
 
         {/* Operational Footer */}
-        <footer className="bg-card border-t border-border py-12 px-4 sm:px-6 lg:px-8 text-muted-foreground">
+        <footer className="bg-card/80 backdrop-blur-xl border-t border-border/80 py-12 px-4 sm:px-6 lg:px-8 text-muted-foreground">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center space-x-3">
               <div className="bg-primary p-1.5 rounded text-primary-foreground">
