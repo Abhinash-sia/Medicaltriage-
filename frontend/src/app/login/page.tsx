@@ -5,10 +5,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { HeartPulse, ShieldAlert, LogIn, Loader2, User, Lock, CheckCircle2, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { HeartPulse, ShieldAlert, LogIn, Loader2, User, Lock, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { LanguageSelector } from '@/components/ui/LanguageSelector';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { setAuthSession } from '@/lib/authSession';
 
 const SYNTHETIC_DEMO_ACCOUNTS = [
   {
@@ -17,7 +18,6 @@ const SYNTHETIC_DEMO_ACCOUNTS = [
     password: 'Password123!',
     role: 'DOCTOR',
     targetRoute: '/reviewer',
-    color: 'bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100',
   },
   {
     roleLabel: 'Nurse (Secondary Care)',
@@ -25,7 +25,6 @@ const SYNTHETIC_DEMO_ACCOUNTS = [
     password: 'Password123!',
     role: 'NURSE',
     targetRoute: '/reviewer',
-    color: 'bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100',
   },
   {
     roleLabel: 'Patient (Hindi Speaking)',
@@ -33,7 +32,6 @@ const SYNTHETIC_DEMO_ACCOUNTS = [
     password: 'Password123!',
     role: 'PATIENT',
     targetRoute: '/patient',
-    color: 'bg-purple-50 border-purple-200 text-purple-800 hover:bg-purple-100',
   },
   {
     roleLabel: 'System Administrator',
@@ -41,11 +39,8 @@ const SYNTHETIC_DEMO_ACCOUNTS = [
     password: 'HospitalAdmin2026!',
     role: 'ADMIN',
     targetRoute: '/admin',
-    color: 'bg-slate-100 border-slate-300 text-slate-900 hover:bg-slate-200',
   },
 ];
-
-import { setAuthSession } from '@/lib/authSession';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -119,43 +114,45 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-center items-center p-4 relative">
-      <div className="absolute top-4 right-4 z-10">
+    <div className="min-h-screen bg-background text-foreground flex flex-col justify-center items-center p-4 relative transition-colors duration-300">
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
         <LanguageSelector variant="full" />
+        <ThemeToggle />
       </div>
 
       <div className="max-w-md w-full space-y-6">
         {/* Header Branding */}
         <div className="text-center space-y-2">
-          <Link href="/" className="inline-flex items-center space-x-2 text-slate-900 font-bold text-xl">
-            <div className="bg-blue-600 text-white p-2 rounded-xl">
-              <HeartPulse className="w-6 h-6" />
+          <Link href="/" className="inline-flex items-center space-x-2 text-foreground font-bold text-xl">
+            <div className="bg-primary text-primary-foreground p-2 rounded-xl border border-primary/40 shadow-sm">
+              <HeartPulse className="w-6 h-6 text-accent" />
             </div>
-            <span>MedicalTriage</span>
+            <span className="font-mono">MedicalTriage</span>
           </Link>
-          <p className="text-xs text-slate-500 font-medium">
+          <p className="text-xs text-muted-foreground font-medium">
             {t('auth.subtitle')}
           </p>
         </div>
 
         {/* Login Card */}
-        <Card className="border border-slate-200 shadow-sm bg-white">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-lg font-bold text-slate-900">{t('auth.title')}</CardTitle>
-            <CardDescription className="text-xs text-slate-500">
+        <div className="glass-panel rounded-2xl p-6 shadow-2xl space-y-5">
+          <div className="space-y-1">
+            <h2 className="text-lg font-bold text-foreground tracking-tight">{t('auth.title')}</h2>
+            <p className="text-xs text-muted-foreground">
               {t('auth.personaSubtitle')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+            </p>
+          </div>
+
+          <div className="space-y-4">
             {sessionExpiredNotice && !error && (
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-start space-x-2">
+              <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-xs text-amber-700 dark:text-amber-400 flex items-start space-x-2">
                 <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <span>Your session has expired. Please log in again to continue.</span>
               </div>
             )}
 
             {error && (
-              <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-800 flex items-start space-x-2">
+              <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-lg text-xs text-rose-700 dark:text-rose-400 flex items-start space-x-2">
                 <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
@@ -163,36 +160,36 @@ export default function LoginPage() {
 
             <form onSubmit={handleLogin} className="space-y-3">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700">{t('auth.email')}</label>
+                <label className="text-xs font-semibold text-foreground">{t('auth.email')}</label>
                 <div className="relative">
-                  <User className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  <User className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5" />
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-9 pr-3 py-2 text-sm border border-border bg-card/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-ring text-foreground"
                     placeholder="email@example.test"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700">{t('auth.password')}</label>
+                <label className="text-xs font-semibold text-foreground">{t('auth.password')}</label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  <Lock className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-9 pr-10 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-9 pr-10 py-2 text-sm border border-border bg-card/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-ring text-foreground"
                     placeholder="••••••••"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 focus:outline-none"
+                    className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground focus:outline-none"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -200,7 +197,11 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <Button type="submit" disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold">
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-2.5 shadow-md"
+              >
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <LogIn className="w-4 h-4 mr-2" />}
                 {t('auth.signIn')}
               </Button>
@@ -208,10 +209,12 @@ export default function LoginPage() {
 
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200" />
+                <div className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-slate-500 font-semibold">{t('auth.quickRoles')}</span>
+                <span className="glass-pill px-2.5 py-0.5 text-muted-foreground font-semibold text-[10px] font-mono">
+                  {t('auth.quickRoles')}
+                </span>
               </div>
             </div>
 
@@ -222,10 +225,10 @@ export default function LoginPage() {
                   key={idx}
                   type="button"
                   onClick={() => selectDemoAccount(acc)}
-                  className={`p-2.5 rounded-lg border text-left flex items-center justify-between text-xs transition-colors ${acc.color}`}
+                  className="glass-card p-2.5 rounded-lg text-left flex items-center justify-between text-xs transition-colors group cursor-pointer"
                 >
                   <div>
-                    <span className="font-bold block">
+                    <span className="font-bold block text-foreground group-hover:text-primary dark:group-hover:text-accent">
                       {acc.role === 'DOCTOR'
                         ? t('auth.doctorRole')
                         : acc.role === 'NURSE'
@@ -234,19 +237,20 @@ export default function LoginPage() {
                         ? t('auth.patientRole')
                         : t('auth.adminRole')}
                     </span>
-                    <span className="text-[10px] opacity-80">{acc.email}</span>
+                    <span className="text-[10px] text-muted-foreground">{acc.email}</span>
                   </div>
-                  <CheckCircle2 className="w-4 h-4 text-slate-600" />
+                  <CheckCircle2 className="w-4 h-4 text-muted-foreground group-hover:text-primary dark:group-hover:text-accent" />
                 </button>
               ))}
             </div>
-          </CardContent>
-          <CardFooter className="bg-slate-50 border-t border-slate-100 p-4 text-center">
-            <p className="text-xs text-slate-500 w-full">
+          </div>
+
+          <div className="pt-3 border-t border-border text-center">
+            <p className="text-[11px] text-muted-foreground">
               {t('auth.footerNotice')}
             </p>
-          </CardFooter>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

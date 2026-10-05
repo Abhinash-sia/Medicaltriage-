@@ -11,12 +11,15 @@ import {
   Building2,
   Trash2,
   Lock,
+  LogOut,
 } from 'lucide-react';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
 import { UserManagementPanel } from '@/components/admin/UserManagementPanel';
 import { FacilityManagementPanel } from '@/components/admin/FacilityManagementPanel';
 import { RetentionPurgePanel } from '@/components/admin/RetentionPurgePanel';
 import { NotificationBell } from '@/components/ui/NotificationBell';
+import { LanguageSelector } from '@/components/ui/LanguageSelector';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { DemoBanner } from '@/components/ui/DemoBanner';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -55,39 +58,55 @@ export default function AdminPage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
       <DemoBanner />
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur border-b border-slate-200 dark:border-slate-800 px-4 sm:px-8 py-3 flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-card/85 backdrop-blur-md border-b border-border px-4 sm:px-8 py-3 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-4">
           <Link
             href="/reviewer"
-            className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-1.5 text-xs font-medium"
+            className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-xs font-medium transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             {t('admin.reviewerQueueLink')}
           </Link>
-          <div className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
+          <div className="h-4 w-px bg-border" />
           <div className="flex items-center gap-2">
-            <ShieldAlert className="w-5 h-5 text-blue-600" />
-            <h1 className="text-base font-bold tracking-tight">{t('admin.dashboardTitle')}</h1>
+            <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center border border-primary/20">
+              <ShieldAlert className="w-4 h-4" />
+            </div>
+            <h1 className="text-sm sm:text-base font-bold tracking-tight text-foreground">{t('admin.dashboardTitle')}</h1>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          <LanguageSelector variant="compact" />
+          <ThemeToggle />
           <NotificationBell />
           {currentUserRole && (
-            <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+            <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border">
               {t('admin.roleLabel')}: {currentUserRole}
             </span>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              clearAuthSession();
+              router.push('/login');
+            }}
+            className="text-xs text-muted-foreground hover:text-destructive hover:border-destructive/30 hover:bg-destructive/10"
+            title="Logout"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+          </Button>
         </div>
       </header>
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
         {/* Navigation Tabs */}
-        <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+        <div className="flex flex-wrap items-center gap-2 border-b border-border pb-2">
           <Button
             variant={activeTab === 'dashboard' ? 'default' : 'ghost'}
             size="sm"
@@ -134,7 +153,7 @@ export default function AdminPage() {
       </main>
 
       {/* Footer Disclaimer */}
-      <footer className="border-t border-slate-200 dark:border-slate-800 px-4 py-4 text-center text-xs text-slate-400 bg-white dark:bg-slate-900">
+      <footer className="border-t border-border px-4 py-4 text-center text-xs text-muted-foreground bg-card/60">
         {t('landing.footerDisclaimer')}
       </footer>
     </div>

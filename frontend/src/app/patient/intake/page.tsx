@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { DemoBanner } from '@/components/ui/DemoBanner';
 import { LanguageSelector } from '@/components/ui/LanguageSelector';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { AudioWaveformRecorder } from '@/components/intake/AudioWaveformRecorder';
 import { DocumentDropzone } from '@/components/intake/DocumentDropzone';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -241,7 +242,10 @@ export default function PatientIntakePage() {
               <ChevronLeft className="w-3.5 h-3.5 mr-1" />
               <span>{t('patient.backToDashboard')}</span>
             </Link>
-            <LanguageSelector />
+            <div className="flex items-center gap-2">
+              <LanguageSelector />
+              <ThemeToggle />
+            </div>
           </div>
 
           {/* Header Branding */}

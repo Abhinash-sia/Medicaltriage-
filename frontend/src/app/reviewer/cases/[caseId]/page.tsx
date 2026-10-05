@@ -33,6 +33,8 @@ import {
 import { ReferralHistoryView } from '@/components/reviewer/ReferralHistoryView';
 import { AuditTrailModal } from '@/components/reviewer/AuditTrailModal';
 import { DemoBanner } from '@/components/ui/DemoBanner';
+import { LanguageSelector } from '@/components/ui/LanguageSelector';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { clearAuthSession } from '@/lib/authSession';
 
@@ -1073,10 +1075,10 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center space-y-3">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-indigo-600" />
-          <p className="text-xs text-slate-600 font-medium">{t('common.loading')}</p>
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+          <p className="text-xs text-muted-foreground font-medium">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -1084,18 +1086,18 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
 
   if (error || !caseDetails) {
     return (
-      <div className="min-h-screen bg-slate-50 py-10 px-4">
+      <div className="min-h-screen bg-background py-10 px-4">
         <div className="max-w-2xl mx-auto space-y-4">
           <Link href="/reviewer">
             <Button variant="outline" size="sm" className="text-xs">
               <ChevronLeft className="w-4 h-4 mr-1" /> {t('common.back')}
             </Button>
           </Link>
-          <Card className="bg-white border-red-200">
+          <Card className="bg-card border-destructive/30">
             <CardHeader className="text-center">
-              <AlertCircle className="w-10 h-10 text-red-500 mx-auto mb-2" />
-              <CardTitle className="text-base text-slate-900">{t('common.error')}</CardTitle>
-              <CardDescription className="text-xs text-slate-600">
+              <AlertCircle className="w-10 h-10 text-destructive mx-auto mb-2" />
+              <CardTitle className="text-base text-foreground">{t('common.error')}</CardTitle>
+              <CardDescription className="text-xs text-muted-foreground">
                 {error || 'Unable to retrieve case details.'}
               </CardDescription>
             </CardHeader>
@@ -1109,15 +1111,15 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
   const isAdmin = currentUserRole === 'ADMIN';
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans flex flex-col">
+    <div className="min-h-screen bg-background text-foreground font-sans flex flex-col">
       <DemoBanner />
       <div className="py-8 px-4 sm:px-6 lg:px-8 flex-1">
         <div className="max-w-4xl mx-auto space-y-6">
         {/* Navigation & Case Reference */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center space-x-2">
             <Link href="/reviewer">
-              <Button variant="outline" size="sm" className="text-xs bg-white text-slate-700 border-slate-300">
+              <Button variant="outline" size="sm" className="text-xs bg-card text-foreground border-border hover:bg-muted">
                 <ChevronLeft className="w-4 h-4 mr-1" /> {t('common.back')} - {t('reviewer.queueTitle')}
               </Button>
             </Link>
@@ -1125,30 +1127,32 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
               variant="outline"
               size="sm"
               onClick={() => setIsAuditTrailOpen(true)}
-              className="text-xs bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
+              className="text-xs bg-card text-foreground border-border hover:bg-muted"
             >
-              <History className="w-4 h-4 mr-1 text-indigo-600" /> Case Audit Trail
+              <History className="w-4 h-4 mr-1 text-primary" /> Case Audit Trail
             </Button>
           </div>
           <div className="flex items-center space-x-2">
-            <Badge variant="outline" className="bg-indigo-50 text-indigo-800 border-indigo-200 font-mono text-xs">
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-mono text-xs">
               {caseDetails.caseNumber}
             </Badge>
             <Badge
               variant="outline"
               className={
                 caseDetails.status === 'OPEN'
-                  ? 'bg-blue-50 text-blue-700 border-blue-200'
-                  : 'bg-purple-50 text-purple-700 border-purple-200'
+                  ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
+                  : 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
               }
             >
               {caseDetails.status}
             </Badge>
+            <LanguageSelector variant="compact" />
+            <ThemeToggle />
           </div>
         </div>
 
         {/* Persistent Safety Disclaimer */}
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-900 text-xs flex items-start space-x-3 shadow-sm">
+        <div className="p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-950 dark:text-amber-200 text-xs flex items-start space-x-3 shadow-xs">
           <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="space-y-1">
             <p className="font-semibold">Healthcare Staff Review Disclaimer:</p>

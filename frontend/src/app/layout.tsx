@@ -26,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`h-full ${instrumentSans.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`h-full ${instrumentSans.variable} ${jetbrainsMono.variable}`}>
       <body className="font-sans antialiased h-full text-foreground bg-background selection:bg-accent/20">
         <Providers>{children}</Providers>
       </body>

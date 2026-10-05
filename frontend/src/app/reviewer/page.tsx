@@ -27,9 +27,12 @@ import {
   Filter,
   CheckCircle2,
   AlertTriangle,
+  LogOut,
 } from 'lucide-react';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { DemoBanner } from '@/components/ui/DemoBanner';
+import { LanguageSelector } from '@/components/ui/LanguageSelector';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { getAccessToken, clearAuthSession } from '@/lib/authSession';
 import { gsap, Flip, MOTION, withMotion } from '@/lib/motion';
@@ -334,6 +337,8 @@ export default function ReviewerQueuePage() {
             </div>
 
             <div className="flex items-center gap-2">
+              <LanguageSelector />
+              <ThemeToggle />
               <NotificationBell />
 
               {currentUserRole === 'ADMIN' && (
@@ -371,6 +376,19 @@ export default function ReviewerQueuePage() {
               >
                 <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${isLoading ? 'animate-spin' : ''}`} />
                 {t('reviewer.refreshQueue')}
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  clearAuthSession();
+                  router.push('/login');
+                }}
+                className="text-xs text-muted-foreground hover:text-destructive hover:border-destructive/30 hover:bg-destructive/10"
+                title="Logout"
+              >
+                <LogOut className="w-3.5 h-3.5" />
               </Button>
             </div>
           </div>
