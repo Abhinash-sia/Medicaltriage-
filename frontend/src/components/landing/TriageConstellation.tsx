@@ -26,19 +26,19 @@ export function TriageConstellation() {
     // Scene, Camera, Renderer
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 1000);
-    camera.position.z = 80;
+    camera.position.z = 75;
 
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
-      antialias: true,
+      antialias: false, // Turn off heavy antialias on low-power devices
       powerPreference: 'high-performance',
     });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    renderer.setPixelRatio(1); // Lock to 1x to avoid 4K GPU fill-rate throttling
     container.appendChild(renderer.domElement);
 
-    // Optimized Particle Count (50 nodes is ultra-lightweight & silky smooth)
-    const particleCount = 50;
+    // Ultra-optimized particle count
+    const particleCount = 30;
     const positions = new Float32Array(particleCount * 3);
     const velocities: { x: number; y: number; z: number }[] = [];
     const colors = new Float32Array(particleCount * 3);
@@ -64,13 +64,13 @@ export function TriageConstellation() {
 
     for (let i = 0; i < particleCount; i++) {
       const i3 = i * 3;
-      positions[i3] = (Math.random() - 0.5) * 105;
-      positions[i3 + 1] = (Math.random() - 0.5) * 65;
-      positions[i3 + 2] = (Math.random() - 0.5) * 40;
+      positions[i3] = (Math.random() - 0.5) * 95;
+      positions[i3 + 1] = (Math.random() - 0.5) * 60;
+      positions[i3 + 2] = (Math.random() - 0.5) * 35;
 
       velocities.push({
-        x: (Math.random() - 0.5) * 0.03,
-        y: (Math.random() - 0.5) * 0.03,
+        x: (Math.random() - 0.5) * 0.025,
+        y: (Math.random() - 0.5) * 0.025,
         z: (Math.random() - 0.5) * 0.015,
       });
     }
@@ -79,19 +79,18 @@ export function TriageConstellation() {
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
-    // Particle sprite using canvas
+    // Simple particle sprite
     const canvas = document.createElement('canvas');
-    canvas.width = 32;
-    canvas.height = 32;
+    canvas.width = 16;
+    canvas.height = 16;
     const ctx = canvas.getContext('2d');
     if (ctx) {
-      const grad = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+      const grad = ctx.createRadialGradient(8, 8, 0, 8, 8, 8);
       grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-      grad.addColorStop(0.35, 'rgba(56, 217, 200, 0.8)');
-      grad.addColorStop(0.7, 'rgba(15, 111, 115, 0.2)');
+      grad.addColorStop(0.4, 'rgba(56, 217, 200, 0.8)');
       grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 32, 32);
+      ctx.fillRect(0, 0, 16, 16);
     }
     const texture = new THREE.CanvasTexture(canvas);
 
@@ -100,15 +99,15 @@ export function TriageConstellation() {
       vertexColors: true,
       map: texture,
       transparent: true,
-      opacity: isCurrentlyDark ? 0.85 : 0.65,
+      opacity: isCurrentlyDark ? 0.8 : 0.6,
       depthWrite: false,
     });
 
     const points = new THREE.Points(geometry, pointsMaterial);
     scene.add(points);
 
-    // Dynamic Connections (Lines)
-    const maxLineConnections = 180;
+    // Connections (Lines)
+    const maxLineConnections = 80;
     const linePositions = new Float32Array(maxLineConnections * 6);
     const lineColors = new Float32Array(maxLineConnections * 6);
     const linesGeometry = new THREE.BufferGeometry();
@@ -118,7 +117,7 @@ export function TriageConstellation() {
     const lineMat = new THREE.LineBasicMaterial({
       vertexColors: true,
       transparent: true,
-      opacity: isCurrentlyDark ? 0.35 : 0.25,
+      opacity: isCurrentlyDark ? 0.3 : 0.2,
       depthWrite: false,
     });
     const lines = new THREE.LineSegments(linesGeometry, lineMat);
@@ -131,26 +130,10 @@ export function TriageConstellation() {
       if (geometry.attributes.color) {
         geometry.attributes.color.needsUpdate = true;
       }
-      pointsMaterial.opacity = dark ? 0.85 : 0.65;
-      lineMat.opacity = dark ? 0.35 : 0.25;
+      pointsMaterial.opacity = dark ? 0.8 : 0.6;
+      lineMat.opacity = dark ? 0.3 : 0.2;
     });
     themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-
-    // Mouse Parallax
-    let mouseX = 0;
-    let mouseY = 0;
-    let targetX = 0;
-    let targetY = 0;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = container.getBoundingClientRect();
-      const clientX = e.clientX - rect.left;
-      const clientY = e.clientY - rect.top;
-      mouseX = (clientX / rect.width - 0.5) * 2;
-      mouseY = -(clientY / rect.height - 0.5) * 2;
-    };
-
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
 
     // Handle Resize
     const handleResize = () => {
@@ -162,17 +145,19 @@ export function TriageConstellation() {
       renderer.setSize(w, h);
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResize, { passive: true });
 
     // Animation Loop
     let animationFrameId: number;
     let clock = new THREE.Clock();
+    let frameCount = 0;
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
 
       if (!isVisible) return; // Skip compute when offscreen
 
+      frameCount++;
       const delta = clock.getDelta();
       const posAttr = geometry.attributes.position as THREE.BufferAttribute;
       const posArray = posAttr.array as Float32Array;
@@ -184,80 +169,74 @@ export function TriageConstellation() {
         posArray[i3 + 1] += velocities[i].y;
         posArray[i3 + 2] += velocities[i].z;
 
-        if (Math.abs(posArray[i3]) > 52) velocities[i].x *= -1;
-        if (Math.abs(posArray[i3 + 1]) > 35) velocities[i].y *= -1;
-        if (Math.abs(posArray[i3 + 2]) > 22) velocities[i].z *= -1;
+        if (Math.abs(posArray[i3]) > 48) velocities[i].x *= -1;
+        if (Math.abs(posArray[i3 + 1]) > 30) velocities[i].y *= -1;
+        if (Math.abs(posArray[i3 + 2]) > 18) velocities[i].z *= -1;
       }
       posAttr.needsUpdate = true;
 
-      // Update Connections
-      let lineIndex = 0;
-      const connectionDist = 19;
-      const darkNow = document.documentElement.classList.contains('dark');
+      // Update Connections every 2nd frame to save 50% line compute
+      if (frameCount % 2 === 0) {
+        let lineIndex = 0;
+        const connectionDist = 20;
+        const darkNow = document.documentElement.classList.contains('dark');
 
-      for (let i = 0; i < particleCount; i++) {
-        for (let j = i + 1; j < particleCount; j++) {
-          if (lineIndex >= maxLineConnections) break;
+        for (let i = 0; i < particleCount; i++) {
+          for (let j = i + 1; j < particleCount; j++) {
+            if (lineIndex >= maxLineConnections) break;
 
-          const dx = posArray[i * 3] - posArray[j * 3];
-          const dy = posArray[i * 3 + 1] - posArray[j * 3 + 1];
-          const dz = posArray[i * 3 + 2] - posArray[j * 3 + 2];
-          const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            const dx = posArray[i * 3] - posArray[j * 3];
+            const dy = posArray[i * 3 + 1] - posArray[j * 3 + 1];
+            const dz = posArray[i * 3 + 2] - posArray[j * 3 + 2];
+            const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-          if (dist < connectionDist) {
-            const alpha = 1.0 - dist / connectionDist;
-            const li = lineIndex * 6;
+            if (dist < connectionDist) {
+              const alpha = 1.0 - dist / connectionDist;
+              const li = lineIndex * 6;
 
-            linePositions[li] = posArray[i * 3];
-            linePositions[li + 1] = posArray[i * 3 + 1];
-            linePositions[li + 2] = posArray[i * 3 + 2];
+              linePositions[li] = posArray[i * 3];
+              linePositions[li + 1] = posArray[i * 3 + 1];
+              linePositions[li + 2] = posArray[i * 3 + 2];
 
-            linePositions[li + 3] = posArray[j * 3];
-            linePositions[li + 4] = posArray[j * 3 + 1];
-            linePositions[li + 5] = posArray[j * 3 + 2];
+              linePositions[li + 3] = posArray[j * 3];
+              linePositions[li + 4] = posArray[j * 3 + 1];
+              linePositions[li + 5] = posArray[j * 3 + 2];
 
-            if (darkNow) {
-              lineColors[li] = 0.22 * alpha;
-              lineColors[li + 1] = 0.85 * alpha;
-              lineColors[li + 2] = 0.78 * alpha;
+              if (darkNow) {
+                lineColors[li] = 0.22 * alpha;
+                lineColors[li + 1] = 0.85 * alpha;
+                lineColors[li + 2] = 0.78 * alpha;
 
-              lineColors[li + 3] = 0.06 * alpha;
-              lineColors[li + 4] = 0.43 * alpha;
-              lineColors[li + 5] = 0.45 * alpha;
-            } else {
-              lineColors[li] = 0.06 * alpha;
-              lineColors[li + 1] = 0.43 * alpha;
-              lineColors[li + 2] = 0.45 * alpha;
+                lineColors[li + 3] = 0.06 * alpha;
+                lineColors[li + 4] = 0.43 * alpha;
+                lineColors[li + 5] = 0.45 * alpha;
+              } else {
+                lineColors[li] = 0.06 * alpha;
+                lineColors[li + 1] = 0.43 * alpha;
+                lineColors[li + 2] = 0.45 * alpha;
 
-              lineColors[li + 3] = 0.35 * alpha;
-              lineColors[li + 4] = 0.43 * alpha;
-              lineColors[li + 5] = 0.46 * alpha;
+                lineColors[li + 3] = 0.35 * alpha;
+                lineColors[li + 4] = 0.43 * alpha;
+                lineColors[li + 5] = 0.46 * alpha;
+              }
+
+              lineIndex++;
             }
-
-            lineIndex++;
           }
         }
+
+        for (let k = lineIndex * 6; k < maxLineConnections * 6; k++) {
+          linePositions[k] = 0;
+          lineColors[k] = 0;
+        }
+
+        linesGeometry.attributes.position.needsUpdate = true;
+        linesGeometry.attributes.color.needsUpdate = true;
+        linesGeometry.setDrawRange(0, lineIndex * 2);
       }
 
-      for (let k = lineIndex * 6; k < maxLineConnections * 6; k++) {
-        linePositions[k] = 0;
-        lineColors[k] = 0;
-      }
-
-      linesGeometry.attributes.position.needsUpdate = true;
-      linesGeometry.attributes.color.needsUpdate = true;
-      linesGeometry.setDrawRange(0, lineIndex * 2);
-
-      // Parallax easing
-      targetX += (mouseX * 8 - targetX) * 0.04;
-      targetY += (mouseY * 5 - targetY) * 0.04;
-
-      camera.position.x = targetX;
-      camera.position.y = targetY;
-      camera.lookAt(0, 0, 0);
-
-      scene.rotation.y += delta * 0.02;
-      scene.rotation.x += delta * 0.01;
+      scene.rotation.y += delta * 0.015;
+      scene.rotation.x += delta * 0.008;
 
       renderer.render(scene, camera);
     };
@@ -268,7 +247,6 @@ export function TriageConstellation() {
       observerIntersection.disconnect();
       themeObserver.disconnect();
       cancelAnimationFrame(animationFrameId);
-      window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('resize', handleResize);
       if (container && renderer.domElement) {
         container.removeChild(renderer.domElement);
@@ -285,7 +263,7 @@ export function TriageConstellation() {
   return (
     <div
       ref={mountRef}
-      className="absolute inset-0 pointer-events-none z-0 opacity-70 dark:opacity-80 overflow-hidden"
+      className="absolute inset-0 pointer-events-none z-0 opacity-60 dark:opacity-75 overflow-hidden will-change-transform"
       aria-hidden="true"
     />
   );

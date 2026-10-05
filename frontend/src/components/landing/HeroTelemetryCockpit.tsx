@@ -7,16 +7,19 @@ import {
   Sparkles,
   ShieldCheck,
   Volume2,
-  FileCheck2,
-  Stethoscope,
   Clock,
   CheckCircle2,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 export function HeroTelemetryCockpit() {
+  const { language } = useLanguage();
   const [pulse, setPulse] = useState(72);
   const [spo2, setSpo2] = useState(98);
+
+  const isHindi = language === 'hi';
+  const isOdia = language === 'or';
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -39,12 +42,16 @@ export function HeroTelemetryCockpit() {
             <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
           </div>
           <div>
-            <div className="font-mono text-xs font-bold text-foreground">LIVE CLINICAL WORKSPACE</div>
-            <div className="font-mono text-[10px] text-muted-foreground">ODISHA EMERGENCY NETWORK • NODE #442</div>
+            <div className="font-mono text-xs font-bold text-foreground">
+              {isOdia ? 'ସକ୍ରିୟ କ୍ଲିନିକାଲ୍‌ କାର୍ଯ୍ୟକ୍ଷେତ୍ର' : isHindi ? 'सक्रिय नैदानिक कार्यक्षेत्र' : 'LIVE CLINICAL WORKSPACE'}
+            </div>
+            <div className="font-mono text-[10px] text-muted-foreground">
+              {isOdia ? 'ଓଡ଼ିଶା ଜରୁରୀକାଳୀନ ନେଟୱାର୍କ • ନୋଡ୍‌ #୪୪୨' : isHindi ? 'आपातकालीन नेटवर्क • नोड #442' : 'ODISHA EMERGENCY NETWORK • NODE #442'}
+            </div>
           </div>
         </div>
         <Badge variant="outline" className="glass-pill font-mono text-[10px] text-primary dark:text-accent">
-          ESTABLISHED 24/7
+          {isOdia ? '୨୪/୭ ସକ୍ରିୟ' : isHindi ? '24/7 सक्रिय' : 'ESTABLISHED 24/7'}
         </Badge>
       </div>
 
@@ -53,7 +60,7 @@ export function HeroTelemetryCockpit() {
         <div className="flex items-center justify-between text-xs font-mono">
           <span className="text-muted-foreground flex items-center gap-1.5">
             <Volume2 className="w-3.5 h-3.5 text-primary dark:text-accent" />
-            Audio Stream (Odia / Hindi / English)
+            {isOdia ? 'ଭଏସ୍‌ ଷ୍ଟ୍ରିମ୍‌ (ଓଡ଼ିଆ / ହିନ୍ଦୀ / ଇଂରାଜୀ)' : isHindi ? 'ऑडियो स्ट्रीम (हिंदी / ओडिया / अंग्रेजी)' : 'Audio Stream (Odia / Hindi / English)'}
           </span>
           <span className="text-emerald-600 dark:text-emerald-400 font-semibold">16kHz Ingesting</span>
         </div>
@@ -79,7 +86,7 @@ export function HeroTelemetryCockpit() {
       <div className="grid grid-cols-3 gap-3">
         <div className="glass-card p-3 rounded-xl space-y-1">
           <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground">
-            <span>HEART RATE</span>
+            <span>{isOdia ? 'ହୃଦସ୍ପନ୍ଦନ' : isHindi ? 'हृदय गति' : 'HEART RATE'}</span>
             <Activity className="w-3 h-3 text-rose-500" />
           </div>
           <div className="text-lg font-mono font-bold text-foreground tabular-nums">{pulse} <span className="text-xs font-normal text-muted-foreground">bpm</span></div>
@@ -87,7 +94,7 @@ export function HeroTelemetryCockpit() {
 
         <div className="glass-card p-3 rounded-xl space-y-1">
           <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground">
-            <span>SpO2 OXYGEN</span>
+            <span>{isOdia ? 'ଅମ୍ଳଜାନ SpO2' : isHindi ? 'ऑक्सीजन SpO2' : 'SpO2 OXYGEN'}</span>
             <Sparkles className="w-3 h-3 text-sky-500" />
           </div>
           <div className="text-lg font-mono font-bold text-foreground tabular-nums">{spo2}% <span className="text-xs font-normal text-muted-foreground">Room Air</span></div>
@@ -95,7 +102,7 @@ export function HeroTelemetryCockpit() {
 
         <div className="glass-card p-3 rounded-xl space-y-1">
           <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground">
-            <span>SLA TIMER</span>
+            <span>{isOdia ? 'SLA ଟାଇମର୍‌' : isHindi ? 'SLA टाइमर' : 'SLA TIMER'}</span>
             <Clock className="w-3 h-3 text-primary dark:text-accent" />
           </div>
           <div className="text-lg font-mono font-bold text-foreground tabular-nums">14:52 <span className="text-xs font-normal text-muted-foreground">min</span></div>
@@ -106,11 +113,13 @@ export function HeroTelemetryCockpit() {
       <div className="glass-pill flex items-center justify-between p-3 rounded-xl">
         <div className="flex items-center space-x-2">
           <ShieldCheck className="w-4 h-4 text-primary dark:text-accent shrink-0" />
-          <span className="text-xs font-mono font-semibold text-foreground">22 Clinical Rules Guardrail</span>
+          <span className="text-xs font-mono font-semibold text-foreground">
+            {isOdia ? '୨୨-ନିୟମ ସୁରକ୍ଷା ଗାର୍ଡରେଲ୍‌' : isHindi ? '22 नैदानिक नियम सुरक्षा' : '22 Clinical Rules Guardrail'}
+          </span>
         </div>
         <span className="text-xs font-mono text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
           <CheckCircle2 className="w-3.5 h-3.5" />
-          Zero Violations
+          {isOdia ? 'ସମ୍ପୂର୍ଣ୍ଣ ସୁରକ୍ଷିତ' : isHindi ? 'शून्य उल्लंघन' : 'Zero Violations'}
         </span>
       </div>
     </div>
