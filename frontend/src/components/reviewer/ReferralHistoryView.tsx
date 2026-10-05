@@ -58,66 +58,66 @@ export const ReferralHistoryView: React.FC<ReferralHistoryViewProps> = ({ caseId
   }, [caseId, authToken]);
 
   if (loading) {
-    return <div className="text-slate-400 text-sm py-4">Loading referral history...</div>;
+    return <div className="text-muted-foreground text-xs py-4">Loading referral history...</div>;
   }
 
   if (error) {
-    return <div className="text-rose-400 text-sm py-2">Note: {error}</div>;
+    return <div className="text-destructive text-xs py-2">Note: {error}</div>;
   }
 
   if (referrals.length === 0) {
-    return <div className="text-slate-500 text-sm py-2 italic">No referrals recorded for this case.</div>;
+    return <div className="text-muted-foreground text-xs py-2 italic">No referrals recorded for this case.</div>;
   }
 
   return (
     <div className="space-y-4">
       {referrals.map((ref) => (
-        <div key={ref.id} className="p-4 bg-slate-900/60 rounded-lg border border-slate-700/60 text-sm space-y-2">
+        <div key={ref.id} className="p-4 glass-card rounded-lg border border-border text-sm space-y-2">
           <div className="flex items-center justify-between">
-            <span className="font-mono text-cyan-400 font-semibold">{ref.referralCode}</span>
+            <span className="font-mono text-primary font-semibold text-xs">{ref.referralCode}</span>
             <span
               className={`px-2 py-0.5 text-xs rounded font-medium ${
                 ref.status === 'ACCEPTED'
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
                   : ref.status === 'COMPLETED'
-                  ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                  ? 'bg-primary/10 text-primary border border-primary/20'
                   : ref.status === 'REJECTED' || ref.status === 'CANCELLED'
-                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                  : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                  ? 'bg-destructive/15 text-destructive border border-destructive/30'
+                  : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30'
               }`}
             >
               {ref.status}
             </span>
           </div>
 
-          <div className="text-slate-300 grid grid-cols-2 gap-2 text-xs">
+          <div className="text-foreground grid grid-cols-2 gap-2 text-xs">
             <div>
-              <span className="text-slate-500">From:</span> {ref.originatingFacilityId}
+              <span className="text-muted-foreground">From:</span> {ref.originatingFacilityId}
             </div>
             <div>
-              <span className="text-slate-500">To:</span> {ref.destinationFacilityId}{' '}
+              <span className="text-muted-foreground">To:</span> {ref.destinationFacilityId}{' '}
               {ref.destinationDepartment ? `(${ref.destinationDepartment})` : ''}
             </div>
             <div>
-              <span className="text-slate-500">Referring Reviewer:</span> {ref.referringReviewerName} ({ref.referringReviewerRole})
+              <span className="text-muted-foreground">Referring Reviewer:</span> {ref.referringReviewerName} ({ref.referringReviewerRole})
             </div>
             <div>
-              <span className="text-slate-500">Date:</span> {new Date(ref.createdAt).toLocaleDateString()}
+              <span className="text-muted-foreground">Date:</span> {new Date(ref.createdAt).toLocaleDateString()}
             </div>
           </div>
 
-          <div className="pt-2 border-t border-slate-800 text-slate-300">
-            <div className="font-medium text-xs text-slate-400">Reason:</div>
-            <p className="text-xs text-slate-200 mt-0.5">{ref.reason}</p>
+          <div className="pt-2 border-t border-border text-foreground">
+            <div className="font-medium text-xs text-muted-foreground">Reason:</div>
+            <p className="text-xs text-foreground mt-0.5">{ref.reason}</p>
           </div>
 
-          <div className="text-slate-300">
-            <div className="font-medium text-xs text-slate-400">Summary:</div>
-            <p className="text-xs text-slate-200 mt-0.5">{ref.summary}</p>
+          <div className="text-foreground">
+            <div className="font-medium text-xs text-muted-foreground">Summary:</div>
+            <p className="text-xs text-foreground mt-0.5">{ref.summary}</p>
           </div>
 
           {ref.destinationNotes && (
-            <div className="p-2 bg-slate-800/80 rounded text-xs text-emerald-300 mt-2">
+            <div className="p-2 bg-muted/50 rounded text-xs text-emerald-600 dark:text-emerald-400 mt-2 border border-border">
               <span className="font-semibold">Destination Response:</span> {ref.destinationNotes}
             </div>
           )}

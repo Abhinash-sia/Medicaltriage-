@@ -263,7 +263,7 @@ export function TriageConstellation() {
   return (
     <div
       ref={mountRef}
-      className="absolute inset-0 pointer-events-none z-0 opacity-60 dark:opacity-75 overflow-hidden will-change-transform"
+      className="absolute inset-0 pointer-events-none -z-10 opacity-25 dark:opacity-40 overflow-hidden will-change-transform"
       aria-hidden="true"
     />
   );
