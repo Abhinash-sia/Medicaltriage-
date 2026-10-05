@@ -5,25 +5,25 @@
 
 @layer base {
   :root {
-    --background: 195 20% 96%;        /* #F2F6F7 */
-    --foreground: 196 38% 8%;         /* #0C171B */
-    --card: 0 0% 100%;                /* #FFFFFF */
-    --card-foreground: 196 38% 8%;    /* #0C171B */
-    --popover: 0 0% 100%;             /* #FFFFFF */
-    --popover-foreground: 196 38% 8%; /* #0C171B */
-    --primary: 182 77% 25%;           /* #0F6F73 - deep teal */
-    --primary-foreground: 0 0% 100%;  /* #FFFFFF */
-    --secondary: 193 18% 91%;         /* #E2EBED */
-    --secondary-foreground: 196 38% 8%;
-    --muted: 193 18% 91%;
-    --muted-foreground: 195 13% 41%;  /* #5B6F76 */
-    --accent: 173 68% 54%;            /* #38D9C8 - ice */
-    --accent-foreground: 196 38% 8%;
-    --destructive: 356 66% 55%;       /* #D93C45 - urgent red */
+    --background: 48 18% 95%;        /* #F6F5F1 - Warm Alabaster */
+    --foreground: 223 44% 10%;       /* #0E1424 - Oxford Midnight */
+    --card: 0 0% 100%;              /* #FFFFFF */
+    --card-foreground: 223 44% 10%;  /* #0E1424 */
+    --popover: 0 0% 100%;           /* #FFFFFF */
+    --popover-foreground: 223 44% 10%;
+    --primary: 223 55% 24%;         /* #1B2E5E - Deep Oxford Navy */
+    --primary-foreground: 48 18% 95%;/* #F6F5F1 */
+    --secondary: 47 19% 90%;        /* Sandstone Tint */
+    --secondary-foreground: 223 44% 10%;
+    --muted: 47 19% 90%;
+    --muted-foreground: 223 13% 42%;/* #5E667A - Slate Navy */
+    --accent: 43 35% 42%;           /* #8F7A45 - Antique Brass / Gold */
+    --accent-foreground: 48 18% 95%;
+    --destructive: 356 66% 55%;     /* #D93C45 - Urgent Crimson */
     --destructive-foreground: 0 0% 100%;
-    --border: 193 18% 88%;            /* #D9E3E6 */
-    --input: 193 18% 88%;
-    --ring: 173 68% 54%;              /* #38D9C8 - ice focus ring */
+    --border: 45 16% 87%;           /* #E3E0D6 - Sandstone Border */
+    --input: 45 16% 87%;
+    --ring: 43 35% 42%;             /* #8F7A45 */
     --radius: 0.375rem;
 
     /* Semantic Urgency Tokens */
@@ -33,25 +33,25 @@
   }
 
   .dark {
-    --background: 200 33% 5%;         /* #090F12 */
-    --foreground: 192 23% 92%;        /* #E6EEF0 */
-    --card: 200 30% 8%;               /* #0F181C */
-    --card-foreground: 192 23% 92%;   /* #E6EEF0 */
-    --popover: 200 30% 8%;
-    --popover-foreground: 192 23% 92%;
-    --primary: 173 68% 54%;           /* #38D9C8 - ice */
-    --primary-foreground: 200 33% 5%; /* #090F12 */
-    --secondary: 198 30% 12%;         /* #152227 */
-    --secondary-foreground: 192 23% 92%;
-    --muted: 198 30% 12%;
-    --muted-foreground: 195 12% 55%;  /* #7E9299 */
-    --accent: 173 70% 69%;            /* #7AE8DC */
-    --accent-foreground: 200 33% 5%;
-    --destructive: 356 66% 55%;       /* #D93C45 */
+    --background: 223 52% 8%;        /* #0A1020 - Celestial Midnight */
+    --foreground: 225 24% 94%;       /* #EDEFF5 - Soft Ice */
+    --card: 221 45% 12%;            /* #111A2E - Deep Navy Card */
+    --card-foreground: 225 24% 94%;  /* #EDEFF5 */
+    --popover: 221 45% 12%;
+    --popover-foreground: 225 24% 94%;
+    --primary: 223 51% 37%;         /* #2F4B8F - Royal Cobalt */
+    --primary-foreground: 225 24% 94%;/* #EDEFF5 */
+    --secondary: 221 45% 17%;       /* #17233D */
+    --secondary-foreground: 225 24% 94%;
+    --muted: 221 45% 17%;
+    --muted-foreground: 221 18% 60%;/* #8591AB */
+    --accent: 42 43% 64%;           /* #C9B27C - Luminous Champagne Gold */
+    --accent-foreground: 223 52% 8%;/* #0A1020 */
+    --destructive: 356 66% 55%;     /* #D93C45 */
     --destructive-foreground: 0 0% 100%;
-    --border: 198 27% 15%;            /* #1C2B31 */
-    --input: 198 27% 15%;
-    --ring: 173 68% 54%;
+    --border: 221 38% 20%;          /* #1F2B45 - Deep Navy Border */
+    --input: 221 38% 20%;
+    --ring: 42 43% 64%;             /* #C9B27C */
     --radius: 0.375rem;
 
     /* Semantic Urgency Tokens */
@@ -93,59 +93,59 @@
 
 /* High-Performance Hardware-Accelerated Glassmorphism */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.78);
+  background: rgba(246, 245, 241, 0.85);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(217, 227, 230, 0.85);
-  box-shadow: 0 4px 20px -2px rgba(12, 23, 27, 0.05);
+  border: 1px solid rgba(227, 224, 214, 0.9);
+  box-shadow: 0 4px 20px -2px rgba(14, 20, 36, 0.05);
   transform: translateZ(0);
 }
 
 .dark .glass-panel {
-  background: rgba(12, 23, 27, 0.75);
+  background: rgba(17, 26, 46, 0.8);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(31, 43, 69, 0.9);
   box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
   transform: translateZ(0);
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(217, 227, 230, 0.8);
-  box-shadow: 0 2px 12px -1px rgba(12, 23, 27, 0.04);
+  border: 1px solid rgba(227, 224, 214, 0.85);
+  box-shadow: 0 2px 12px -1px rgba(14, 20, 36, 0.04);
   transform: translateZ(0);
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .glass-card:hover {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: rgba(15, 111, 115, 0.4);
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(27, 46, 94, 0.4);
   transform: translateY(-2px) translateZ(0);
 }
 
 .dark .glass-card {
-  background: rgba(15, 24, 28, 0.7);
+  background: rgba(17, 26, 46, 0.7);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(31, 43, 69, 0.8);
   box-shadow: 0 2px 12px -1px rgba(0, 0, 0, 0.3);
   transform: translateZ(0);
 }
 
 .dark .glass-card:hover {
-  background: rgba(21, 34, 39, 0.85);
-  border-color: rgba(56, 217, 200, 0.4);
+  background: rgba(23, 35, 61, 0.85);
+  border-color: rgba(201, 178, 124, 0.45);
   transform: translateY(-2px) translateZ(0);
 }
 
 .glass-pill {
-  background: rgba(255, 255, 255, 0.65);
+  background: rgba(246, 245, 241, 0.75);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  border: 1px solid rgba(217, 227, 230, 0.7);
+  border: 1px solid rgba(227, 224, 214, 0.75);
   transform: translateZ(0);
 }
 

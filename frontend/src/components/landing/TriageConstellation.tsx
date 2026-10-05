@@ -44,9 +44,9 @@ export function TriageConstellation() {
     const colors = new Float32Array(particleCount * 3);
 
     const updateColorsForTheme = (isDark: boolean) => {
-      const color1 = isDark ? new THREE.Color(0x38d9c8) : new THREE.Color(0x0f6f73);
-      const color2 = isDark ? new THREE.Color(0x0f6f73) : new THREE.Color(0x2a7a82);
-      const color3 = isDark ? new THREE.Color(0xd9e3e6) : new THREE.Color(0x5b6f76);
+      const color1 = isDark ? new THREE.Color(0xc9b27c) : new THREE.Color(0x1b2e5e);
+      const color2 = isDark ? new THREE.Color(0x2f4b8f) : new THREE.Color(0x8f7a45);
+      const color3 = isDark ? new THREE.Color(0xedeff5) : new THREE.Color(0x5e667a);
       const color4 = isDark ? new THREE.Color(0xe8a33a) : new THREE.Color(0xd97706);
 
       for (let i = 0; i < particleCount; i++) {
@@ -203,21 +203,21 @@ export function TriageConstellation() {
               linePositions[li + 5] = posArray[j * 3 + 2];
 
               if (darkNow) {
-                lineColors[li] = 0.22 * alpha;
-                lineColors[li + 1] = 0.85 * alpha;
-                lineColors[li + 2] = 0.78 * alpha;
+                lineColors[li] = 0.79 * alpha;
+                lineColors[li + 1] = 0.70 * alpha;
+                lineColors[li + 2] = 0.49 * alpha;
 
-                lineColors[li + 3] = 0.06 * alpha;
-                lineColors[li + 4] = 0.43 * alpha;
-                lineColors[li + 5] = 0.45 * alpha;
+                lineColors[li + 3] = 0.18 * alpha;
+                lineColors[li + 4] = 0.29 * alpha;
+                lineColors[li + 5] = 0.56 * alpha;
               } else {
-                lineColors[li] = 0.06 * alpha;
-                lineColors[li + 1] = 0.43 * alpha;
-                lineColors[li + 2] = 0.45 * alpha;
+                lineColors[li] = 0.11 * alpha;
+                lineColors[li + 1] = 0.18 * alpha;
+                lineColors[li + 2] = 0.37 * alpha;
 
-                lineColors[li + 3] = 0.35 * alpha;
-                lineColors[li + 4] = 0.43 * alpha;
-                lineColors[li + 5] = 0.46 * alpha;
+                lineColors[li + 3] = 0.56 * alpha;
+                lineColors[li + 4] = 0.48 * alpha;
+                lineColors[li + 5] = 0.27 * alpha;
               }
 
               lineIndex++;
