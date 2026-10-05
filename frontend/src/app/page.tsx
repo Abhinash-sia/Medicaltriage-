@@ -134,7 +134,7 @@ export default function PublicLandingPage() {
                 {t('landing.navHowItWorks')}
               </a>
               <a href="#simulator" className="hover:text-foreground transition-colors">
-                Live Simulator
+                {t('landing.navDemo')}
               </a>
               <a href="#capabilities" className="hover:text-foreground transition-colors">
                 {t('landing.navCapabilities')}
@@ -183,39 +183,39 @@ export default function PublicLandingPage() {
                 {/* Status Pill */}
                 <div className="hero-badge inline-flex items-center space-x-2 bg-card/80 backdrop-blur-xl border border-border text-primary dark:text-accent px-3.5 py-1.5 rounded-full text-xs font-mono tracking-wider uppercase shadow-xs ring-1 ring-white/10">
                   <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>HUMAN-IN-THE-LOOP CLINICAL TRIAGE ASSISTANT</span>
+                  <span>{t('landing.badgeAssistant')}</span>
                 </div>
 
                 {/* H1 Heading */}
                 <h1 className="hero-headline text-4xl sm:text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight leading-[1.12]">
-                  Human-in-the-loop triage, <br />
+                  {t('landing.heroTitleLine1')} <br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-foreground">
-                    engineered for clinical certainty.
+                    {t('landing.heroTitleLine2')}
                   </span>
                 </h1>
 
                 {/* Subtitle */}
                 <p className="hero-subtitle text-base sm:text-lg text-muted-foreground leading-relaxed max-w-xl">
-                  Organize symptoms, voice transcripts, lab OCR reports, visual observations, and timelines into structured information for qualified healthcare professionals.
+                  {t('landing.heroSubtitle')}
                 </p>
 
                 {/* Badges Grid */}
                 <div className="hero-chips flex flex-wrap gap-2 text-xs font-mono">
                   <Badge variant="outline" className="bg-card/70 backdrop-blur-md border-border text-foreground px-3 py-1 shadow-2xs">
                     <ShieldAlert className="w-3.5 h-3.5 mr-1.5 text-[#E8A33A]" />
-                    Non-Diagnostic
+                    {t('landing.badgeNonDiagnostic')}
                   </Badge>
                   <Badge variant="outline" className="bg-card/70 backdrop-blur-md border-border text-foreground px-3 py-1 shadow-2xs">
                     <Stethoscope className="w-3.5 h-3.5 mr-1.5 text-primary dark:text-accent" />
-                    Qualified Human Review
+                    {t('landing.badgeHumanReview')}
                   </Badge>
                   <Badge variant="outline" className="bg-card/70 backdrop-blur-md border-border text-foreground px-3 py-1 shadow-2xs">
                     <Lock className="w-3.5 h-3.5 mr-1.5 text-[#2E9E6B]" />
-                    Privacy-Conscious
+                    {t('landing.badgePrivacy')}
                   </Badge>
                   <Badge variant="outline" className="bg-card/70 backdrop-blur-md border-border text-foreground px-3 py-1 shadow-2xs">
                     <Globe className="w-3.5 h-3.5 mr-1.5 text-primary dark:text-accent" />
-                    Multilingual India-Ready
+                    {t('landing.badgeMultilingual')}
                   </Badge>
                 </div>
 
@@ -226,7 +226,7 @@ export default function PublicLandingPage() {
                       size="lg"
                       className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-7 py-5 text-sm shadow-lg shadow-primary/20 border border-primary/40"
                     >
-                      Get Started (Patient Intake)
+                      {t('landing.getStarted')}
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </Link>
@@ -236,7 +236,7 @@ export default function PublicLandingPage() {
                       variant="outline"
                       className="w-full sm:w-auto border-border/80 bg-card/60 backdrop-blur-xl text-foreground font-semibold px-7 py-5 text-sm hover:bg-muted/80 shadow-xs"
                     >
-                      Reviewer Workspace Queue
+                      {t('landing.reviewerQueue')}
                     </Button>
                   </Link>
                 </div>
@@ -258,28 +258,28 @@ export default function PublicLandingPage() {
             </div>
             <div className="space-y-1">
               <h3 className="font-bold font-mono text-xs text-amber-800 dark:text-amber-400 tracking-wider uppercase">
-                STRICT NON-DIAGNOSTIC & HUMAN-IN-THE-LOOP SAFETY BOUNDARY
+                {t('landing.disclaimerTitle')}
               </h3>
               <p className="text-xs sm:text-sm leading-relaxed text-foreground/85">
-                MedicalTriage is built to assist — not replace — qualified healthcare professionals. It organizes and surfaces structured patient information, timelines, and safety signals. It does not diagnose medical conditions, prescribe treatment, or independently make clinical decisions.
+                {t('landing.disclaimerBody')}
               </p>
             </div>
           </div>
         </section>
 
-        {/* Live Interactive Triage Sandbox (21st.dev Style Bento Playground) */}
+        {/* Live Interactive Triage Sandbox */}
         <section id="simulator" className="reveal-section py-24 px-4 sm:px-6 lg:px-8 border-b border-border/80 bg-muted/20">
           <div className="max-w-7xl mx-auto space-y-12">
             <div className="text-center max-w-2xl mx-auto space-y-3">
               <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-primary dark:text-accent uppercase tracking-wider bg-primary/10 dark:bg-accent/10 px-3 py-1 rounded-md border border-primary/20 dark:border-accent/20">
                 <Cpu className="w-3.5 h-3.5" />
-                <span>Interactive Demonstration</span>
+                <span>{t('landing.navDemo')}</span>
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-                Experience the Triage Engine Live
+                {t('landing.capabilitiesTitle')}
               </h2>
               <p className="text-sm text-muted-foreground">
-                Select clinical presentations below to observe real-time red-flag evaluation, SLA countdown computation, and verified provenance synthesis.
+                {t('landing.capabilitiesSubtitle')}
               </p>
             </div>
 
@@ -293,13 +293,13 @@ export default function PublicLandingPage() {
             <div className="text-center max-w-2xl mx-auto space-y-3">
               <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-primary dark:text-accent uppercase tracking-wider bg-primary/10 dark:bg-accent/10 px-3 py-1 rounded-md border border-primary/20 dark:border-accent/20">
                 <Workflow className="w-3.5 h-3.5" />
-                <span>End-to-End Clinical Flow</span>
+                <span>{t('landing.navHowItWorks')}</span>
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-                How The System Works
+                {t('landing.howItWorksTitle')}
               </h2>
               <p className="text-sm text-muted-foreground">
-                A continuous, transparent workflow connecting patient intake to clinician decision-support and referral escalation.
+                {t('landing.howItWorksSubtitle')}
               </p>
             </div>
 
@@ -313,51 +313,51 @@ export default function PublicLandingPage() {
             <div className="text-center max-w-2xl mx-auto space-y-3">
               <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-primary dark:text-accent uppercase tracking-wider bg-primary/10 dark:bg-accent/10 px-3 py-1 rounded-md border border-primary/20 dark:border-accent/20">
                 <Layers className="w-3.5 h-3.5" />
-                <span>Clinical Capabilities</span>
+                <span>{t('landing.navCapabilities')}</span>
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-                Engineered for High-Acuity Reliability
+                {t('landing.capabilitiesTitle')}
               </h2>
               <p className="text-sm text-muted-foreground">
-                Built specifically to solve high-pressure triage bottlenecks in busy hospitals, rural clinics, and emergency departments.
+                {t('landing.capabilitiesSubtitle')}
               </p>
             </div>
 
             <div className="bento-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 {
-                  title: 'Multimodal Ingestion',
-                  desc: 'Ingest voice recordings in Indian regional languages, lab PDF reports via edge OCR, and guided intake forms seamlessly.',
+                  title: t('landing.cap1Title'),
+                  desc: t('landing.cap1Desc'),
                   icon: Mic,
                   badge: 'Voice + OCR + Vitals',
                 },
                 {
-                  title: 'Safety & Urgency Engine',
-                  desc: 'Evaluates 22 hardcoded clinical red flags before generating recommendations. Triages cases into URGENT, PRIORITY, or ROUTINE.',
+                  title: t('landing.cap2Title'),
+                  desc: t('landing.cap2Desc'),
                   icon: ShieldCheck,
                   badge: '22 Deterministic Rules',
                 },
                 {
-                  title: 'Side-by-Side Provenance',
-                  desc: 'Displays verbatim original patient statements and OCR report spans next to translated clinical notes for zero-hallucination verification.',
+                  title: t('landing.cap4Title'),
+                  desc: t('landing.cap4Desc'),
                   icon: FileText,
                   badge: '100% Grounded Citations',
                 },
                 {
-                  title: 'SLA Countdown Monitor',
-                  desc: 'Enforces clinical review SLA deadlines based on calculated urgency with audible alerts and continuous queue prioritization.',
+                  title: t('landing.cap5Title'),
+                  desc: t('landing.cap5Desc'),
                   icon: Activity,
                   badge: '15m / 60m / 240m SLA',
                 },
                 {
-                  title: 'Immutable Audit Trail',
-                  desc: 'Cryptographic SHA-256 hashed audit events record intake, extraction, review modifications, and referral authorizations.',
+                  title: t('landing.feature3Title'),
+                  desc: t('landing.feature3Desc'),
                   icon: History,
                   badge: 'Tamper-Evident Logs',
                 },
                 {
-                  title: 'Facility Directory & Referrals',
-                  desc: 'One-click referral escalation to specialized healthcare facilities with automated QR code verification cards.',
+                  title: t('landing.cap6Title'),
+                  desc: t('landing.cap6Desc'),
                   icon: Building2,
                   badge: 'Direct Facility Handoff',
                 },
@@ -395,31 +395,31 @@ export default function PublicLandingPage() {
             <div className="max-w-3xl mx-auto text-center space-y-3">
               <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-primary dark:text-accent uppercase tracking-wider bg-primary/10 dark:bg-accent/10 px-3 py-1 rounded-md border border-primary/20 dark:border-accent/20">
                 <Globe className="w-3.5 h-3.5" />
-                <span>Regional Healthcare Infrastructure</span>
+                <span>{t('landing.indiaBadge')}</span>
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-                Built for the Realities of Indian Healthcare
+                {t('landing.indiaTitle')}
               </h2>
               <p className="text-sm text-muted-foreground">
-                Engineered from the ground up for diverse languages, varying network bandwidth, and ABDM-aligned public healthcare systems.
+                {t('landing.indiaSubtitle')}
               </p>
             </div>
 
             <div className="bento-grid grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
                 {
-                  title: 'English, Hindi & Odia Native',
-                  desc: 'Immediate real-time language switching with persistent locale preservation for both patient intake and clinical reviewer dashboards.',
+                  title: t('landing.cap3Title'),
+                  desc: t('landing.cap3Desc'),
                   icon: Globe,
                 },
                 {
-                  title: 'Low-Bandwidth Resilience',
-                  desc: 'Optimized asset delivery, local offline audio recording, and minimal JSON payload payloads engineered for 2G/3G rural networks.',
+                  title: t('landing.feature1Title'),
+                  desc: t('landing.feature1Desc'),
                   icon: Cpu,
                 },
                 {
-                  title: 'ABDM-Ready Architecture',
-                  desc: 'Aligned with Ayushman Bharat Digital Mission (ABDM) standards, FHIR resource schemas, and privacy-conscious data retention protocols.',
+                  title: t('landing.cap6Title'),
+                  desc: t('landing.cap6Desc'),
                   icon: Building2,
                 },
               ].map((item, idx) => {
@@ -452,20 +452,20 @@ export default function PublicLandingPage() {
             </div>
 
             <p className="text-xs text-muted-foreground text-center">
-              A clinical decision-support and triage preparation tool. Strictly non-diagnostic. Human clinical oversight mandatory.
+              {t('landing.disclaimer')}
             </p>
 
             <div className="flex items-center space-x-4 text-xs font-mono">
               <Link href="/patient/intake" className="hover:text-foreground transition-colors">
-                Patient Intake
+                {t('landing.patientPortal')}
               </Link>
               <span>•</span>
               <Link href="/reviewer" className="hover:text-foreground transition-colors">
-                Reviewer Portal
+                {t('landing.reviewerPortal')}
               </Link>
               <span>•</span>
               <Link href="/admin" className="hover:text-foreground transition-colors">
-                Admin
+                {t('landing.adminPortal')}
               </Link>
             </div>
           </div>
