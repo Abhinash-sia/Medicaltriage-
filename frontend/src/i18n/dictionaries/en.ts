@@ -22,7 +22,7 @@ export const en = {
     viewDetails: "View Details",
     close: "Close",
     previous: "Previous",
-    next: "Next",
+    next: "Next Step",
     refresh: "Refresh",
   },
   landing: {
@@ -178,7 +178,7 @@ export const en = {
     step4Subtitle: "Inspect your entered information before submitting.",
     consentStatus: "Consent Status",
     consentGranted: "Affirmative Granted",
-    submitIntake: "Submit Triage Intake",
+    submitIntake: "Submit Intake",
     submitting: "Submitting...",
     successTitle: "Intake Submitted Successfully",
     successSubtitle: "Your information has been recorded for healthcare staff review.",

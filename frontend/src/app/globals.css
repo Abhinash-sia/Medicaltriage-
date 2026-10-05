@@ -4,56 +4,88 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
+    --background: 195 20% 96%;        /* #F2F6F7 */
+    --foreground: 196 38% 8%;         /* #0C171B */
+    --card: 0 0% 100%;                /* #FFFFFF */
+    --card-foreground: 196 38% 8%;    /* #0C171B */
+    --popover: 0 0% 100%;             /* #FFFFFF */
+    --popover-foreground: 196 38% 8%; /* #0C171B */
+    --primary: 182 77% 25%;           /* #0F6F73 - deep teal */
+    --primary-foreground: 0 0% 100%;  /* #FFFFFF */
+    --secondary: 193 18% 91%;         /* #E2EBED */
+    --secondary-foreground: 196 38% 8%;
+    --muted: 193 18% 91%;
+    --muted-foreground: 195 13% 41%;  /* #5B6F76 */
+    --accent: 173 68% 54%;            /* #38D9C8 - ice */
+    --accent-foreground: 196 38% 8%;
+    --destructive: 356 66% 55%;       /* #D93C45 - urgent red */
+    --destructive-foreground: 0 0% 100%;
+    --border: 193 18% 88%;            /* #D9E3E6 */
+    --input: 193 18% 88%;
+    --ring: 173 68% 54%;              /* #38D9C8 - ice focus ring */
+    --radius: 0.375rem;
+
+    /* Semantic Urgency Tokens */
+    --urgency-urgent: 356 66% 55%;    /* #D93C45 */
+    --urgency-priority: 36 80% 57%;   /* #E8A33A */
+    --urgency-routine: 152 55% 40%;   /* #2E9E6B */
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --background: 200 33% 5%;         /* #090F12 */
+    --foreground: 192 23% 92%;        /* #E6EEF0 */
+    --card: 200 30% 8%;               /* #0F181C */
+    --card-foreground: 192 23% 92%;   /* #E6EEF0 */
+    --popover: 200 30% 8%;
+    --popover-foreground: 192 23% 92%;
+    --primary: 173 68% 54%;           /* #38D9C8 - ice */
+    --primary-foreground: 200 33% 5%; /* #090F12 */
+    --secondary: 198 30% 12%;         /* #152227 */
+    --secondary-foreground: 192 23% 92%;
+    --muted: 198 30% 12%;
+    --muted-foreground: 195 12% 55%;  /* #7E9299 */
+    --accent: 173 70% 69%;            /* #7AE8DC */
+    --accent-foreground: 200 33% 5%;
+    --destructive: 356 66% 55%;       /* #D93C45 */
+    --destructive-foreground: 0 0% 100%;
+    --border: 198 27% 15%;            /* #1C2B31 */
+    --input: 198 27% 15%;
+    --ring: 173 68% 54%;
+    --radius: 0.375rem;
+
+    /* Semantic Urgency Tokens */
+    --urgency-urgent: 356 66% 55%;
+    --urgency-priority: 36 80% 57%;
+    --urgency-routine: 152 55% 40%;
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
   body {
-    @apply bg-background text-foreground antialiased;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
+}
+
+/* Subtle Urgent Pulse Animation */
+@keyframes urgent-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(217, 60, 69, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(217, 60, 69, 0.15);
+  }
+}
+
+.animate-urgent-pulse {
+  animation: urgent-pulse 1.4s ease-in-out infinite;
+}
+
+/* Tabular Mono Utilities */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }

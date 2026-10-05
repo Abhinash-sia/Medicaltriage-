@@ -9,7 +9,7 @@ export class GeminiVisionProvider implements VisionProvider {
   private modelName: string;
   private timeoutMs: number;
 
-  constructor(apiKey?: string, modelName: string = 'gemini-2.5-flash', timeoutMs: number = 20000) {
+  constructor(apiKey?: string, modelName: string = 'gemini-2.0-flash', timeoutMs: number = 20000) {
     const key = apiKey || env.GEMINI_API_KEY;
     if (!key) {
       throw new Error('GEMINI_API_KEY is not configured for GeminiVisionProvider');
