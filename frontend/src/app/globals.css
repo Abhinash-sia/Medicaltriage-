@@ -29,7 +29,12 @@
     /* Semantic Urgency Tokens */
     --urgency-urgent: 356 66% 55%;    /* #D93C45 */
     --urgency-priority: 36 80% 57%;   /* #E8A33A */
-    --urgency-routine: 152 55% 40%;   /* #2E9E6B */
+    /* Night-to-Dawn Story Design Tokens */
+    --ink: rgb(233, 238, 248);
+    --on-accent: #1b1a17;
+    --flag: #ff5a4d;
+    --night-1: #0a1226;
+    --night-2: #101c3a;
   }
 
   .dark {
@@ -149,11 +154,16 @@
   transform: translateZ(0);
 }
 
-.dark .glass-pill {
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  transform: translateZ(0);
+.font-display {
+  font-family: var(--font-display), serif;
 }
+
+.font-odia {
+  font-family: var(--font-odia), sans-serif;
+}
+
+.font-devanagari {
+  font-family: var(--font-devanagari), sans-serif;
+}
+
 

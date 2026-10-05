@@ -493,14 +493,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
     }
   };
 
-  useEffect(() => {
-    fetchCaseDetails();
-    fetchTimeline();
-    fetchMissingInformation();
-    fetchReports();
-    fetchSafetyData();
-    fetchTriageNote();
-  }, [fetchCaseDetails, fetchTimeline, fetchMissingInformation, fetchReports, fetchSafetyData, fetchTriageNote]);
+
 
   const handleVerifyReport = async (reportId: string) => {
     try {
@@ -634,15 +627,35 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
     }
   }, [caseId]);
 
+  const fetchAllCaseData = useCallback(async () => {
+    setIsLoading(true);
+    await Promise.allSettled([
+      fetchCaseDetails(),
+      fetchTimeline(),
+      fetchMissingInformation(),
+      fetchReports(),
+      fetchSafetyData(),
+      fetchTriageNote(),
+      fetchVisualInputs(),
+      fetchVoiceInputs(),
+      fetchTranslations(),
+    ]);
+    setIsLoading(false);
+  }, [
+    fetchCaseDetails,
+    fetchTimeline,
+    fetchMissingInformation,
+    fetchReports,
+    fetchSafetyData,
+    fetchTriageNote,
+    fetchVisualInputs,
+    fetchVoiceInputs,
+    fetchTranslations,
+  ]);
+
   useEffect(() => {
-    fetchCaseDetails();
-    fetchTimeline();
-    fetchMissingInformation();
-    fetchReports();
-    fetchVisualInputs();
-    fetchVoiceInputs();
-    fetchTranslations();
-  }, [fetchCaseDetails, fetchTimeline, fetchMissingInformation, fetchReports, fetchVisualInputs, fetchVoiceInputs, fetchTranslations]);
+    fetchAllCaseData();
+  }, [fetchAllCaseData]);
 
   const handleRequestTranslation = async (sourceType: string, sourceId?: string) => {
     const actionId = sourceId || sourceType;

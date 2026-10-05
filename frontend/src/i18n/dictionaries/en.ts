@@ -106,10 +106,16 @@ export const en = {
     demoPatientTitle: "Patient Intake Demo",
     demoPatientDesc: "Submit multi-step intake with symptoms, voice, or PDF reports.",
     demoReviewerTitle: "Reviewer Workspace",
-    demoReviewerDesc: "Explore reviewer queue, SLA timers, triage notes & overrides.",
+    demoReviewerDesc: "Inspect reviewer queue, SLA timers, triage notes, and overrides.",
     demoAdminTitle: "Admin Operations",
     demoAdminDesc: "View facility management, retention overview, and audit logs.",
     demoSeedNotice: "Execute npm run seed:test-data in the backend to populate standard synthetic demo records.",
+    stat1Title: "1 : 1,456 Doctor Ratio",
+    stat1Desc: "Bridging frontline primary health centres and community workers to tertiary specialists across rural Odisha.",
+    stat2Title: "10+ Regional Languages",
+    stat2Desc: "Native audio voice intake and transcription for Odia, Hindi, Bengali, Tamil, Telugu, and English.",
+    stat3Title: "< 60 Min Acute SLA",
+    stat3Desc: "Deterministic rule engine prioritizes acute cases for immediate physician evaluation and referral dispatch.",
 
     footerDisclaimer: "Human-in-the-loop decision-support assistant. Prototype built for evaluation purposes only. Not for medical diagnosis or independent clinical decisions."
   },

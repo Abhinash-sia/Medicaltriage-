@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
   Mic,
   ShieldCheck,
@@ -9,18 +11,39 @@ import {
   ArrowRight,
   CheckCircle2,
   Workflow,
+  Sparkles,
+  Volume2,
+  FileSearch,
+  ScanLine,
+  AlertTriangle,
+  QrCode,
+  Clock,
+  ExternalLink,
+  Lock,
+  Building2,
+  FileCheck,
+  Check,
+  ChevronRight,
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/i18n/LanguageContext';
+
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 export function StorytellingPipeline() {
   const { t, language } = useLanguage();
-  const [activeStepIndex, setActiveStepIndex] = useState(0);
+  const [activeStep, setActiveStep] = useState<number>(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const stepsTrackRef = useRef<HTMLDivElement>(null);
 
   const isHindi = language === 'hi';
   const isOdia = language === 'or';
 
   const STEPS = [
     {
+      id: 'step-intake',
       step: '01',
       badge: isOdia ? 'ବହୁମୁଖୀ ଗ୍ରହଣ' : isHindi ? 'मल्टीमॉडल प्रवेश' : 'Multimodal Intake',
       title: isOdia
@@ -52,31 +75,15 @@ export function StorytellingPipeline() {
             'उच्च-सटीकता लैब मान निष्कर्षण (Hb, Platelets, TLC, Creatinine)',
           ]
         : [
-            'Real-time Audio waveform visualizer (Web Audio API)',
-            'Multilingual speech recognition for Indian regional dialects',
-            'High-confidence lab values extraction (Hb, Platelets, TLC, Creatinine)',
+            'Real-time audio waveform ingestion (16kHz PCM stream)',
+            'Multilingual Indian language recognition (Odia / Hindi / English)',
+            'Tabular boundary lab values OCR (Hb, Platelets, TLC, Creatinine)',
           ],
-      mockData: {
-        title: isOdia ? 'ଗ୍ରହଣ ଉତ୍ପତ୍ତି ତଥ୍ୟ ଫିଡ୍‌' : isHindi ? 'इनटेक स्रोत डेटा फ़ीड' : 'Ingestion Provenance Stream',
-        items: [
-          {
-            k: isOdia ? 'ଭଏସ୍‌ ରେକର୍ଡିଂ' : isHindi ? 'वॉयस बफ़र' : 'Voice Buffer',
-            v: isOdia ? 'ଓଡ଼ିଆ • 16kHz PCM • 42.1s' : isHindi ? 'हिंदी • 16kHz PCM • 42.1s' : 'Odia / Hindi • 16kHz PCM • 42.1s',
-          },
-          {
-            k: isOdia ? 'OCR ଡକ୍ୟୁମେଣ୍ଟ' : isHindi ? 'OCR दस्तावेज़' : 'OCR Document',
-            v: 'CBC_Report_0926.pdf (320 DPI)',
-          },
-          {
-            k: isOdia ? 'ପ୍ରମାଣିକରଣ ID' : isHindi ? 'प्रमाणीकरण ID' : 'Grounding ID',
-            v: 'IN-OD-2026-99218',
-          },
-        ],
-      },
     },
     {
+      id: 'step-safety',
       step: '02',
-      badge: isOdia ? 'ସୁରକ୍ଷା ଓ ଜରୁରୀକାଳୀନ ଇଞ୍ଜିନ୍‌' : isHindi ? 'सुरक्षा एवं तात्कालिकता इंजन' : 'Safety & Urgency Engine',
+      badge: isOdia ? 'ସୁରକ୍ଷା ଓ ଜରୁରୀକାଳୀନ ଇଞ୍ଜିନ୍‌' : isHindi ? 'सुरक्षा एवं तात्कालिकता इंजन' : 'Deterministic Safety Engine',
       title: isOdia
         ? '୨୨-ନିୟମ ବିଶିଷ୍ଟ ନିର୍ଦ୍ଧାରିତ କ୍ଲିନିକାଲ୍‌ ସୁରକ୍ଷା ଯାଞ୍ଚ'
         : isHindi
@@ -86,7 +93,7 @@ export function StorytellingPipeline() {
         ? 'AI ନୋଟ୍‌ ପ୍ରସ୍ତୁତ ହେବା ପୂର୍ବରୁ ସୁରକ୍ଷା ଯାଞ୍ଚ ସ୍ୱୟଂଚାଳିତ ଭାବେ ଚାଲେ'
         : isHindi
         ? 'AI नोट्स से पहले नियम-आधारित रेड-फ्लैग गेटकीपर चलता है'
-        : 'Rule-based red-flag gatekeeper runs before any AI synthesis',
+        : 'Hardcoded red-flag gatekeeper runs before any AI synthesis',
       description: isOdia
         ? 'କୌଣସି ବିପଦଜନକ ସ୍ଥିତି (ଯଥା ହୃଦଘାତ, ସେପସିସ୍‌, ଶିଶୁ ନିର୍ଜଳୀକରଣ) ତୁରନ୍ତ ଚିହ୍ନଟ କରି ଜରୁରୀକାଳୀନ ସମୟ ସୀମା (୧୫ମି / ୬୦ମି / ୨୪୦ମି) ନିର୍ଦ୍ଧାରଣ କରେ।'
         : isHindi
@@ -106,31 +113,15 @@ export function StorytellingPipeline() {
             'सख्त गैर-निदानात्मक सुरक्षा सीमाएं लागू',
           ]
         : [
-            'Hardcoded deterministic logic prevents LLM hallucinations',
-            'Dynamic SLA countdown timer based on patient acuity',
+            'Hardcoded rule logic completely prevents AI hallucinations',
+            'Dynamic SLA countdown timer (Urgent: 1h, Priority: 4h, Routine: 24h)',
             'Non-diagnostic boundary guardrails strictly enforced',
           ],
-      mockData: {
-        title: isOdia ? 'ସୁରକ୍ଷା ନିୟମ ମୂଲ୍ୟାୟନ ତାଲିକା' : isHindi ? 'नियम इंजन निष्पादन मैट्रिक्स' : 'Rule Engine Execution Matrix',
-        items: [
-          {
-            k: isOdia ? 'ନିୟମ #୦୧ (ଆନାଫାଇଲାକ୍ସିସ୍‌)' : isHindi ? 'नियम #01 (एनाफिलेक्सिस)' : 'Rule #01 (Anaphylaxis)',
-            v: isOdia ? 'ଉତ୍ତୀର୍ଣ୍ଣ (ନେଗେଟିଭ୍‌)' : isHindi ? 'उत्तीर्ण (नेगेटिव)' : 'PASSED (Negative)',
-          },
-          {
-            k: isOdia ? 'ନିୟମ #୦୩ (ଛାତି ଯନ୍ତ୍ରଣା)' : isHindi ? 'नियम #03 (सीने में दर्द)' : 'Rule #03 (Chest Pain)',
-            v: isOdia ? 'ଚିହ୍ନଟ (ଜରୁରୀ ଧ୍ୟାନ)' : isHindi ? 'ध्वजंकित (अति गंभीर)' : 'FLAGGED (Retrosternal)',
-          },
-          {
-            k: isOdia ? 'ନିର୍ଦ୍ଧାରିତ SLA' : isHindi ? 'गणना की गई SLA' : 'Calculated SLA',
-            v: isOdia ? '୧୫ ମିନିଟ୍‌ (ଜରୁରୀ ବର୍ଗ)' : isHindi ? '15 मिनट (तत्काल श्रेणी)' : '15 min (URGENT Tier)',
-          },
-        ],
-      },
     },
     {
+      id: 'step-synthesis',
       step: '03',
-      badge: isOdia ? 'ପାରସ୍ପରିକ ତୁଳନାତ୍ମକ ସଂଶ୍ଳେଷଣ' : isHindi ? 'आमने-सामने संश्लेषण' : 'Side-by-Side Synthesis',
+      badge: isOdia ? 'ପାରସ୍ପରିକ ତୁଳନାତ୍ମକ ସଂଶ୍ଳେଷଣ' : isHindi ? 'आमने-सामने संश्लेषण' : 'Provenance Grounding',
       title: isOdia
         ? '୧୦୦% ପ୍ରମାଣିକ ଆଧାର ସହିତ ମୂଳ ଉତ୍ସ ତଥ୍ୟ କାର୍ଡ'
         : isHindi
@@ -160,31 +151,15 @@ export function StorytellingPipeline() {
             'लक्षणों की समयरेखा का स्पष्ट कालानुक्रम',
           ]
         : [
-            'Side-by-side original vernacular vs standardized English',
-            'Visual provenance badge chips (Voice, Form, OCR)',
-            'Timeline chronology synthesis of symptom progression',
+            'Side-by-side verbatim Odia/Hindi vs standardized English',
+            'Visual provenance chips (Voice, Form, Lab OCR, AI Observation)',
+            'Chronological timeline synthesis of symptom evolution',
           ],
-      mockData: {
-        title: isOdia ? 'ତଥ୍ୟ ପ୍ରମାଣିକରଣ ଲିଙ୍କ୍‌' : isHindi ? 'दस्तावेज़ साक्ष्य लिंक' : 'Dossier Grounding Links',
-        items: [
-          {
-            k: isOdia ? 'ମୂଳ ଭଏସ୍‌ ଟ୍ରାନ୍ସକ୍ରିପ୍ଟ' : isHindi ? 'मूल ट्रांसक्रिप्ट' : 'Original Transcript',
-            v: isOdia ? 'ଛାତିରେ ବହୁତ ଜୋରରେ କଷ୍ଟ ହେଉଛି... (Odia)' : 'छाती में बहुत तेज दर्द है... (Hindi)',
-          },
-          {
-            k: isOdia ? 'ଇଂରାଜୀ ଅନୁବାଦ' : isHindi ? 'अंग्रेजी अनुवाद' : 'English Translation',
-            v: 'Severe crushing chest pain radiating to left arm...',
-          },
-          {
-            k: isOdia ? 'ସଠିକତା ସ୍କୋର' : isHindi ? 'सटीकता स्कोर' : 'Confidence Score',
-            v: '98.4% (Verbatim Match)',
-          },
-        ],
-      },
     },
     {
+      id: 'step-referral',
       step: '04',
-      badge: isOdia ? 'ମାନବ ଅନୁମୋଦନ ଓ ରେଫରାଲ୍‌' : isHindi ? 'मानव प्रमाणीकरण एवं रेफरल' : 'Human Authorization & Referral',
+      badge: isOdia ? 'ମାନବ ଅନୁମୋଦନ ଓ ରେଫରାଲ୍‌' : isHindi ? 'मानव प्रमाणीकरण एवं रेफरल' : 'Physician Authorization',
       title: isOdia
         ? 'QR-କୋଡ୍‌ ଯୁକ୍ତ ସୁରକ୍ଷିତ ଡାକ୍ତରୀ ଅନୁମୋଦନ ଏବଂ ରେଫରାଲ୍‌'
         : isHindi
@@ -205,7 +180,7 @@ export function StorytellingPipeline() {
         ? [
             'କୌଣସି ଡାକ୍ତରୀ ନିଷ୍ପତ୍ତି ପୂର୍ବରୁ କଠୋର ମାନବ ଯାଞ୍ଚ ବାଧ୍ୟତାମୂଳକ',
             'ଡାକ୍ତରଖାନା ତଲାସ ସହିତ QR ରେଫରାଲ୍‌ ପ୍ରେରଣ',
-            'ସମୀକ୍ଷା ସମୟ ଓ ପରିଚୟ ରେକର୍ଡ କରୁଥିବା ଅପରିବର୍ତ୍ତନୀୟ ଅଡିଟ୍‌ ଲଗ୍‌',
+            'ସମୀକ୍ଷକ ସମୟ ଓ ପରିଚୟ ରେକର୍ଡ କରୁଥିବା ଅପରିବର୍ତ୍ତନୀୟ ଅଡିଟ୍‌ ଲଗ୍‌',
           ]
         : isHindi
         ? [
@@ -215,136 +190,361 @@ export function StorytellingPipeline() {
           ]
         : [
             'Strict Human-in-the-Loop requirement before any disposition',
-            'Tamper-evident QR referral dispatch with emergency facility lookup',
-            'Immutable audit log tracking review timestamp and credentials',
+            'Tamper-evident QR referral dispatch with destination hospital routing',
+            'Immutable audit trail tracking clinician ID, timestamp & disposition',
           ],
-      mockData: {
-        title: isOdia ? 'ଅନୁମୋଦନ ପ୍ରମାଣପତ୍ର' : isHindi ? 'प्राधिकरण प्रमाणपत्र' : 'Authorization Certificate',
-        items: [
-          {
-            k: isOdia ? 'ସମୀକ୍ଷକ ଡାକ୍ତର' : isHindi ? 'समीक्षक चिकित्सक' : 'Reviewing Clinician',
-            v: 'Dr. Anita Sharma, MD (Reg: MCI-88392)',
-          },
-          {
-            k: isOdia ? 'ରେଫରାଲ୍‌ କେନ୍ଦ୍ର' : isHindi ? 'रेफरल सुविधा' : 'Escalation Facility',
-            v: isOdia ? 'ଜିଲ୍ଲା ମୁଖ୍ୟ ଚିକିତ୍ସାଳୟ, କଟକ' : isHindi ? 'जिला अस्पताल, कटक' : 'District Cardiology Center, Cuttack',
-          },
-          {
-            k: isOdia ? 'ରେଫରାଲ୍‌ ଟୋକନ୍‌' : isHindi ? 'रेफरल टोकन' : 'Referral Token',
-            v: 'REF-2026-OD-8812 (Active)',
-          },
-        ],
-      },
     },
   ];
 
-  const active = STEPS[activeStepIndex];
+  // Set up GSAP ScrollTrigger for Awwwards-style section scrolling
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion || !containerRef.current) return;
+
+    const ctx = gsap.context(() => {
+      // Find all step anchor elements
+      const stepElements = containerRef.current?.querySelectorAll<HTMLElement>('.story-step-section');
+      if (!stepElements || stepElements.length === 0) return;
+
+      stepElements.forEach((el, index) => {
+        ScrollTrigger.create({
+          trigger: el,
+          start: 'top 50%',
+          end: 'bottom 50%',
+          onEnter: () => setActiveStep(index),
+          onEnterBack: () => setActiveStep(index),
+        });
+      });
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, []);
+
+  const scrollToStep = (index: number) => {
+    setActiveStep(index);
+    const stepEl = document.getElementById(`story-step-${index}`);
+    if (stepEl) {
+      stepEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
+  const active = STEPS[activeStep];
   const IconComponent = active.icon;
 
   return (
-    <div className="w-full space-y-10">
-      {/* Stepper Navigation Pills */}
-      <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-        {STEPS.map((s, idx) => {
-          const StepIcon = s.icon;
-          const isActive = idx === activeStepIndex;
-          return (
-            <button
-              key={s.step}
-              onClick={() => setActiveStepIndex(idx)}
-              className={`flex items-center space-x-2.5 px-4 py-3 rounded-xl transition-all duration-200 text-left ${
-                isActive
-                  ? 'bg-primary text-primary-foreground border border-primary shadow-md shadow-primary/20 scale-[1.02]'
-                  : 'glass-card text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <span className={`font-mono text-xs font-bold ${isActive ? 'text-accent' : 'text-muted-foreground'}`}>
-                {s.step}
-              </span>
-              <div className="flex items-center space-x-1.5">
-                <StepIcon className="w-4 h-4" />
-                <span className="text-xs font-semibold">{s.badge}</span>
-              </div>
-            </button>
-          );
-        })}
+    <div ref={containerRef} className="w-full relative space-y-12">
+      {/* Top Floating Glass Stepper Navigator */}
+      <div className="sticky top-20 z-30 flex items-center justify-center">
+        <div className="glass-panel p-1.5 rounded-2xl flex flex-wrap items-center justify-center gap-1.5 shadow-xl border border-border backdrop-blur-xl bg-card/80 dark:bg-card/70">
+          {STEPS.map((s, idx) => {
+            const StepIcon = s.icon;
+            const isActive = idx === activeStep;
+            return (
+              <button
+                key={s.step}
+                type="button"
+                onClick={() => scrollToStep(idx)}
+                className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl transition-all duration-300 text-xs font-medium ${
+                  isActive
+                    ? 'bg-primary text-primary-foreground shadow-md shadow-primary/25 scale-[1.03] font-semibold ring-1 ring-primary/40'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                }`}
+              >
+                <span className={`font-mono text-[11px] font-bold ${isActive ? 'text-accent' : 'text-muted-foreground'}`}>
+                  {s.step}
+                </span>
+                <StepIcon className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{s.badge}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Active Step Showcase Card */}
-      <div className="glass-panel grid grid-cols-1 lg:grid-cols-12 gap-8 items-center rounded-2xl p-6 sm:p-10 shadow-xl transition-all duration-300 relative overflow-hidden">
-        {/* Left Narrative Column */}
-        <div className="lg:col-span-7 space-y-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center space-x-2 font-mono text-xs text-primary dark:text-accent uppercase tracking-wider bg-primary/10 dark:bg-accent/10 px-3 py-1 rounded-md border border-primary/20 dark:border-accent/20">
-              <IconComponent className="w-3.5 h-3.5" />
-              <span>
-                {isOdia ? 'ପର୍ଯ୍ୟାୟ' : isHindi ? 'चरण' : 'Phase'} {active.step} • {active.badge}
-              </span>
-            </div>
-            <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight leading-tight">
-              {active.title}
-            </h3>
-            <p className="text-sm font-medium text-primary dark:text-accent">{active.subtitle}</p>
+      {/* Main Dual-Column Storytelling Canvas */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+        {/* Left Column: Scrollable Narrative Steps with Animated Timeline Line */}
+        <div ref={stepsTrackRef} className="lg:col-span-6 space-y-24 relative pl-6 sm:pl-8">
+          {/* Vertical Glowing Progress Line */}
+          <div className="absolute left-2.5 sm:left-3.5 top-4 bottom-4 w-[2px] bg-border">
+            <div
+              className="w-full bg-gradient-to-b from-primary via-accent to-primary transition-all duration-500 rounded-full"
+              style={{
+                height: `${((activeStep + 1) / STEPS.length) * 100}%`,
+              }}
+            />
           </div>
 
-          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-            {active.description}
-          </p>
+          {STEPS.map((step, idx) => {
+            const isCurrent = idx === activeStep;
+            const StepIcon = step.icon;
 
-          <div className="space-y-2.5 pt-2">
-            {active.highlights.map((h, i) => (
-              <div key={i} className="flex items-start space-x-2.5 text-xs text-foreground">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-accent shrink-0 mt-0.5" />
-                <span>{h}</span>
+            return (
+              <div
+                key={step.id}
+                id={`story-step-${idx}`}
+                className={`story-step-section space-y-6 transition-all duration-500 relative scroll-mt-36 ${
+                  isCurrent ? 'opacity-100 scale-100' : 'opacity-40 hover:opacity-75 scale-[0.98]'
+                }`}
+              >
+                {/* Step Node Marker on Line */}
+                <div
+                  className={`absolute -left-6 sm:-left-8 top-1.5 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 ${
+                    isCurrent
+                      ? 'bg-primary text-primary-foreground ring-4 ring-primary/20 shadow-md shadow-primary/30 scale-110'
+                      : 'bg-card border border-border text-muted-foreground'
+                  }`}
+                >
+                  <span className="font-mono text-[10px] font-bold">{step.step}</span>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="inline-flex items-center space-x-2 font-mono text-xs text-primary dark:text-accent uppercase tracking-wider bg-primary/10 dark:bg-accent/10 px-3 py-1 rounded-md border border-primary/20 dark:border-accent/20">
+                    <StepIcon className="w-3.5 h-3.5" />
+                    <span>
+                      {isOdia ? 'ପର୍ଯ୍ୟାୟ' : isHindi ? 'चरण' : 'Phase'} {step.step} • {step.badge}
+                    </span>
+                  </div>
+
+                  <h3 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight leading-tight">
+                    {step.title}
+                  </h3>
+
+                  <p className="text-xs sm:text-sm font-medium text-primary dark:text-accent leading-snug">
+                    {step.subtitle}
+                  </p>
+                </div>
+
+                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                  {step.description}
+                </p>
+
+                <div className="space-y-2.5 pt-2">
+                  {step.highlights.map((h, i) => (
+                    <div key={i} className="flex items-start space-x-2.5 text-xs text-foreground font-medium">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                      <span>{h}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => scrollToStep((idx + 1) % STEPS.length)}
+                    className="inline-flex items-center gap-1.5 text-xs font-mono font-semibold text-primary dark:text-accent hover:underline"
+                  >
+                    <span>{idx === STEPS.length - 1 ? 'Back to Start (Phase 01)' : `Advance to Phase 0${idx + 2}`}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
-            ))}
-          </div>
-
-          <div className="pt-4 flex items-center space-x-4">
-            <button
-              onClick={() => setActiveStepIndex((prev) => (prev + 1) % STEPS.length)}
-              className="inline-flex items-center space-x-2 text-xs font-semibold text-primary dark:text-accent hover:underline transition-colors"
-            >
-              <span>
-                {isOdia ? 'ପରବର୍ତ୍ତୀ ପର୍ଯ୍ୟାୟ ଦେଖନ୍ତୁ' : isHindi ? 'अगला चरण देखें' : 'Explore Next Phase'} (
-                {STEPS[(activeStepIndex + 1) % STEPS.length].badge})
-              </span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
+            );
+          })}
         </div>
 
-        {/* Right Interactive Mock Display */}
-        <div className="lg:col-span-5 bg-muted/40 dark:bg-[#080E11] border border-border/80 dark:border-white/10 rounded-xl p-5 shadow-lg space-y-4">
-          <div className="flex items-center justify-between border-b border-border/80 dark:border-white/10 pb-3">
-            <div className="flex items-center space-x-2">
-              <div className="h-2 w-2 rounded-full bg-accent animate-pulse" />
-              <span className="font-mono text-xs font-semibold text-foreground">{active.mockData.title}</span>
-            </div>
-            <span className="font-mono text-[10px] text-muted-foreground">
-              {isOdia ? 'ଅଡିଟ୍‌ ତଥ୍ୟ' : isHindi ? 'ऑडिट डेटा' : 'AUDIT TELEMETRY'}
-            </span>
-          </div>
+        {/* Right Column: Sticky Interactive 3D Showcase Canvas */}
+        <div className="lg:col-span-6 sticky top-36 z-20">
+          <div className="glass-panel w-full rounded-2xl p-6 space-y-5 transition-all duration-500 relative overflow-hidden border border-border shadow-2xl bg-card/90 dark:bg-card/75 backdrop-blur-xl">
+            {/* Top Specular Accent Glow */}
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/60 dark:via-accent/60 to-transparent pointer-events-none" />
 
-          <div className="space-y-2">
-            {active.mockData.items.map((item, idx) => (
-              <div
-                key={idx}
-                className="glass-card p-3 rounded-lg flex flex-col space-y-1"
-              >
-                <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
-                  {item.k}
-                </span>
-                <span className="font-mono text-xs font-semibold text-foreground tabular-nums">
-                  {item.v}
-                </span>
+            {/* Stage Header */}
+            <div className="flex items-center justify-between border-b border-border/80 pb-4">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary dark:text-accent">
+                  <IconComponent className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="font-mono text-xs font-bold text-foreground">
+                    STAGE {active.step}: {active.badge.toUpperCase()}
+                  </div>
+                  <div className="font-mono text-[10px] text-muted-foreground">
+                    Verified Execution State • Zero Hallucination
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
 
-          <div className="pt-2 border-t border-border/80 dark:border-white/5 flex items-center justify-between text-[11px] font-mono text-muted-foreground">
-            <span>{isOdia ? 'ସୁରକ୍ଷା ଯାଞ୍ଚ' : isHindi ? 'सुरक्षा सत्यापन' : 'Cryptographic Integrity'}</span>
-            <span className="text-emerald-600 dark:text-emerald-400 font-semibold">SHA-256 Validated</span>
+              <Badge variant="outline" className="font-mono text-[10px] bg-muted/60 text-primary dark:text-accent border-border">
+                Live Simulation
+              </Badge>
+            </div>
+
+            {/* Dynamic Stage Content based on activeStep */}
+            <div className="min-h-[320px] flex flex-col justify-center">
+              {activeStep === 0 && (
+                /* Stage 01: Multimodal Intake */
+                <div className="space-y-4 animate-in fade-in duration-300">
+                  {/* Audio Stream Ingestion Box */}
+                  <div className="p-3.5 bg-muted/50 dark:bg-black/40 rounded-xl border border-border space-y-2.5">
+                    <div className="flex items-center justify-between text-xs font-mono">
+                      <span className="text-muted-foreground flex items-center gap-1.5">
+                        <Volume2 className="w-3.5 h-3.5 text-primary dark:text-accent" />
+                        <span>Odia Voice Ingestion • 16kHz</span>
+                      </span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        Transcribing
+                      </span>
+                    </div>
+
+                    <div className="h-8 flex items-center justify-between gap-1 px-1">
+                      {[40, 75, 30, 90, 60, 45, 85, 100, 70, 50, 80, 65, 95, 40, 60, 85, 55, 70, 90, 45, 60, 75, 35].map(
+                        (h, i) => (
+                          <div
+                            key={i}
+                            className="w-full bg-primary/70 dark:bg-accent rounded-full animate-pulse transition-all duration-300"
+                            style={{ height: `${h}%`, animationDelay: `${(i % 5) * 150}ms` }}
+                          />
+                        )
+                      )}
+                    </div>
+
+                    <div className="text-xs italic text-foreground/90 font-serif p-2 bg-card rounded-md border border-border/60">
+                      &quot;ଛାତିରେ ବହୁତ ଯନ୍ତ୍ରଣା ହେଉଛି ୪୫ ମିନିଟ୍‌ ହେଲା, ବାମ ହାତକୁ ଯାଉଛି...&quot;
+                    </div>
+                  </div>
+
+                  {/* OCR Document Scanner Box */}
+                  <div className="p-3.5 bg-card rounded-xl border border-border space-y-2">
+                    <div className="flex items-center justify-between text-xs font-mono">
+                      <span className="text-muted-foreground flex items-center gap-1.5">
+                        <ScanLine className="w-3.5 h-3.5 text-primary dark:text-accent" />
+                        <span>Lab Report OCR Parser</span>
+                      </span>
+                      <span className="text-primary dark:text-accent text-[10px]">CBC_Report_0926.pdf</span>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 pt-1 font-mono text-[11px]">
+                      <div className="p-2 bg-muted/60 rounded-lg border border-border/50 text-center">
+                        <div className="text-muted-foreground text-[9px]">Hb Level</div>
+                        <div className="font-bold text-foreground">11.2 g/dL</div>
+                      </div>
+                      <div className="p-2 bg-muted/60 rounded-lg border border-border/50 text-center">
+                        <div className="text-muted-foreground text-[9px]">Platelets</div>
+                        <div className="font-bold text-emerald-600 dark:text-emerald-400">240,000</div>
+                      </div>
+                      <div className="p-2 bg-muted/60 rounded-lg border border-border/50 text-center">
+                        <div className="text-muted-foreground text-[9px]">TLC Count</div>
+                        <div className="font-bold text-foreground">7,800 /uL</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeStep === 1 && (
+                /* Stage 02: Deterministic Safety Guardrails */
+                <div className="space-y-4 animate-in fade-in duration-300">
+                  <div className="p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-xl space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-mono font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                        <AlertTriangle className="w-4 h-4" />
+                        <span>CRITICAL SAFETY TRIGGER</span>
+                      </span>
+                      <Badge variant="outline" className="font-mono text-[9px] bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-500/40">
+                        RULE-104 ACTIVATED
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-rose-950 dark:text-rose-200">
+                      Acute Retrosternal Pain + Left Arm Radiation detected. Mandatory High Acuity assignment.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 bg-muted/50 rounded-xl border border-border space-y-1">
+                      <div className="text-[10px] font-mono text-muted-foreground flex items-center justify-between">
+                        <span>PRIORITY TIER</span>
+                        <Clock className="w-3 h-3 text-rose-500" />
+                      </div>
+                      <div className="text-base font-mono font-bold text-rose-600 dark:text-rose-400">URGENT</div>
+                      <div className="text-[10px] text-muted-foreground font-mono">1 Hour Target SLA</div>
+                    </div>
+
+                    <div className="p-3 bg-muted/50 rounded-xl border border-border space-y-1">
+                      <div className="text-[10px] font-mono text-muted-foreground flex items-center justify-between">
+                        <span>GUARDRAILS</span>
+                        <ShieldCheck className="w-3 h-3 text-emerald-500" />
+                      </div>
+                      <div className="text-base font-mono font-bold text-emerald-600 dark:text-emerald-400">22 / 22 Passed</div>
+                      <div className="text-[10px] text-muted-foreground font-mono">0 Hallucinations</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeStep === 2 && (
+                /* Stage 03: Provenance Grounding */
+                <div className="space-y-4 animate-in fade-in duration-300">
+                  <div className="p-3 bg-muted/40 rounded-xl border border-border space-y-2">
+                    <div className="text-[10px] font-mono text-muted-foreground uppercase">Verbatim Source Matching</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                      <div className="p-2.5 bg-card rounded-lg border border-border/70 space-y-1">
+                        <div className="font-mono text-[9px] text-muted-foreground">Original Patient Transcript</div>
+                        <div className="italic text-foreground font-serif text-[11px]">
+                          &quot;ଛାତିରେ ବହୁତ ଜୋରରେ କଷ୍ଟ ହେଉଛି...&quot;
+                        </div>
+                      </div>
+                      <div className="p-2.5 bg-card rounded-lg border border-border/70 space-y-1">
+                        <div className="font-mono text-[9px] text-primary dark:text-accent font-semibold">Verified Clinical English</div>
+                        <div className="text-foreground font-sans text-[11px]">
+                          Severe retrosternal pressure radiating to left extremity.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-card rounded-xl border border-border flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                      <span className="font-mono text-[11px]">Exact Grounding Confidence</span>
+                    </div>
+                    <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">98.4% Match</span>
+                  </div>
+                </div>
+              )}
+
+              {activeStep === 3 && (
+                /* Stage 04: Physician Authorization & QR Referral */
+                <div className="space-y-4 animate-in fade-in duration-300">
+                  <div className="p-3.5 bg-card rounded-xl border border-border space-y-3">
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <Stethoscope className="w-4 h-4 text-primary dark:text-accent" />
+                        <div>
+                          <div className="font-bold text-foreground text-xs">Dr. Anita Sharma, MD</div>
+                          <div className="text-[10px] font-mono text-muted-foreground">Reg: MCI-88392 • Verified Reviewer</div>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="font-mono text-[9px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30">
+                        Signed & Dispatched
+                      </Badge>
+                    </div>
+
+                    <div className="p-2.5 bg-muted/40 rounded-lg border border-border/60 flex items-center justify-between text-xs">
+                      <div>
+                        <div className="text-[10px] font-mono text-muted-foreground">Destination Facility</div>
+                        <div className="font-semibold text-foreground text-xs">District Cardiology Center, Cuttack</div>
+                      </div>
+                      <QrCode className="w-8 h-8 text-primary dark:text-accent p-1 bg-card rounded border border-border" />
+                    </div>
+                  </div>
+
+                  <div className="p-2.5 bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-lg flex items-center justify-between text-xs font-mono">
+                    <span className="text-muted-foreground text-[10px]">Tamper-Evident Referral Token</span>
+                    <span className="text-primary dark:text-accent font-bold text-[11px]">REF-2026-OD-8812</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Bottom Progress Bar */}
+            <div className="pt-2 border-t border-border/80 flex items-center justify-between text-[11px] font-mono text-muted-foreground">
+              <span>PIPELINE PROGRESS</span>
+              <span className="text-foreground font-bold">
+                {activeStep + 1} of {STEPS.length} Stages Completed
+              </span>
+            </div>
           </div>
         </div>
       </div>

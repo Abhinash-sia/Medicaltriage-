@@ -38,7 +38,7 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { TriageSimulator } from '@/components/landing/TriageSimulator';
 import { StorytellingPipeline } from '@/components/landing/StorytellingPipeline';
-import { HeroTelemetryCockpit } from '@/components/landing/HeroTelemetryCockpit';
+import { InteractiveTriageAssistant } from '@/components/landing/InteractiveTriageAssistant';
 
 // Dynamically import smooth scroll and 3D constellation to ensure instant first paint
 const SmoothScroll = dynamic(
@@ -172,7 +172,7 @@ export default function PublicLandingPage() {
           </div>
         </header>
 
-        {/* Hero Section: Asymmetrical Editorial Clinical Layout */}
+        {/* Hero Section */}
         <section className="relative overflow-hidden pt-12 pb-20 sm:pt-20 sm:pb-28 border-b border-border/80">
           <TriageConstellation />
 
@@ -230,21 +230,21 @@ export default function PublicLandingPage() {
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </Link>
-                  <Link href="/reviewer">
+                  <a href="#how-it-works">
                     <Button
                       size="lg"
                       variant="outline"
                       className="w-full sm:w-auto border-border/80 bg-card/60 backdrop-blur-xl text-foreground font-semibold px-7 py-5 text-sm hover:bg-muted/80 shadow-xs"
                     >
-                      {t('landing.reviewerQueue')}
+                      {t('landing.navHowItWorks')}
                     </Button>
-                  </Link>
+                  </a>
                 </div>
               </div>
 
-              {/* Right Column: Live Clinical Telemetry Cockpit */}
+              {/* Right Column: Interactive Clinical Triage & Symptom Guide */}
               <div className="hero-cockpit lg:col-span-5">
-                <HeroTelemetryCockpit />
+                <InteractiveTriageAssistant />
               </div>
             </div>
           </div>
@@ -307,7 +307,7 @@ export default function PublicLandingPage() {
           </div>
         </section>
 
-        {/* Core Capabilities Section (Bento Grid) */}
+        {/* Core Capabilities Section (Asymmetric Bento Grid) */}
         <section id="capabilities" className="reveal-section py-24 px-4 sm:px-6 lg:px-8 border-b border-border/80 bg-muted/10">
           <div className="max-w-7xl mx-auto space-y-16">
             <div className="text-center max-w-2xl mx-auto space-y-3">
@@ -323,68 +323,173 @@ export default function PublicLandingPage() {
               </p>
             </div>
 
+            {/* Asymmetric Bento Grid */}
             <div className="bento-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[
-                {
-                  title: t('landing.cap1Title'),
-                  desc: t('landing.cap1Desc'),
-                  icon: Mic,
-                  badge: 'Voice + OCR + Vitals',
-                },
-                {
-                  title: t('landing.cap2Title'),
-                  desc: t('landing.cap2Desc'),
-                  icon: ShieldCheck,
-                  badge: '22 Deterministic Rules',
-                },
-                {
-                  title: t('landing.cap4Title'),
-                  desc: t('landing.cap4Desc'),
-                  icon: FileText,
-                  badge: '100% Grounded Citations',
-                },
-                {
-                  title: t('landing.cap5Title'),
-                  desc: t('landing.cap5Desc'),
-                  icon: Activity,
-                  badge: '15m / 60m / 240m SLA',
-                },
-                {
-                  title: t('landing.feature3Title'),
-                  desc: t('landing.feature3Desc'),
-                  icon: History,
-                  badge: 'Tamper-Evident Logs',
-                },
-                {
-                  title: t('landing.cap6Title'),
-                  desc: t('landing.cap6Desc'),
-                  icon: Building2,
-                  badge: 'Direct Facility Handoff',
-                },
-              ].map((cap, idx) => {
-                const Icon = cap.icon;
-                return (
-                  <div
-                    key={idx}
-                    className="bento-card glass-card p-6 rounded-2xl flex flex-col justify-between group"
-                  >
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div className="p-3 bg-primary/10 text-primary dark:text-accent rounded-xl border border-primary/20 group-hover:scale-105 transition-transform backdrop-blur-md">
-                          <Icon className="w-5 h-5" />
-                        </div>
-                        <span className="font-mono text-[10px] text-muted-foreground bg-muted/80 px-2 py-0.5 rounded border border-border/80">
-                          {cap.badge}
-                        </span>
+              {/* Bento Card 1: Multimodal Intake (Span 2 cols on desktop) */}
+              <div className="bento-card lg:col-span-2 glass-panel p-6 sm:p-8 rounded-2xl flex flex-col justify-between group relative overflow-hidden border border-border hover:border-primary/40 transition-all duration-300">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 dark:bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+                
+                <div className="space-y-4 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <div className="p-3 bg-primary/10 text-primary dark:text-accent rounded-xl border border-primary/20 group-hover:scale-105 transition-transform">
+                      <Mic className="w-5 h-5" />
+                    </div>
+                    <Badge variant="outline" className="font-mono text-[10px] bg-card border-border text-foreground">
+                      Voice + OCR + Tabular Ingestion
+                    </Badge>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
+                      {t('landing.cap1Title')}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mt-2 max-w-xl">
+                      {t('landing.cap1Desc')}
+                    </p>
+                  </div>
+
+                  {/* Micro Visual Ingestion Sandbox Preview */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-2">
+                      <div className="text-[10px] font-mono text-muted-foreground flex items-center justify-between">
+                        <span>Multilingual Audio Processing</span>
+                        <span className="text-emerald-500 font-semibold">16kHz PCM</span>
                       </div>
-                      <h3 className="text-lg font-bold text-foreground tracking-tight">{cap.title}</h3>
-                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                        {cap.desc}
-                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {['ଓଡ଼ିଆ (Odia)', 'हिन्दी (Hindi)', 'English', 'বাংলা (Bengali)'].map((lang, i) => (
+                          <span key={i} className="text-[10px] font-mono bg-card px-2 py-0.5 rounded border border-border text-foreground">
+                            {lang}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-2">
+                      <div className="text-[10px] font-mono text-muted-foreground flex items-center justify-between">
+                        <span>Document Lab OCR</span>
+                        <span className="text-primary dark:text-accent font-semibold">High Precision</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] font-mono text-foreground">
+                        <span className="p-1 bg-card rounded border border-border">Hb: 11.2</span>
+                        <span className="p-1 bg-card rounded border border-border">Plt: 240k</span>
+                        <span className="p-1 bg-card rounded border border-border">TLC: 7.8k</span>
+                      </div>
                     </div>
                   </div>
-                );
-              })}
+                </div>
+              </div>
+
+              {/* Bento Card 2: 22 Deterministic Safety Rules (Span 1 col, Tall) */}
+              <div className="bento-card glass-panel p-6 sm:p-8 rounded-2xl flex flex-col justify-between group relative overflow-hidden border border-border hover:border-primary/40 transition-all duration-300">
+                <div className="space-y-4 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <div className="p-3 bg-primary/10 text-primary dark:text-accent rounded-xl border border-primary/20 group-hover:scale-105 transition-transform">
+                      <ShieldCheck className="w-5 h-5" />
+                    </div>
+                    <Badge variant="outline" className="font-mono text-[10px] bg-rose-500/10 text-rose-500 border-rose-500/30">
+                      Zero Hallucination
+                    </Badge>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xl font-bold text-foreground tracking-tight">
+                      {t('landing.cap2Title')}
+                    </h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed mt-2">
+                      {t('landing.cap2Desc')}
+                    </p>
+                  </div>
+
+                  {/* Rules checklist snippet */}
+                  <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-2 font-mono text-[11px]">
+                    <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400">
+                      <span>✓ Rule 104 (Cardiac ACS)</span>
+                      <span className="text-[9px] bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/30">PASSED</span>
+                    </div>
+                    <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400">
+                      <span>✓ Rule 208 (Pediatric Wheeze)</span>
+                      <span className="text-[9px] bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/30">PASSED</span>
+                    </div>
+                    <div className="flex items-center justify-between text-muted-foreground">
+                      <span>✓ Rule 301 (Outpatient Path)</span>
+                      <span className="text-[9px] bg-muted px-1.5 py-0.2 rounded border border-border">ACTIVE</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bento Card 3: 100% Grounded Citations (Span 1 col) */}
+              <div className="bento-card glass-panel p-6 sm:p-8 rounded-2xl flex flex-col justify-between group relative overflow-hidden border border-border hover:border-primary/40 transition-all duration-300">
+                <div className="space-y-4 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <div className="p-3 bg-primary/10 text-primary dark:text-accent rounded-xl border border-primary/20 group-hover:scale-105 transition-transform">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <Badge variant="outline" className="font-mono text-[10px] bg-card border-border text-foreground">
+                      100% Grounded
+                    </Badge>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xl font-bold text-foreground tracking-tight">
+                      {t('landing.cap4Title')}
+                    </h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed mt-2">
+                      {t('landing.cap4Desc')}
+                    </p>
+                  </div>
+
+                  <div className="p-3 bg-muted/40 rounded-xl border border-border/70 text-xs font-mono space-y-1.5">
+                    <div className="text-[10px] text-muted-foreground">Grounding Metadata:</div>
+                    <div className="text-[11px] text-primary dark:text-accent font-semibold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span>Audio Span #01 ➔ Line 4 OCR</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bento Card 4: Verified Physician Authorization & Emergency Referral (Span 2 cols on desktop) */}
+              <div className="bento-card lg:col-span-2 glass-panel p-6 sm:p-8 rounded-2xl flex flex-col justify-between group relative overflow-hidden border border-border hover:border-primary/40 transition-all duration-300">
+                <div className="space-y-4 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <div className="p-3 bg-primary/10 text-primary dark:text-accent rounded-xl border border-primary/20 group-hover:scale-105 transition-transform">
+                      <Building2 className="w-5 h-5" />
+                    </div>
+                    <Badge variant="outline" className="font-mono text-[10px] bg-card border-border text-foreground">
+                      Clinician Sign-off • QR Referral
+                    </Badge>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
+                      {t('landing.cap6Title')}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mt-2 max-w-xl">
+                      {t('landing.cap6Desc')}
+                    </p>
+                  </div>
+
+                  {/* Dispatch preview */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1 text-xs">
+                      <div className="text-[10px] font-mono text-muted-foreground">Emergency Facility Escalation:</div>
+                      <div className="font-semibold text-foreground">District Cardiology Center, Cuttack</div>
+                      <div className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400">SLA Response: &lt; 60 Minutes</div>
+                    </div>
+
+                    <div className="p-3 bg-muted/40 rounded-xl border border-border/70 flex items-center justify-between text-xs">
+                      <div className="space-y-0.5">
+                        <div className="text-[10px] font-mono text-muted-foreground">Tamper-Evident Token</div>
+                        <div className="font-mono font-bold text-primary dark:text-accent">REF-2026-OD-8812</div>
+                      </div>
+                      <div className="font-mono text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-1 rounded border border-emerald-500/30">
+                        VERIFIED
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -405,68 +510,48 @@ export default function PublicLandingPage() {
               </p>
             </div>
 
-            <div className="bento-grid grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                {
-                  title: t('landing.cap3Title'),
-                  desc: t('landing.cap3Desc'),
-                  icon: Globe,
-                },
-                {
-                  title: t('landing.feature1Title'),
-                  desc: t('landing.feature1Desc'),
-                  icon: Cpu,
-                },
-                {
-                  title: t('landing.cap6Title'),
-                  desc: t('landing.cap6Desc'),
-                  icon: Building2,
-                },
-              ].map((item, idx) => {
-                const Icon = item.icon;
-                return (
-                  <div
-                    key={idx}
-                    className="bento-card glass-card p-6 rounded-2xl space-y-3"
-                  >
-                    <div className="p-2.5 bg-primary/10 text-primary dark:text-accent w-fit rounded-lg border border-primary/20 backdrop-blur-md">
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <h3 className="text-base font-bold text-foreground">{item.title}</h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
-                  </div>
-                );
-              })}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="glass-card p-6 rounded-2xl space-y-3">
+                <div className="font-mono text-xs text-primary dark:text-accent font-bold">01 / ACCESS RATIO</div>
+                <h3 className="text-lg font-bold text-foreground">{t('landing.stat1Title')}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{t('landing.stat1Desc')}</p>
+              </div>
+
+              <div className="glass-card p-6 rounded-2xl space-y-3">
+                <div className="font-mono text-xs text-primary dark:text-accent font-bold">02 / MULTILINGUAL</div>
+                <h3 className="text-lg font-bold text-foreground">{t('landing.stat2Title')}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{t('landing.stat2Desc')}</p>
+              </div>
+
+              <div className="glass-card p-6 rounded-2xl space-y-3">
+                <div className="font-mono text-xs text-primary dark:text-accent font-bold">03 / TIMEFRAMES</div>
+                <h3 className="text-lg font-bold text-foreground">{t('landing.stat3Title')}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{t('landing.stat3Desc')}</p>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Operational Footer */}
-        <footer className="bg-card/80 backdrop-blur-xl border-t border-border/80 py-12 px-4 sm:px-6 lg:px-8 text-muted-foreground">
-          <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center space-x-3">
-              <div className="bg-primary p-1.5 rounded text-primary-foreground">
-                <HeartPulse className="w-4 h-4 text-accent" />
-              </div>
-              <span className="font-mono text-sm font-bold text-foreground">MedicalTriage Clinical OS</span>
+        {/* Global Footer */}
+        <footer className="bg-card/40 border-t border-border/80 py-12 px-4 sm:px-6 lg:px-8 text-xs text-muted-foreground">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="flex items-center space-x-2">
+              <HeartPulse className="w-4 h-4 text-primary dark:text-accent" />
+              <span className="font-mono font-semibold text-foreground">MedicalTriage Clinical Decision Support</span>
             </div>
 
-            <p className="text-xs text-muted-foreground text-center">
-              {t('landing.disclaimer')}
-            </p>
-
-            <div className="flex items-center space-x-4 text-xs font-mono">
-              <Link href="/patient/intake" className="hover:text-foreground transition-colors">
-                {t('landing.patientPortal')}
-              </Link>
+            <div className="flex items-center space-x-6 font-mono text-[11px]">
+              <a href="tel:108" className="text-rose-600 dark:text-rose-400 font-bold hover:underline">
+                Emergency: 108
+              </a>
               <span>•</span>
-              <Link href="/reviewer" className="hover:text-foreground transition-colors">
-                {t('landing.reviewerPortal')}
-              </Link>
+              <a href="tel:112" className="hover:text-foreground transition-colors">
+                National Helpline: 112
+              </a>
               <span>•</span>
-              <Link href="/admin" className="hover:text-foreground transition-colors">
-                {t('landing.adminPortal')}
-              </Link>
+              <a href="tel:104" className="hover:text-foreground transition-colors">
+                Health Info: 104
+              </a>
             </div>
           </div>
         </footer>

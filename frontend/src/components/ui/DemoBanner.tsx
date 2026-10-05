@@ -1,9 +1,5 @@
-'use client';
-
 import React from 'react';
 import { Info, ShieldAlert } from 'lucide-react';
-import { LanguageSelector } from './LanguageSelector';
-import { ThemeToggle } from './ThemeToggle';
 import { useLanguage } from '../../i18n/LanguageContext';
 
 export function DemoBanner() {
@@ -21,13 +17,11 @@ export function DemoBanner() {
             {t('common.demoBannerNotice')}
           </span>
         </div>
-        <div className="flex items-center space-x-2.5">
+        <div className="flex items-center space-x-2">
           <span className="bg-amber-500/15 text-amber-900 dark:text-amber-300 px-2 py-0.5 rounded-[4px] border border-amber-500/25 text-[10px] font-semibold tracking-wider uppercase flex items-center gap-1">
             <ShieldAlert className="w-3 h-3 text-amber-600 dark:text-amber-400" />
             {t('common.nonDiagnostic')}
           </span>
-          <LanguageSelector variant="compact" />
-          <ThemeToggle />
         </div>
       </div>
     </div>
