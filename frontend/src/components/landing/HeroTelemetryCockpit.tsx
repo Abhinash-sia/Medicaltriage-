@@ -27,9 +27,12 @@ export function HeroTelemetryCockpit() {
   }, []);
 
   return (
-    <div className="w-full rounded-2xl border border-border bg-card/80 dark:bg-[#0C171B]/90 backdrop-blur-xl shadow-2xl p-6 space-y-6 transition-colors">
+    <div className="glass-panel w-full rounded-2xl p-6 space-y-6 transition-all duration-300 relative overflow-hidden">
+      {/* Specular Top Glow */}
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/40 dark:via-white/20 to-transparent pointer-events-none" />
+
       {/* Top Cockpit Header */}
-      <div className="flex items-center justify-between border-b border-border pb-4">
+      <div className="flex items-center justify-between border-b border-border/80 pb-4">
         <div className="flex items-center space-x-2.5">
           <div className="relative flex h-3 w-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -40,13 +43,13 @@ export function HeroTelemetryCockpit() {
             <div className="font-mono text-[10px] text-muted-foreground">ODISHA EMERGENCY NETWORK • NODE #442</div>
           </div>
         </div>
-        <Badge variant="outline" className="font-mono text-[10px] border-primary/30 text-primary dark:text-accent">
+        <Badge variant="outline" className="glass-pill font-mono text-[10px] text-primary dark:text-accent">
           ESTABLISHED 24/7
         </Badge>
       </div>
 
       {/* Real-time Voice Audio Visualizer Mock */}
-      <div className="space-y-2 bg-muted/30 dark:bg-black/30 p-3.5 rounded-xl border border-border">
+      <div className="space-y-2 bg-muted/40 dark:bg-black/40 p-3.5 rounded-xl border border-border/70 backdrop-blur-md">
         <div className="flex items-center justify-between text-xs font-mono">
           <span className="text-muted-foreground flex items-center gap-1.5">
             <Volume2 className="w-3.5 h-3.5 text-primary dark:text-accent" />
@@ -72,9 +75,9 @@ export function HeroTelemetryCockpit() {
         </div>
       </div>
 
-      {/* Live Vitals Gauge Grid */}
+      {/* Live Vitals Gauge Grid (Glass Cards) */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-muted/20 dark:bg-white/[0.02] border border-border p-3 rounded-xl space-y-1">
+        <div className="glass-card p-3 rounded-xl space-y-1">
           <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground">
             <span>HEART RATE</span>
             <Activity className="w-3 h-3 text-rose-500" />
@@ -82,7 +85,7 @@ export function HeroTelemetryCockpit() {
           <div className="text-lg font-mono font-bold text-foreground tabular-nums">{pulse} <span className="text-xs font-normal text-muted-foreground">bpm</span></div>
         </div>
 
-        <div className="bg-muted/20 dark:bg-white/[0.02] border border-border p-3 rounded-xl space-y-1">
+        <div className="glass-card p-3 rounded-xl space-y-1">
           <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground">
             <span>SpO2 OXYGEN</span>
             <Sparkles className="w-3 h-3 text-sky-500" />
@@ -90,7 +93,7 @@ export function HeroTelemetryCockpit() {
           <div className="text-lg font-mono font-bold text-foreground tabular-nums">{spo2}% <span className="text-xs font-normal text-muted-foreground">Room Air</span></div>
         </div>
 
-        <div className="bg-muted/20 dark:bg-white/[0.02] border border-border p-3 rounded-xl space-y-1">
+        <div className="glass-card p-3 rounded-xl space-y-1">
           <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground">
             <span>SLA TIMER</span>
             <Clock className="w-3 h-3 text-primary dark:text-accent" />
@@ -100,7 +103,7 @@ export function HeroTelemetryCockpit() {
       </div>
 
       {/* Deterministic Guardrail Status Pill */}
-      <div className="flex items-center justify-between p-3 rounded-xl bg-primary/5 dark:bg-accent/5 border border-primary/20 dark:border-accent/20">
+      <div className="glass-pill flex items-center justify-between p-3 rounded-xl">
         <div className="flex items-center space-x-2">
           <ShieldCheck className="w-4 h-4 text-primary dark:text-accent shrink-0" />
           <span className="text-xs font-mono font-semibold text-foreground">22 Clinical Rules Guardrail</span>

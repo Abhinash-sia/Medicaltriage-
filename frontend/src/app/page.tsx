@@ -251,7 +251,7 @@ export default function PublicLandingPage() {
         </section>
 
         {/* Strict Non-Diagnostic & Safety Boundary Banner */}
-        <section id="safety" className="reveal-section bg-amber-500/10 backdrop-blur-md border-y border-amber-500/20 py-6 px-4">
+        <section id="safety" className="reveal-section glass-panel !border-x-0 border-y border-amber-500/30 py-6 px-4 !bg-amber-500/10 dark:!bg-amber-500/5">
           <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="bg-amber-500/20 text-amber-700 dark:text-amber-400 p-2.5 rounded-xl border border-amber-500/30 shrink-0">
               <ShieldAlert className="w-6 h-6" />
@@ -366,7 +366,7 @@ export default function PublicLandingPage() {
                 return (
                   <div
                     key={idx}
-                    className="bento-card p-6 rounded-2xl border border-border/80 bg-card/60 dark:bg-card/40 backdrop-blur-2xl hover:border-primary/40 dark:hover:border-accent/40 transition-all duration-300 shadow-[0_4px_24px_0_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_0_rgba(0,0,0,0.25)] hover:shadow-lg flex flex-col justify-between group ring-1 ring-white/10 dark:ring-white/5"
+                    className="bento-card glass-card p-6 rounded-2xl flex flex-col justify-between group"
                   >
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
@@ -427,7 +427,7 @@ export default function PublicLandingPage() {
                 return (
                   <div
                     key={idx}
-                    className="bento-card p-6 rounded-2xl border border-border/80 bg-card/60 dark:bg-card/40 backdrop-blur-2xl space-y-3 shadow-[0_4px_24px_0_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_0_rgba(0,0,0,0.25)] ring-1 ring-white/10 dark:ring-white/5"
+                    className="bento-card glass-card p-6 rounded-2xl space-y-3"
                   >
                     <div className="p-2.5 bg-primary/10 text-primary dark:text-accent w-fit rounded-lg border border-primary/20 backdrop-blur-md">
                       <Icon className="w-5 h-5" />

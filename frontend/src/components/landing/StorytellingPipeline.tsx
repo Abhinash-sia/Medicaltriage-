@@ -131,10 +131,10 @@ export function StorytellingPipeline() {
             <button
               key={s.step}
               onClick={() => setActiveStepIndex(idx)}
-              className={`flex items-center space-x-2.5 px-4 py-3 rounded-xl border transition-all duration-200 text-left ${
+              className={`flex items-center space-x-2.5 px-4 py-3 rounded-xl transition-all duration-200 text-left ${
                 isActive
-                  ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20 scale-[1.02]'
-                  : 'bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border'
+                  ? 'bg-primary text-primary-foreground border border-primary shadow-lg shadow-primary/20 scale-[1.02]'
+                  : 'glass-card text-muted-foreground hover:text-foreground'
               }`}
             >
               <span className={`font-mono text-xs font-bold ${isActive ? 'text-accent' : 'text-muted-foreground'}`}>
@@ -150,7 +150,10 @@ export function StorytellingPipeline() {
       </div>
 
       {/* Active Step Showcase Card */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-card/60 dark:bg-card/40 border border-border rounded-2xl p-6 sm:p-10 backdrop-blur-xl shadow-lg transition-colors">
+      <div className="glass-panel grid grid-cols-1 lg:grid-cols-12 gap-8 items-center rounded-2xl p-6 sm:p-10 shadow-2xl transition-all duration-300 relative overflow-hidden">
+        {/* Specular Top Glow */}
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/40 dark:via-white/20 to-transparent pointer-events-none" />
+
         {/* Left Narrative Column */}
         <div className="lg:col-span-7 space-y-6">
           <div className="space-y-2">
