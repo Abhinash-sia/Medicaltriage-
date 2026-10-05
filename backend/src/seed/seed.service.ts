@@ -194,9 +194,9 @@ export class SeedService {
             {
               ruleId: `RULE-${c.category}-SYN`,
               ruleName: c.ruleTrigger,
-              category: 'RED_FLAG' as any,
+              category: c.priority === 'URGENT' ? 'CLINICAL_URGENT' : 'CLINICAL_PRIORITY',
               priority: c.priority,
-              sourceType: 'INTAKE_NARRATIVE' as any,
+              sourceType: 'SYMPTOM_MODEL',
               sourceId: caseObjectId.toString(),
               evidenceSnippet: c.chiefComplaint,
               explanation: `Synthetic evidence match for clinical red flag: ${c.ruleTrigger}`,
@@ -205,21 +205,17 @@ export class SeedService {
           ]
         : [];
 
-      await SafetyEvaluation.findOneAndUpdate(
-        { caseId: caseObjectId, evaluationVersion: 1 },
-        {
-          caseId: caseObjectId,
-          evaluationVersion: 1,
-          status: 'ACTIVE',
-          calculatedPriority: c.priority,
-          effectivePriority: c.priority,
-          matchedSignals,
-          hasHumanOverride: false,
-          evaluatedAt: createdAt,
-          evaluatedBy: 'SAFETY_ENGINE',
-        },
-        { upsert: true, new: true }
-      );
+      await SafetyEvaluation.deleteMany({ caseId: caseObjectId });
+      await SafetyEvaluation.create({
+        caseId: caseObjectId,
+        evaluationVersion: 1,
+        status: 'ACTIVE',
+        calculatedPriority: c.priority,
+        effectivePriority: c.priority,
+        matchedSignals,
+        hasHumanOverride: false,
+        evaluatedAt: createdAt,
+      });
       summary.safetyEvaluations++;
 
       // 5. Seed Structured TriageNote (Version 1)

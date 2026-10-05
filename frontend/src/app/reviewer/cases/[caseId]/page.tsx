@@ -26,12 +26,50 @@ import {
   Globe,
   Share2,
   History,
+  Eye,
+  Sparkles,
+  Flame,
 } from 'lucide-react';
 import { ReferralHistoryView } from '@/components/reviewer/ReferralHistoryView';
 import { AuditTrailModal } from '@/components/reviewer/AuditTrailModal';
 import { DemoBanner } from '@/components/ui/DemoBanner';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { clearAuthSession } from '@/lib/authSession';
+
+function ProvenanceChip({ provenance }: { provenance?: string }) {
+  const p = provenance || 'AI_GENERATED';
+  if (p === 'HUMAN_VERIFIED') {
+    return (
+      <Badge variant="provenance" className="text-emerald-700 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/10 inline-flex items-center gap-1 font-mono text-[10px]">
+        <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+        <span>HUMAN VERIFIED</span>
+      </Badge>
+    );
+  }
+  if (p === 'PATIENT_PROVIDED') {
+    return (
+      <Badge variant="provenance" className="inline-flex items-center gap-1 font-mono text-[10px]">
+        <User className="w-3 h-3 text-muted-foreground" />
+        <span>PATIENT PROVIDED</span>
+      </Badge>
+    );
+  }
+  if (p === 'AI_OBSERVATION') {
+    return (
+      <Badge variant="provenance" className="inline-flex items-center gap-1 font-mono text-[10px]">
+        <Eye className="w-3 h-3 text-muted-foreground" />
+        <span>AI OBSERVATION</span>
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="provenance" className="inline-flex items-center gap-1 font-mono text-[10px]">
+      <Sparkles className="w-3 h-3 text-muted-foreground" />
+      <span>{p}</span>
+    </Badge>
+  );
+}
+
 
 interface ReviewerCaseSymptom {
   id: string;

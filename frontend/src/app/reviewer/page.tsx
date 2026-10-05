@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -22,11 +22,17 @@ import {
   Globe,
   Building2,
   ShieldAlert,
+  Flame,
+  Clock,
+  Filter,
+  CheckCircle2,
+  AlertTriangle,
 } from 'lucide-react';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { DemoBanner } from '@/components/ui/DemoBanner';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { getAccessToken, clearAuthSession } from '@/lib/authSession';
+import { gsap, Flip, MOTION, withMotion } from '@/lib/motion';
 
 interface ReviewerQueueItem {
   id: string;
@@ -93,8 +99,9 @@ export default function ReviewerQueuePage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
 
+  const queueContainerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    // Read current user token / ID from window if available
     if (typeof window !== 'undefined') {
       const storedToken = getAccessToken();
       if (!storedToken) {
@@ -131,6 +138,9 @@ export default function ReviewerQueuePage() {
       if (languageFilter) params.append('language', languageFilter);
       if (facilityFilter) params.append('facilityId', facilityFilter);
 
+      // Record state for FLIP animation if cards exist
+      const state = typeof window !== 'undefined' && queueContainerRef.current ? Flip.getState(queueContainerRef.current.querySelectorAll('.case-queue-card')) : null;
+
       const response = await fetch(`${apiBaseUrl}/reviewer/cases?${params.toString()}`, {
         headers: {
           'Content-Type': 'application/json',
@@ -149,9 +159,35 @@ export default function ReviewerQueuePage() {
         throw new Error(result.error?.message || 'Failed to fetch reviewer cases queue.');
       }
 
-      setCases(result.data || []);
+      const nextCases = result.data || [];
+      setCases(nextCases);
       if (result.pagination) {
         setPagination(result.pagination);
+      }
+
+      // Run GSAP Flip animation on card position updates or staggered entrance
+      if (state) {
+        requestAnimationFrame(() => {
+          Flip.from(state, {
+            duration: MOTION.duration.base,
+            ease: MOTION.ease.transition,
+            stagger: 0.02,
+          });
+        });
+      } else {
+        requestAnimationFrame(() => {
+          if (queueContainerRef.current) {
+            withMotion(() => {
+              gsap.from(queueContainerRef.current!.querySelectorAll('.case-queue-card'), {
+                y: 14,
+                opacity: 0,
+                stagger: 0.03,
+                duration: MOTION.duration.base,
+                ease: MOTION.ease.entrance,
+              });
+            });
+          }
+        });
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'An error occurred while loading reviewer cases.';
@@ -200,10 +236,6 @@ export default function ReviewerQueuePage() {
     }
   };
 
-  useEffect(() => {
-    fetchCases();
-  }, [fetchCases]);
-
   const handleClaim = async (caseId: string) => {
     setActionLoadingId(caseId);
     setError(null);
@@ -229,7 +261,7 @@ export default function ReviewerQueuePage() {
         throw new Error(result.error?.message || 'Failed to claim case.');
       }
 
-      fetchCases(); // Refresh queue
+      fetchCases();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Claim action failed.';
       setError(msg);
@@ -259,7 +291,7 @@ export default function ReviewerQueuePage() {
         throw new Error(result.error?.message || 'Failed to release case.');
       }
 
-      fetchCases(); // Refresh queue
+      fetchCases();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Release action failed.';
       setError(msg);
@@ -268,371 +300,399 @@ export default function ReviewerQueuePage() {
     }
   };
 
+  const calculateSlaPercentage = (createdAt: string, dueAt: string | null, priority: string) => {
+    if (!dueAt) return 100;
+    const start = new Date(createdAt).getTime();
+    const end = new Date(dueAt).getTime();
+    const now = Date.now();
+    const total = end - start;
+    if (total <= 0) return 0;
+    const remaining = end - now;
+    const pct = Math.max(0, Math.min(100, (remaining / total) * 100));
+    return Math.round(pct);
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 font-sans flex flex-col">
+    <div className="min-h-screen bg-background text-foreground font-sans flex flex-col">
       <DemoBanner />
-      <div className="py-8 px-4 sm:px-6 lg:px-8 flex-1">
-        <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header & Branding */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200 pb-4">
-          <div>
-            <div className="inline-flex items-center space-x-2 bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-2">
-              <HeartPulse className="w-3.5 h-3.5" />
-              <span>{t('reviewer.portalTitle')}</span>
+
+      <div className="py-6 px-4 sm:px-6 lg:px-8 flex-1">
+        <div className="max-w-7xl mx-auto space-y-4">
+          {/* Header & Controls */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-border pb-4">
+            <div>
+              <div className="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/20 text-primary px-2 py-0.5 rounded-[4px] text-[10px] font-mono font-semibold uppercase tracking-wider mb-1">
+                <HeartPulse className="w-3 h-3" />
+                <span>{t('reviewer.portalTitle')}</span>
+              </div>
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                {t('reviewer.queueTitle')}
+              </h1>
+              <p className="text-xs text-muted-foreground">
+                {t('reviewer.queueSubtitle')}
+              </p>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-              {t('reviewer.queueTitle')}
-            </h1>
-            <p className="text-sm text-slate-600 mt-1">
-              {t('reviewer.queueSubtitle')}
-            </p>
-          </div>
 
-          <div className="flex items-center space-x-3">
-            <NotificationBell />
+            <div className="flex items-center gap-2">
+              <NotificationBell />
 
-            {currentUserRole === 'ADMIN' && (
-              <Link href="/admin">
+              {currentUserRole === 'ADMIN' && (
+                <Link href="/admin">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-primary/30 text-primary hover:bg-primary/10 text-xs flex items-center gap-1.5"
+                  >
+                    <ShieldAlert className="w-3.5 h-3.5" />
+                    {t('reviewer.adminOps')}
+                  </Button>
+                </Link>
+              )}
+
+              {(currentUserRole === 'ADMIN' || currentUserRole === 'MEDICAL_OFFICER') && (
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-blue-300 text-blue-800 bg-blue-50 hover:bg-blue-100 font-medium text-xs flex items-center gap-1.5"
+                  onClick={handleProcessSla}
+                  disabled={isProcessingSla || isLoading}
+                  className="text-xs"
                 >
-                  <ShieldAlert className="w-3.5 h-3.5" />
-                  {t('reviewer.adminOps')}
+                  <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${isProcessingSla ? 'animate-spin' : ''}`} />
+                  {t('reviewer.processSla')}
                 </Button>
-              </Link>
-            )}
+              )}
 
-            {(currentUserRole === 'ADMIN' || currentUserRole === 'MEDICAL_OFFICER') && (
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleProcessSla}
-                disabled={isProcessingSla || isLoading}
-                className="border-purple-300 text-purple-800 bg-purple-50 hover:bg-purple-100 font-medium text-xs"
+                onClick={fetchCases}
+                disabled={isLoading}
+                className="text-xs"
               >
-                <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${isProcessingSla ? 'animate-spin' : ''}`} />
-                {t('reviewer.processSla')}
+                <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${isLoading ? 'animate-spin' : ''}`} />
+                {t('reviewer.refreshQueue')}
               </Button>
-            )}
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={fetchCases}
-              disabled={isLoading}
-              className="border-slate-300 text-slate-700 bg-white"
-            >
-              <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-              {t('reviewer.refreshQueue')}
-            </Button>
+            </div>
           </div>
-        </div>
 
-        {/* Operational Safety Disclaimer */}
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-900 text-xs flex items-start space-x-3 shadow-sm">
-          <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <p className="font-semibold">{t('reviewer.safetyNoticeTitle')}</p>
-            <p className="leading-relaxed">
-              {t('reviewer.safetyNoticeDesc')}
-            </p>
+          {/* Operational Safety Disclaimer Notice */}
+          <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-[6px] text-amber-950 dark:text-amber-200 text-xs flex items-start gap-2.5">
+            <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+            <div className="space-y-0.5">
+              <p className="font-semibold text-[11px] uppercase tracking-wider">{t('reviewer.safetyNoticeTitle')}</p>
+              <p className="text-xs text-amber-900/90 dark:text-amber-200/90 leading-relaxed">
+                {t('reviewer.safetyNoticeDesc')}
+              </p>
+            </div>
           </div>
-        </div>
 
-        {processResult && (
-          <div className="p-3 bg-indigo-50 border border-indigo-200 text-indigo-800 rounded-lg text-xs font-medium">
-            {processResult}
-          </div>
-        )}
+          {processResult && (
+            <div className="p-2.5 bg-primary/10 border border-primary/20 text-primary rounded-[6px] text-xs font-medium font-mono">
+              {processResult}
+            </div>
+          )}
 
-        {/* Filter Controls Bar */}
-        <Card className="bg-white border-slate-200 shadow-sm">
-          <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 block">{t('reviewer.filterWorkload')}</label>
-                <select
-                  value={assignedToFilter}
-                  onChange={(e) => {
-                    setAssignedToFilter(e.target.value);
-                    setPage(1);
-                  }}
-                  className="text-xs p-2 border border-slate-300 rounded-md bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                >
-                  <option value="">{t('reviewer.allCases')}</option>
-                  <option value="me">{t('reviewer.assignedToMe')}</option>
-                  <option value="unassigned">{t('reviewer.unassigned')}</option>
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 block">{t('reviewer.filterStatus')}</label>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => {
-                    setStatusFilter(e.target.value);
-                    setPage(1);
-                  }}
-                  className="text-xs p-2 border border-slate-300 rounded-md bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                >
-                  <option value="">{t('reviewer.allStatuses')}</option>
-                  <option value="OPEN">{t('reviewer.statusOpen')}</option>
-                  <option value="IN_REVIEW">{t('reviewer.statusInReview')}</option>
-                  <option value="RESOLVED">{t('reviewer.statusResolved')}</option>
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 block">{t('reviewer.filterCategory')}</label>
-                <select
-                  value={priorityFilter}
-                  onChange={(e) => {
-                    setPriorityFilter(e.target.value);
-                    setPage(1);
-                  }}
-                  className="text-xs p-2 border border-slate-300 rounded-md bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                >
-                  <option value="">{t('reviewer.allPriorities')}</option>
-                  <option value="ROUTINE">ROUTINE (Unassessed)</option>
-                  <option value="PRIORITY">PRIORITY</option>
-                  <option value="URGENT">URGENT</option>
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 block">Operational SLA</label>
-                <select
-                  value={slaStatusFilter}
-                  onChange={(e) => {
-                    setSlaStatusFilter(e.target.value);
-                    setPage(1);
-                  }}
-                  className="text-xs p-2 border border-slate-300 rounded-md bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                  aria-label="Filter by SLA status"
-                >
-                  <option value="">All SLA States</option>
-                  <option value="pending">PENDING</option>
-                  <option value="due_soon">DUE_SOON</option>
-                  <option value="overdue">OVERDUE</option>
-                  <option value="escalated">ESCALATED</option>
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 block">Case Language</label>
-                <select
-                  value={languageFilter}
-                  onChange={(e) => {
-                    setLanguageFilter(e.target.value);
-                    setPage(1);
-                  }}
-                  className="text-xs p-2 border border-slate-300 rounded-md bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                  aria-label="Filter by case language"
-                >
-                  <option value="">All Languages</option>
-                  {SUPPORTED_LANGUAGES.map((l) => (
-                    <option key={l.code} value={l.code}>
-                      {l.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+          {/* Filter Bar */}
+          <div className="bg-card border border-border rounded-[6px] p-3 shadow-2xs space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <Filter className="w-3.5 h-3.5" /> Queue Filters
+              </span>
+              <span className="text-[11px] font-mono text-muted-foreground tabular-nums">
+                Total Cases: {pagination.total}
+              </span>
             </div>
 
-            <div className="text-xs text-slate-500 font-medium">
-              Showing {cases.length} of {pagination.total} cases
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+              <select
+                value={priorityFilter}
+                onChange={(e) => {
+                  setPriorityFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="h-8 text-xs border border-border bg-card rounded-[5px] px-2 text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              >
+                <option value="">All Priorities</option>
+                <option value="URGENT">URGENT (1h SLA)</option>
+                <option value="PRIORITY">PRIORITY (4h SLA)</option>
+                <option value="ROUTINE">ROUTINE (24h SLA)</option>
+              </select>
+
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="h-8 text-xs border border-border bg-card rounded-[5px] px-2 text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              >
+                <option value="">All Statuses</option>
+                <option value="INTAKE_SUBMITTED">INTAKE_SUBMITTED</option>
+                <option value="AI_EXTRACTED">AI_EXTRACTED</option>
+                <option value="SAFETY_EVALUATED">SAFETY_EVALUATED</option>
+                <option value="UNDER_REVIEW">UNDER_REVIEW</option>
+                <option value="REVIEWED">REVIEWED</option>
+                <option value="REFERRED">REFERRED</option>
+                <option value="CLOSED">CLOSED</option>
+              </select>
+
+              <select
+                value={slaStatusFilter}
+                onChange={(e) => {
+                  setSlaStatusFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="h-8 text-xs border border-border bg-card rounded-[5px] px-2 text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              >
+                <option value="">All SLA States</option>
+                <option value="PENDING">PENDING</option>
+                <option value="DUE_SOON">DUE SOON</option>
+                <option value="OVERDUE">OVERDUE</option>
+                <option value="ESCALATED">ESCALATED</option>
+              </select>
+
+              <select
+                value={assignedToFilter}
+                onChange={(e) => {
+                  setAssignedToFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="h-8 text-xs border border-border bg-card rounded-[5px] px-2 text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              >
+                <option value="">All Assignments</option>
+                <option value="me">Assigned to Me</option>
+                <option value="unassigned">Unassigned Only</option>
+              </select>
+
+              <select
+                value={languageFilter}
+                onChange={(e) => {
+                  setLanguageFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="h-8 text-xs border border-border bg-card rounded-[5px] px-2 text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              >
+                <option value="">All Languages</option>
+                {SUPPORTED_LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code}>
+                    {l.name}
+                  </option>
+                ))}
+              </select>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setPriorityFilter('');
+                  setStatusFilter('');
+                  setSlaStatusFilter('');
+                  setAssignedToFilter('');
+                  setLanguageFilter('');
+                  setFacilityFilter('');
+                  setPage(1);
+                }}
+                className="h-8 text-xs text-muted-foreground hover:text-foreground"
+              >
+                Clear Filters
+              </Button>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Error Alert */}
-        {error && (
-          <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs flex items-center space-x-2 shadow-sm">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
           </div>
-        )}
 
-        {/* Queue Case List */}
-        {isLoading ? (
-          <div className="p-12 text-center text-slate-500 text-sm space-y-2">
-            <RefreshCw className="w-6 h-6 animate-spin mx-auto text-indigo-600" />
-            <p>Loading reviewer cases queue...</p>
-          </div>
-        ) : cases.length === 0 ? (
-          <Card className="bg-white border-slate-200 p-8 text-center space-y-3">
-            <FileText className="w-10 h-10 text-slate-300 mx-auto" />
-            <CardTitle className="text-base text-slate-800">No Cases In Queue</CardTitle>
-            <CardDescription className="text-xs text-slate-500">
-              No intake cases currently match the selected workflow, SLA, and assignment filters.
-            </CardDescription>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {cases.map((c) => {
-              const isAssignedToMe = currentUserId && c.assignedReviewerId === currentUserId;
+          {/* Queue List View with Progressive Blur Container */}
+          <div className="relative">
+            {/* Top/Bottom Progressive Blur Gradient Overlays */}
+            <div className="pointer-events-none absolute top-0 left-0 right-0 h-3 bg-gradient-to-b from-background to-transparent z-10 opacity-70" />
+            <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-3 bg-gradient-to-t from-background to-transparent z-10 opacity-70" />
 
-              return (
-                <Card
-                  key={c.id}
-                  className="bg-white border-slate-200 hover:border-indigo-300 transition-all shadow-sm"
-                >
-                  <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="space-y-2 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-indigo-900 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
-                          {c.caseNumber}
-                        </span>
+            {isLoading && cases.length === 0 ? (
+              <div className="space-y-2 py-2">
+                {[1, 2, 3, 4].map((n) => (
+                  <div key={n} className="h-20 rounded-[6px] border border-border bg-card/50 animate-pulse" />
+                ))}
+              </div>
+            ) : error ? (
+              <div className="p-8 text-center bg-card border border-destructive/30 rounded-[6px] space-y-2">
+                <AlertCircle className="w-6 h-6 text-destructive mx-auto" />
+                <p className="text-xs text-destructive font-medium">{error}</p>
+                <Button size="sm" variant="outline" onClick={fetchCases}>
+                  Retry Loading
+                </Button>
+              </div>
+            ) : cases.length === 0 ? (
+              <div className="p-12 text-center bg-card border border-border rounded-[6px] space-y-2">
+                <FileText className="w-8 h-8 text-muted-foreground mx-auto stroke-1" />
+                <h3 className="text-sm font-semibold text-foreground">No cases in queue</h3>
+                <p className="text-xs text-muted-foreground">
+                  Try adjusting filter criteria or submit a new case from the patient intake portal.
+                </p>
+              </div>
+            ) : (
+              <div ref={queueContainerRef} className="space-y-2">
+                {cases.map((item) => {
+                  const isUrgent = item.priority === 'URGENT';
+                  const isPriority = item.priority === 'PRIORITY';
+                  const slaRemainingPct = calculateSlaPercentage(item.createdAt, item.sla?.dueAt || null, item.priority);
 
-                        <Badge
-                          variant="outline"
-                          className={
-                            c.status === 'OPEN'
-                              ? 'bg-blue-50 text-blue-700 border-blue-200'
-                              : c.status === 'IN_REVIEW'
-                              ? 'bg-purple-50 text-purple-700 border-purple-200'
-                              : 'bg-slate-100 text-slate-700'
-                          }
-                        >
-                          {c.status}
-                        </Badge>
+                  return (
+                    <div
+                      key={item.id}
+                      className={`case-queue-card bg-card border rounded-[6px] p-3.5 transition-all duration-150 shadow-2xs hover:border-border/80 ${
+                        isUrgent
+                          ? 'border-[hsl(var(--urgency-urgent)/0.4)] animate-urgent-pulse'
+                          : isPriority
+                          ? 'border-[hsl(var(--urgency-priority)/0.35)]'
+                          : 'border-border'
+                      }`}
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                        {/* Left Info Group */}
+                        <div className="space-y-1.5 flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {/* Urgency Chip */}
+                            <Badge
+                              variant={
+                                isUrgent
+                                  ? 'urgent'
+                                  : isPriority
+                                  ? 'priority'
+                                  : 'routine'
+                              }
+                            >
+                              {isUrgent ? (
+                                <Flame className="w-3 h-3 text-[hsl(var(--urgency-urgent))]" />
+                              ) : isPriority ? (
+                                <AlertTriangle className="w-3 h-3 text-[hsl(var(--urgency-priority))]" />
+                              ) : (
+                                <CheckCircle2 className="w-3 h-3 text-[hsl(var(--urgency-routine))]" />
+                              )}
+                              <span>{item.priority}</span>
+                              <span className="font-mono text-[9px] opacity-75">
+                                ({item.priority === 'URGENT' ? '1h' : item.priority === 'PRIORITY' ? '4h' : '24h'})
+                              </span>
+                            </Badge>
 
-                        <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 text-[11px]">
-                          Category: {c.priority} (Unassessed)
-                        </Badge>
+                            {/* Case Number */}
+                            <span className="font-mono text-xs font-semibold text-foreground tracking-tight">
+                              {item.caseNumber}
+                            </span>
 
-                        {/* Operational SLA Badge */}
-                        {c.sla?.status === 'ESCALATED' ? (
-                          <Badge variant="outline" className="bg-purple-100 text-purple-900 border-purple-300 font-semibold text-[11px]">
-                            SLA: Escalated (L1)
-                          </Badge>
-                        ) : c.sla?.status === 'OVERDUE' ? (
-                          <Badge variant="outline" className="bg-red-100 text-red-900 border-red-300 font-semibold text-[11px]">
-                            SLA: Overdue
-                          </Badge>
-                        ) : c.sla?.status === 'DUE_SOON' ? (
-                          <Badge variant="outline" className="bg-amber-100 text-amber-900 border-amber-300 font-semibold text-[11px]">
-                            SLA: Due Soon
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="bg-slate-100 text-slate-700 border-slate-300 text-[11px]">
-                            SLA: Pending
-                          </Badge>
-                        )}
+                            {/* Language Badge */}
+                            <span className="font-mono text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-[3px] border border-border">
+                              {item.language.toUpperCase()}
+                            </span>
 
-                        {/* Assignment Badge */}
-                        {isAssignedToMe ? (
-                          <Badge className="bg-green-600 text-white border-green-700 text-[11px] flex items-center space-x-1">
-                            <UserCheck className="w-3 h-3" />
-                            <span>{t('reviewer.assignedToMe')}</span>
-                          </Badge>
-                        ) : c.isAssigned ? (
-                          <Badge variant="outline" className="bg-indigo-50 text-indigo-800 border-indigo-200 text-[11px] flex items-center space-x-1">
-                            <User className="w-3 h-3 text-indigo-600" />
-                            <span>{c.assignedReviewerName || 'Reviewer'}</span>
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200 text-[11px] flex items-center space-x-1">
-                            <UserX className="w-3 h-3 text-amber-600" />
-                            <span>{t('reviewer.unassigned')}</span>
-                          </Badge>
-                        )}
-                      </div>
+                            {/* Status */}
+                            <span className="text-[10px] font-mono text-muted-foreground uppercase">
+                              • {item.status}
+                            </span>
 
-                      <div className="space-y-1">
-                        <h2 className="text-sm font-semibold text-slate-900 line-clamp-1">{c.chiefComplaint}</h2>
-                        <div className="flex items-center space-x-4 text-xs text-slate-500">
-                          <span className="flex items-center space-x-1">
-                            <User className="w-3.5 h-3.5 text-slate-400" />
-                            <span>{c.patientName}</span>
-                          </span>
-                          <span className="flex items-center space-x-1">
-                            <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                            <span>{new Date(c.createdAt).toLocaleString()}</span>
-                          </span>
+                            {/* Assigned Reviewer */}
+                            {item.isAssigned && (
+                              <span className="text-[10px] font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded-[3px] border border-primary/20 flex items-center gap-1">
+                                <UserCheck className="w-2.5 h-2.5" />
+                                {item.assignedReviewerName || 'Assigned'}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Chief Complaint */}
+                          <p className="text-xs text-foreground/90 font-medium truncate">
+                            {item.chiefComplaint || 'No chief complaint specified'}
+                          </p>
+
+                          {/* SLA Timer Bar */}
+                          <div className="flex items-center gap-2 pt-0.5">
+                            <Clock className="w-3 h-3 text-muted-foreground shrink-0" />
+                            <div className="flex-1 max-w-xs h-1.5 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className={`h-full transition-all duration-300 ${
+                                  slaRemainingPct < 25
+                                    ? 'bg-[hsl(var(--urgency-urgent))]'
+                                    : slaRemainingPct < 50
+                                    ? 'bg-[hsl(var(--urgency-priority))]'
+                                    : 'bg-primary'
+                                }`}
+                                style={{ width: `${slaRemainingPct}%` }}
+                              />
+                            </div>
+                            <span className="font-mono text-[10px] text-muted-foreground tabular-nums">
+                              SLA: {item.sla?.status || 'PENDING'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                          {item.isAssigned && item.assignedReviewerId === currentUserId ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleRelease(item.id)}
+                              disabled={actionLoadingId === item.id}
+                              className="text-[11px] h-7 px-2"
+                            >
+                              <UserX className="w-3 h-3 mr-1" />
+                              Release
+                            </Button>
+                          ) : !item.isAssigned ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleClaim(item.id)}
+                              disabled={actionLoadingId === item.id}
+                              className="text-[11px] h-7 px-2"
+                            >
+                              <UserCheck className="w-3 h-3 mr-1" />
+                              Claim
+                            </Button>
+                          ) : null}
+
+                          <Link href={`/reviewer/cases/${item.id}`}>
+                            <Button size="sm" className="text-[11px] h-7 px-2.5 gap-1">
+                              <span>Review</span>
+                              <ChevronRight className="w-3 h-3" />
+                            </Button>
+                          </Link>
                         </div>
                       </div>
                     </div>
-
-                    {/* Action Controls */}
-                    <div className="flex items-center space-x-2 sm:self-center">
-                      {!c.isAssigned && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleClaim(c.id)}
-                          disabled={actionLoadingId === c.id}
-                          className="bg-green-600 hover:bg-green-700 text-white text-xs"
-                        >
-                          {actionLoadingId === c.id ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
-                          ) : (
-                            <UserCheck className="w-3.5 h-3.5 mr-1" />
-                          )}
-                          {t('reviewer.claimCase')}
-                        </Button>
-                      )}
-
-                      {isAssignedToMe && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleRelease(c.id)}
-                          disabled={actionLoadingId === c.id}
-                          className="border-slate-300 text-slate-700 hover:bg-slate-100 text-xs"
-                        >
-                          {actionLoadingId === c.id ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
-                          ) : (
-                            <UserX className="w-3.5 h-3.5 mr-1 text-slate-500" />
-                          )}
-                          {t('reviewer.releaseCase')}
-                        </Button>
-                      )}
-
-                      <Link href={`/reviewer/cases/${c.id}`}>
-                        <Button size="sm" variant="outline" className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 text-xs">
-                          {t('reviewer.reviewCase')} <ArrowUpRight className="w-4 h-4 ml-1" />
-                        </Button>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                  );
+                })}
+              </div>
+            )}
           </div>
-        )}
 
-        {/* Pagination Footer */}
-        {pagination.totalPages > 1 && (
-          <div className="flex justify-between items-center bg-white p-4 rounded-lg border border-slate-200 text-xs">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => Math.max(p - 1, 1))}
-              disabled={page === 1 || isLoading}
-            >
-              <ChevronLeft className="w-4 h-4 mr-1" /> {t('common.previous')}
-            </Button>
-
-            <span className="text-slate-600 font-medium">
-              Page {pagination.page} of {pagination.totalPages}
-            </span>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => Math.min(p + 1, pagination.totalPages))}
-              disabled={page >= pagination.totalPages || isLoading}
-            >
-              {t('common.next')} <ChevronRight className="w-4 h-4 ml-1" />
-            </Button>
-          </div>
-        )}
+          {/* Pagination Footer */}
+          {pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between pt-2 border-t border-border text-xs text-muted-foreground">
+              <span className="font-mono tabular-nums">
+                Page {pagination.page} of {pagination.totalPages}
+              </span>
+              <div className="flex items-center gap-1.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1 || isLoading}
+                  className="h-7 text-xs"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5 mr-1" /> Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+                  disabled={page >= pagination.totalPages || isLoading}
+                  className="h-7 text-xs"
+                >
+                  Next <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
-  </div>
   );
 }
-
