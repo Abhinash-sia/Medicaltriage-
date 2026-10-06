@@ -62,10 +62,9 @@ export default function PublicLandingPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
   const navItems = [
-    { id: 'simulator', label: t('landing.navDemo') },
     { id: 'how-it-works', label: t('landing.navHowItWorks') },
+    { id: 'simulator', label: t('landing.navSandbox') },
     { id: 'capabilities', label: t('landing.navCapabilities') },
-    { id: 'safety', label: t('landing.navSafety') },
     { id: 'india-context', label: t('landing.navIndiaContext') },
   ];
 
@@ -100,7 +99,7 @@ export default function PublicLandingPage() {
   };
 
   useEffect(() => {
-    const sectionIds = ['safety', 'simulator', 'how-it-works', 'capabilities', 'india-context'];
+    const sectionIds = ['how-it-works', 'simulator', 'capabilities', 'india-context'];
     const handleScroll = () => {
       const scrollPos = window.scrollY + 180;
       for (let i = sectionIds.length - 1; i >= 0; i--) {
@@ -392,26 +391,6 @@ export default function PublicLandingPage() {
           </div>
         </section>
 
-        {/* Live Interactive Triage Sandbox */}
-        <section id="simulator" className="reveal-section scroll-mt-20 py-24 px-4 sm:px-6 lg:px-8 border-b border-border/80 bg-muted/20">
-          <div className="max-w-7xl mx-auto space-y-12">
-            <div className="text-center max-w-2xl mx-auto space-y-3">
-              <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-primary dark:text-accent uppercase tracking-wider bg-primary/10 dark:bg-accent/10 px-3 py-1 rounded-md border border-primary/20 dark:border-accent/20">
-                <Cpu className="w-3.5 h-3.5" />
-                <span>{t('landing.navDemo')}</span>
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-                {t('landing.capabilitiesTitle')}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                {t('landing.capabilitiesSubtitle')}
-              </p>
-            </div>
-
-            <TriageSimulator />
-          </div>
-        </section>
-
         {/* Storytelling Pipeline: How The System Works */}
         <section id="how-it-works" className="reveal-section scroll-mt-20 py-24 px-4 sm:px-6 lg:px-8 border-b border-border/80">
           <div className="max-w-7xl mx-auto space-y-16">
@@ -429,6 +408,26 @@ export default function PublicLandingPage() {
             </div>
 
             <StorytellingPipeline />
+          </div>
+        </section>
+
+        {/* Live Interactive Triage Sandbox */}
+        <section id="simulator" className="reveal-section scroll-mt-20 py-24 px-4 sm:px-6 lg:px-8 border-b border-border/80 bg-muted/20">
+          <div className="max-w-7xl mx-auto space-y-12">
+            <div className="text-center max-w-2xl mx-auto space-y-3">
+              <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-primary dark:text-accent uppercase tracking-wider bg-primary/10 dark:bg-accent/10 px-3 py-1 rounded-md border border-primary/20 dark:border-accent/20">
+                <Cpu className="w-3.5 h-3.5" />
+                <span>{t('landing.navSandbox')}</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+                {t('landing.sandboxTitle')}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {t('landing.sandboxSubtitle')}
+              </p>
+            </div>
+
+            <TriageSimulator />
           </div>
         </section>
 
