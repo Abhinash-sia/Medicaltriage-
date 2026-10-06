@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import gsap from 'gsap';
@@ -61,6 +61,18 @@ export default function PublicLandingPage() {
   const [activeSection, setActiveSection] = useState<string>('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
+  // Desktop nav sliding pill refs & state
+  const navRef = useRef<HTMLElement>(null);
+  const navItemRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const scrollLockTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [pillStyle, setPillStyle] = useState<{ left: number; top: number; width: number; height: number; opacity: number }>({
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 0,
+    opacity: 0,
+  });
+
   const navItems = [
     { id: 'how-it-works', label: t('landing.navHowItWorks') },
     { id: 'simulator', label: t('landing.navSandbox') },
@@ -68,10 +80,62 @@ export default function PublicLandingPage() {
     { id: 'india-context', label: t('landing.navIndiaContext') },
   ];
 
+  const updatePill = useCallback(() => {
+    if (!navRef.current || !activeSection) {
+      setPillStyle((prev) => (prev.opacity === 0 ? prev : { ...prev, opacity: 0 }));
+      return;
+    }
+    const targetBtn = navItemRefs.current[activeSection];
+    if (!targetBtn) {
+      setPillStyle((prev) => (prev.opacity === 0 ? prev : { ...prev, opacity: 0 }));
+      return;
+    }
+    const navRect = navRef.current.getBoundingClientRect();
+    const btnRect = targetBtn.getBoundingClientRect();
+    setPillStyle({
+      left: btnRect.left - navRect.left,
+      top: btnRect.top - navRect.top,
+      width: btnRect.width,
+      height: btnRect.height,
+      opacity: 1,
+    });
+  }, [activeSection]);
+
+  useEffect(() => {
+    updatePill();
+  }, [activeSection, updatePill, t]);
+
+  useEffect(() => {
+    window.addEventListener('resize', updatePill);
+    return () => window.removeEventListener('resize', updatePill);
+  }, [updatePill]);
+
   const handleNavClick = (sectionId: string, e?: React.MouseEvent) => {
     if (e) e.preventDefault();
     setIsMobileMenuOpen(false);
+    
+    // Land on the text IMMEDIATELY the instant the user clicks
     setActiveSection(sectionId);
+
+    if (navRef.current && navItemRefs.current[sectionId]) {
+      const navRect = navRef.current.getBoundingClientRect();
+      const btnRect = navItemRefs.current[sectionId]!.getBoundingClientRect();
+      setPillStyle({
+        left: btnRect.left - navRect.left,
+        top: btnRect.top - navRect.top,
+        width: btnRect.width,
+        height: btnRect.height,
+        opacity: 1,
+      });
+    }
+
+    // Lock scroll spy from overwriting active pill during smooth scroll animation
+    if (scrollLockTimeoutRef.current) {
+      clearTimeout(scrollLockTimeoutRef.current);
+    }
+    scrollLockTimeoutRef.current = setTimeout(() => {
+      scrollLockTimeoutRef.current = null;
+    }, 1400);
 
     const target = document.getElementById(sectionId);
     if (!target) return;
@@ -101,6 +165,9 @@ export default function PublicLandingPage() {
   useEffect(() => {
     const sectionIds = ['how-it-works', 'simulator', 'capabilities', 'india-context'];
     const handleScroll = () => {
+      // Do not override active pill while programmatic smooth scroll is animating to clicked section
+      if (scrollLockTimeoutRef.current) return;
+
       const scrollPos = window.scrollY + 180;
       for (let i = sectionIds.length - 1; i >= 0; i--) {
         const el = document.getElementById(sectionIds[i]);
@@ -113,8 +180,26 @@ export default function PublicLandingPage() {
         setActiveSection('');
       }
     };
+
+    // Release programmatic scroll lock if user manually scrolls with wheel or touch
+    const handleManualScroll = () => {
+      if (scrollLockTimeoutRef.current) {
+        clearTimeout(scrollLockTimeoutRef.current);
+        scrollLockTimeoutRef.current = null;
+      }
+    };
+
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('wheel', handleManualScroll, { passive: true });
+    window.addEventListener('touchmove', handleManualScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('wheel', handleManualScroll);
+      window.removeEventListener('touchmove', handleManualScroll);
+      if (scrollLockTimeoutRef.current) {
+        clearTimeout(scrollLockTimeoutRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -201,21 +286,35 @@ export default function PublicLandingPage() {
             </div>
 
             {/* Desktop Capsule Pill Nav */}
-            <nav className="hidden lg:flex items-center p-1 bg-muted/40 dark:bg-muted/30 border border-border/60 rounded-full shadow-2xs backdrop-blur-md">
+            <nav
+              ref={navRef}
+              className="relative hidden lg:flex items-center p-1 bg-muted/40 dark:bg-muted/30 border border-border/60 rounded-full shadow-2xs backdrop-blur-md"
+            >
+              {/* Dynamic Sliding Pill Indicator */}
+              <span
+                className="absolute rounded-full bg-primary transition-all duration-300 ease-out shadow-xs pointer-events-none"
+                style={{
+                  left: `${pillStyle.left}px`,
+                  top: `${pillStyle.top}px`,
+                  width: `${pillStyle.width}px`,
+                  height: `${pillStyle.height}px`,
+                  opacity: pillStyle.opacity,
+                }}
+              />
               {navItems.map((item) => (
                 <button
                   key={item.id}
+                  ref={(el) => {
+                    navItemRefs.current[item.id] = el;
+                  }}
                   type="button"
                   onClick={(e) => handleNavClick(item.id, e)}
-                  className={`relative px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 whitespace-nowrap cursor-pointer ${
+                  className={`relative z-10 px-3 py-1.5 rounded-full text-xs font-medium transition-colors duration-200 whitespace-nowrap cursor-pointer ${
                     activeSection === item.id
-                      ? 'text-primary-foreground font-semibold shadow-xs'
+                      ? 'text-primary-foreground font-semibold'
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
                   }`}
                 >
-                  {activeSection === item.id && (
-                    <span className="absolute inset-0 bg-primary rounded-full -z-10 transition-all duration-300 shadow-sm" />
-                  )}
                   {item.label}
                 </button>
               ))}
