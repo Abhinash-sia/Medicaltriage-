@@ -134,7 +134,12 @@ export default function LoginPage() {
       const user = json.data.user;
       setAuthSession({ accessToken, refreshToken, user });
 
-      if (user.role === 'PATIENT') {
+      const params = new URLSearchParams(window.location.search);
+      const redirectUrl = params.get('redirect');
+
+      if (redirectUrl) {
+        router.push(redirectUrl);
+      } else if (user.role === 'PATIENT') {
         router.push('/patient');
       } else if (user.role === 'ADMIN') {
         router.push('/admin');

@@ -19,6 +19,9 @@ import {
   Activity,
   ArrowRight,
   Sparkles,
+  Lock,
+  LogIn,
+  LogOut,
 } from 'lucide-react';
 import { DemoBanner } from '@/components/ui/DemoBanner';
 import { LanguageSelector } from '@/components/ui/LanguageSelector';
@@ -27,6 +30,7 @@ import { AudioWaveformRecorder } from '@/components/intake/AudioWaveformRecorder
 import { DocumentDropzone } from '@/components/intake/DocumentDropzone';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { gsap, withMotion, MOTION } from '@/lib/motion';
+import { getAccessToken, getStoredUser, setAuthSession, clearAuthSession } from '@/lib/authSession';
 
 interface IntakeFormData {
   consent: boolean;
@@ -66,6 +70,9 @@ export default function PatientIntakePage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [attachedVoiceFile, setAttachedVoiceFile] = useState<File | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ id?: string; name?: string; email?: string; role?: string } | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
+  const [isDemoLoggingIn, setIsDemoLoggingIn] = useState<boolean>(false);
   const [submittedCase, setSubmittedCase] = useState<{
     caseId: string;
     caseNumber: string;
@@ -78,6 +85,55 @@ export default function PatientIntakePage() {
 
   const stepContainerRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const token = getAccessToken();
+      const user = getStoredUser();
+      if (token && user) {
+        setCurrentUser(user);
+      } else {
+        setCurrentUser(null);
+      }
+      setIsAuthLoading(false);
+    }
+  }, []);
+
+  const handleDemoPatientLogin = async () => {
+    setIsDemoLoggingIn(true);
+    setSubmitError(null);
+    try {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${apiBaseUrl}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'patient.demo.001@example.test',
+          password: 'Password123!',
+        }),
+      });
+
+      const json = await res.json();
+      if (res.ok && json.success) {
+        const accessToken = json.data.accessToken || json.data.token;
+        const refreshToken = json.data.refreshToken;
+        const user = json.data.user;
+        setAuthSession({ accessToken, refreshToken, user });
+        setCurrentUser(user);
+      } else {
+        throw new Error(json.error?.message || 'Demo patient authentication failed');
+      }
+    } catch (err: any) {
+      setSubmitError(err.message || 'Failed to authenticate demo patient.');
+    } finally {
+      setIsDemoLoggingIn(false);
+    }
+  };
+
+  const handleLogout = () => {
+    clearAuthSession(false);
+    setCurrentUser(null);
+  };
 
   const handleConsentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({ ...prev, consent: e.target.checked }));
@@ -142,13 +198,18 @@ export default function PatientIntakePage() {
     setSubmitError(null);
 
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const token = getAccessToken();
+      if (!token) {
+        setCurrentUser(null);
+        throw new Error('Authentication required. Please sign in to submit your intake without losing your data.');
+      }
+
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
       const response = await fetch(`${apiBaseUrl}/intake`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          Authorization: `Bearer ${token}`,
           'Idempotency-Key': `intake-${Date.now()}`,
         },
         body: JSON.stringify({
@@ -166,6 +227,11 @@ export default function PatientIntakePage() {
           course: formData.course,
         }),
       });
+
+      if (response.status === 401) {
+        setCurrentUser(null);
+        throw new Error('Your session has expired. Please sign in below to submit your intake without losing your data.');
+      }
 
       const result = await response.json();
 
@@ -341,9 +407,113 @@ export default function PatientIntakePage() {
                 </Button>
               </CardFooter>
             </Card>
+          ) : isAuthLoading ? (
+            <Card className="border-border bg-card shadow-xs p-12 text-center">
+              <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-3" />
+              <p className="text-xs text-muted-foreground">Checking authentication status...</p>
+            </Card>
+          ) : !currentUser ? (
+            <Card className="border-border bg-card shadow-sm overflow-hidden">
+              <div className="bg-gradient-to-r from-primary/10 via-sky-500/10 to-teal-500/10 border-b border-border p-6 text-center">
+                <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-3 ring-8 ring-primary/5">
+                  <Lock className="w-6 h-6" />
+                </div>
+                <CardTitle className="text-xl font-bold tracking-tight text-foreground">
+                  Sign In Required for Clinical Intake
+                </CardTitle>
+                <CardDescription className="max-w-md mx-auto mt-2 text-xs sm:text-sm text-muted-foreground">
+                  Clinical triage requires an active patient session so your responses, recordings, and medical records are safely linked to your chart.
+                </CardDescription>
+              </div>
+              <CardContent className="p-6 space-y-5">
+                {submitError && (
+                  <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-[6px] text-destructive text-xs flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{submitError}</span>
+                  </div>
+                )}
+
+                {/* Option 1: 1-Click Instant Demo Patient Login */}
+                <div className="p-4 rounded-lg border border-primary/20 bg-primary/5 space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm text-foreground">Instant Demo Patient Login</span>
+                        <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/30">Quick Test</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Sign in instantly as synthetic test patient <strong className="text-foreground">Anita Verma</strong> (<code className="text-[11px] font-mono">patient.demo.001@example.test</code>) to test the intake flow.
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={handleDemoPatientLogin}
+                    disabled={isDemoLoggingIn}
+                    className="w-full h-9 text-xs font-medium gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    {isDemoLoggingIn ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Authenticating demo patient...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        <span>Sign In as Demo Patient (1-Click)</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Option 2: Go to Sign In */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-lg border border-border bg-muted/20">
+                  <div className="space-y-0.5 text-center sm:text-left">
+                    <p className="text-xs font-medium text-foreground">Have your own patient credentials?</p>
+                    <p className="text-[11px] text-muted-foreground">Log in with your existing email and password.</p>
+                  </div>
+                  <Link href="/login?redirect=/patient/intake" className="w-full sm:w-auto">
+                    <Button variant="outline" className="w-full sm:w-auto text-xs h-8 gap-1.5">
+                      <LogIn className="w-3.5 h-3.5" />
+                      <span>Go to Sign In</span>
+                    </Button>
+                  </Link>
+                </div>
+
+                <div className="text-center pt-2">
+                  <Link href="/" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 transition-colors">
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                    <span>Return to Home</span>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
           ) : (
-            /* Multi-Step Intake Form */
-            <Card className="bg-card border border-border shadow-2xs">
+            <div className="space-y-3">
+              {/* Authenticated Patient Session Header */}
+              <div className="flex items-center justify-between px-3.5 py-2 bg-muted/40 border border-border rounded-[6px] text-xs">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-[10px]">
+                    {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'P'}
+                  </div>
+                  <div>
+                    <span className="font-medium text-foreground">{currentUser.name || 'Patient'}</span>
+                    <span className="text-muted-foreground ml-1.5 text-[11px]">({currentUser.email || 'patient'})</span>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="h-6 px-2 text-[11px] text-muted-foreground hover:text-destructive gap-1"
+                >
+                  <LogOut className="w-3 h-3" />
+                  <span>Sign Out</span>
+                </Button>
+              </div>
+
+              {/* Multi-Step Intake Form */}
+              <Card className="bg-card border border-border shadow-2xs">
               {/* Stepper Header */}
               <div className="bg-muted/30 px-4 py-2.5 border-b border-border flex justify-between items-center text-[11px] font-medium text-muted-foreground">
                 <span className={step === 1 ? 'text-primary font-bold' : ''}>
@@ -646,6 +816,7 @@ export default function PatientIntakePage() {
                 )}
               </CardFooter>
             </Card>
+            </div>
           )}
         </div>
       </div>

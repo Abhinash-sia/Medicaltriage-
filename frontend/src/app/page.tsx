@@ -160,7 +160,7 @@ export default function PublicLandingPage() {
                   {t('common.login')}
                 </Button>
               </Link>
-              <Link href="/patient/intake">
+              <Link href="/patient">
                 <Button
                   size="sm"
                   className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs min-h-[32px] px-3.5 py-1 shadow-sm font-semibold border border-primary/30 whitespace-nowrap"
