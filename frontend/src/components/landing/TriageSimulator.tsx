@@ -173,7 +173,7 @@ export function TriageSimulator() {
               <span className="font-mono text-xs text-muted-foreground uppercase tracking-wider">
                 {isOdia ? 'ରୋଗୀ ଗ୍ରହଣ ତଥ୍ୟ' : isHindi ? 'मरीज़ इनटेक विवरण' : 'Patient Case Intake'}
               </span>
-              <span className="font-mono text-xs text-primary dark:text-accent bg-primary/10 dark:bg-accent/10 px-2 py-0.5 rounded border border-primary/20 dark:border-accent/20">
+              <span className="font-mono text-xs text-primary dark:text-accent bg-primary/10 dark:bg-accent/10 px-2.5 py-1 rounded border border-primary/20 dark:border-accent/20 leading-normal">
                 {active.intakeChannel}
               </span>
             </div>

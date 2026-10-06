@@ -177,7 +177,7 @@ export function InteractiveTriageAssistant() {
           </div>
         </div>
 
-        <Badge variant="outline" className={`font-mono text-[10px] font-bold px-2 py-0.5 ${selected.badgeColor}`}>
+        <Badge variant="outline" className={`font-mono text-[10px] font-bold px-2.5 py-1 leading-normal ${selected.badgeColor}`}>
           {selected.urgency}
         </Badge>
       </div>
@@ -195,14 +195,14 @@ export function InteractiveTriageAssistant() {
                 key={opt.id}
                 type="button"
                 onClick={() => setSelectedId(opt.id)}
-                className={`text-left p-2.5 rounded-xl border transition-all flex items-center gap-2 text-xs ${
+                className={`text-left p-2.5 rounded-xl border transition-all flex items-center gap-2 text-xs min-h-[44px] ${
                   isSelected
                     ? 'bg-primary/10 dark:bg-accent/10 border-primary/40 dark:border-accent/40 text-foreground font-semibold shadow-xs ring-1 ring-primary/20'
                     : 'bg-muted/40 border-border/70 text-muted-foreground hover:text-foreground hover:bg-muted/70'
                 }`}
               >
-                <span className="text-base">{opt.icon}</span>
-                <span className="truncate text-[11px]">{opt.label[langKey]}</span>
+                <span className="text-base shrink-0">{opt.icon}</span>
+                <span className="text-[11px] leading-snug line-clamp-2">{opt.label[langKey]}</span>
               </button>
             );
           })}

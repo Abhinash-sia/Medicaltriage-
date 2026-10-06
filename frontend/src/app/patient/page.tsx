@@ -228,22 +228,22 @@ export default function PatientDashboardPage() {
       case 'URGENT':
       case 'EMERGENCY':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-destructive/15 text-destructive border border-destructive/30">
-            <span className="w-1.5 h-1.5 rounded-full bg-destructive mr-1.5 animate-pulse" />
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-destructive/15 text-destructive border border-destructive/30 leading-normal">
+            <span className="w-1.5 h-1.5 rounded-full bg-destructive mr-1.5 animate-pulse shrink-0" />
             {priority}
           </span>
         );
       case 'PRIORITY':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5" />
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 leading-normal">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5 shrink-0" />
             {priority}
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5" />
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 leading-normal">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 shrink-0" />
             {priority || 'ROUTINE'}
           </span>
         );
@@ -256,36 +256,36 @@ export default function PatientDashboardPage() {
       case 'IN_REVIEW':
       case 'ASSIGNED':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
-            <Activity className="w-3 h-3 mr-1 text-primary" />
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20 leading-normal">
+            <Activity className="w-3 h-3 mr-1 text-primary shrink-0" />
             {t('patient.statUnderReview')}
           </span>
         );
       case 'INTAKE_SUBMITTED':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/30">
-            <Clock className="w-3 h-3 mr-1 text-sky-600 dark:text-sky-400" />
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/30 leading-normal">
+            <Clock className="w-3 h-3 mr-1 text-sky-600 dark:text-sky-400 shrink-0" />
             {t('patient.statAwaiting')}
           </span>
         );
       case 'TRIAGE_COMPLETED':
       case 'CLOSED':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground border border-border">
-            <CheckCircle2 className="w-3 h-3 mr-1 text-muted-foreground" />
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground border border-border leading-normal">
+            <CheckCircle2 className="w-3 h-3 mr-1 text-muted-foreground shrink-0" />
             {t('patient.statCompleted')}
           </span>
         );
       case 'REFERRED':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30">
-            <MapPin className="w-3 h-3 mr-1 text-purple-600 dark:text-purple-400" />
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 leading-normal">
+            <MapPin className="w-3 h-3 mr-1 text-purple-600 dark:text-purple-400 shrink-0" />
             Referred
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground border border-border">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground border border-border leading-normal">
             {status}
           </span>
         );

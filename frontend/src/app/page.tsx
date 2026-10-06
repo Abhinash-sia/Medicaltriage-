@@ -116,54 +116,54 @@ export default function PublicLandingPage() {
       >
         {/* Top Floating Glass Navigation */}
         <header className="sticky top-0 z-50 bg-background/85 dark:bg-background/80 backdrop-blur-md border-b border-border/80 shadow-xs">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-16 py-2.5 flex items-center justify-between gap-4">
+            <div className="flex items-center space-x-3 shrink-0">
               <div className="bg-primary p-2 rounded-lg text-primary-foreground border border-primary/40 shadow-sm">
                 <HeartPulse className="w-5 h-5 text-accent" />
               </div>
               <div className="flex items-center space-x-2">
                 <span className="text-lg font-bold tracking-tight text-foreground font-mono">MedicalTriage</span>
-                <span className="text-[10px] font-mono bg-muted/80 text-primary dark:text-accent px-2 py-0.5 rounded-full font-semibold border border-border/80">
+                <span className="text-[10px] bg-muted/80 text-primary dark:text-accent px-2.5 py-1 rounded-full font-semibold border border-border/80 leading-normal inline-flex items-center">
                   {t('landing.prototype')}
                 </span>
               </div>
             </div>
 
-            <nav className="hidden md:flex items-center space-x-6 text-xs font-medium text-muted-foreground">
-              <a href="#how-it-works" className="hover:text-foreground transition-colors">
+            <nav className="hidden lg:flex items-center space-x-5 text-xs font-medium text-muted-foreground">
+              <a href="#how-it-works" className="hover:text-foreground transition-colors py-1">
                 {t('landing.navHowItWorks')}
               </a>
-              <a href="#simulator" className="hover:text-foreground transition-colors">
+              <a href="#simulator" className="hover:text-foreground transition-colors py-1">
                 {t('landing.navDemo')}
               </a>
-              <a href="#capabilities" className="hover:text-foreground transition-colors">
+              <a href="#capabilities" className="hover:text-foreground transition-colors py-1">
                 {t('landing.navCapabilities')}
               </a>
-              <a href="#safety" className="hover:text-foreground transition-colors">
+              <a href="#safety" className="hover:text-foreground transition-colors py-1">
                 {t('landing.navSafety')}
               </a>
-              <a href="#india-context" className="hover:text-foreground transition-colors">
+              <a href="#india-context" className="hover:text-foreground transition-colors py-1">
                 {t('landing.navIndiaContext')}
               </a>
             </nav>
 
-            <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
               <LanguageSelector variant="full" />
               <ThemeToggle />
               <Link href="/login">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="hidden sm:inline-flex items-center gap-1.5 border-border/80 bg-card/60 backdrop-blur-md text-foreground hover:bg-muted text-xs h-8"
+                  className="hidden sm:inline-flex items-center gap-1.5 border-border/80 bg-card/60 backdrop-blur-md text-foreground hover:bg-muted text-xs min-h-[32px] px-3 py-1 whitespace-nowrap"
                 >
-                  <LogIn className="w-3.5 h-3.5" />
+                  <LogIn className="w-3.5 h-3.5 shrink-0" />
                   {t('common.login')}
                 </Button>
               </Link>
               <Link href="/patient/intake">
                 <Button
                   size="sm"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs h-8 px-3.5 shadow-sm font-semibold border border-primary/30"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs min-h-[32px] px-3.5 py-1 shadow-sm font-semibold border border-primary/30 whitespace-nowrap"
                 >
                   {t('landing.patientPortal')}
                 </Button>
@@ -181,13 +181,13 @@ export default function PublicLandingPage() {
               {/* Left Column: Mission & Actions */}
               <div className="lg:col-span-7 space-y-6 text-left">
                 {/* Status Pill */}
-                <div className="hero-badge inline-flex items-center space-x-2 bg-card/90 backdrop-blur-sm border border-border text-primary dark:text-accent px-3.5 py-1.5 rounded-full text-xs font-mono tracking-wider uppercase shadow-xs ring-1 ring-white/10">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <div className="hero-badge inline-flex items-center space-x-2 bg-card/90 backdrop-blur-sm border border-border text-primary dark:text-accent px-3.5 py-1.5 rounded-full text-xs font-medium leading-normal shadow-xs ring-1 ring-white/10">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                   <span>{t('landing.badgeAssistant')}</span>
                 </div>
 
                 {/* H1 Heading */}
-                <h1 className="hero-headline text-4xl sm:text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight leading-[1.12]">
+                <h1 className="hero-headline text-3xl sm:text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight leading-[1.25] sm:leading-[1.18]">
                   {t('landing.heroTitleLine1')} <br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-foreground">
                     {t('landing.heroTitleLine2')}
@@ -200,21 +200,21 @@ export default function PublicLandingPage() {
                 </p>
 
                 {/* Badges Grid */}
-                <div className="hero-chips flex flex-wrap gap-2 text-xs font-mono">
-                  <Badge variant="outline" className="bg-card/85 backdrop-blur-sm border-border text-foreground px-3 py-1 shadow-2xs">
-                    <ShieldAlert className="w-3.5 h-3.5 mr-1.5 text-[#E8A33A]" />
+                <div className="hero-chips flex flex-wrap gap-2 text-xs">
+                  <Badge variant="outline" className="bg-card/85 backdrop-blur-sm border-border text-foreground px-3 py-1.5 shadow-2xs leading-normal">
+                    <ShieldAlert className="w-3.5 h-3.5 mr-1.5 text-[#E8A33A] shrink-0" />
                     {t('landing.badgeNonDiagnostic')}
                   </Badge>
-                  <Badge variant="outline" className="bg-card/85 backdrop-blur-sm border-border text-foreground px-3 py-1 shadow-2xs">
-                    <Stethoscope className="w-3.5 h-3.5 mr-1.5 text-primary dark:text-accent" />
+                  <Badge variant="outline" className="bg-card/85 backdrop-blur-sm border-border text-foreground px-3 py-1.5 shadow-2xs leading-normal">
+                    <Stethoscope className="w-3.5 h-3.5 mr-1.5 text-primary dark:text-accent shrink-0" />
                     {t('landing.badgeHumanReview')}
                   </Badge>
-                  <Badge variant="outline" className="bg-card/85 backdrop-blur-sm border-border text-foreground px-3 py-1 shadow-2xs">
-                    <Lock className="w-3.5 h-3.5 mr-1.5 text-[#2E9E6B]" />
+                  <Badge variant="outline" className="bg-card/85 backdrop-blur-sm border-border text-foreground px-3 py-1.5 shadow-2xs leading-normal">
+                    <Lock className="w-3.5 h-3.5 mr-1.5 text-[#2E9E6B] shrink-0" />
                     {t('landing.badgePrivacy')}
                   </Badge>
-                  <Badge variant="outline" className="bg-card/85 backdrop-blur-sm border-border text-foreground px-3 py-1 shadow-2xs">
-                    <Globe className="w-3.5 h-3.5 mr-1.5 text-primary dark:text-accent" />
+                  <Badge variant="outline" className="bg-card/85 backdrop-blur-sm border-border text-foreground px-3 py-1.5 shadow-2xs leading-normal">
+                    <Globe className="w-3.5 h-3.5 mr-1.5 text-primary dark:text-accent shrink-0" />
                     {t('landing.badgeMultilingual')}
                   </Badge>
                 </div>
@@ -224,17 +224,17 @@ export default function PublicLandingPage() {
                   <Link href="/patient/intake">
                     <Button
                       size="lg"
-                      className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-7 py-5 text-sm shadow-lg shadow-primary/20 border border-primary/40"
+                      className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-7 py-3 min-h-[46px] text-sm shadow-lg shadow-primary/20 border border-primary/40 leading-normal"
                     >
                       {t('landing.getStarted')}
-                      <ArrowRight className="w-4 h-4 ml-2" />
+                      <ArrowRight className="w-4 h-4 ml-2 shrink-0" />
                     </Button>
                   </Link>
                   <a href="#how-it-works">
                     <Button
                       size="lg"
                       variant="outline"
-                      className="w-full sm:w-auto border-border/80 bg-card/80 backdrop-blur-md text-foreground font-semibold px-7 py-5 text-sm hover:bg-muted/80 shadow-xs"
+                      className="w-full sm:w-auto border-border/80 bg-card/80 backdrop-blur-md text-foreground font-semibold px-7 py-3 min-h-[46px] text-sm hover:bg-muted/80 shadow-xs leading-normal"
                     >
                       {t('landing.navHowItWorks')}
                     </Button>

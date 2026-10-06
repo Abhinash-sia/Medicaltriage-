@@ -75,6 +75,33 @@
     color: hsl(var(--foreground));
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
+
+  /* Indic Script Breathing Room & Ligature Protection */
+  html[lang="ml"],
+  html[lang="hi"],
+  html[lang="or"],
+  html[lang="bn"],
+  html[lang="ta"],
+  html[lang="te"],
+  html[lang="mr"],
+  html[lang="kn"],
+  html[lang="pa"],
+  html[lang="gu"] {
+    letter-spacing: normal;
+  }
+
+  html[lang="ml"] body,
+  html[lang="hi"] body,
+  html[lang="or"] body,
+  html[lang="bn"] body,
+  html[lang="ta"] body,
+  html[lang="te"] body,
+  html[lang="mr"] body,
+  html[lang="kn"] body,
+  html[lang="pa"] body,
+  html[lang="gu"] body {
+    line-height: 1.6;
+  }
 }
 
 /* Subtle Urgent Pulse Animation */

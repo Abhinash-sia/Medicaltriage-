@@ -65,6 +65,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
 
     setLanguageState(initialLang);
+    if (typeof document !== 'undefined') {
+      document.documentElement.lang = initialLang;
+    }
     setIsInitialized(true);
   }, []);
 
@@ -72,6 +75,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     if (!SUPPORTED_LANGUAGES.some((l) => l.code === newLang)) return;
 
     setLanguageState(newLang);
+    if (typeof document !== 'undefined') {
+      document.documentElement.lang = newLang;
+    }
 
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY, newLang);
