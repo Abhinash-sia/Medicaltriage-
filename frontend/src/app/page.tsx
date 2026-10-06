@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import gsap from 'gsap';
@@ -29,6 +29,8 @@ import {
   Zap,
   Clock,
   Compass,
+  Menu,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -56,6 +58,72 @@ gsap.registerPlugin(ScrollTrigger);
 export default function PublicLandingPage() {
   const { t } = useLanguage();
   const mainContainerRef = useRef<HTMLDivElement>(null);
+  const [activeSection, setActiveSection] = useState<string>('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+
+  const navItems = [
+    { id: 'simulator', label: t('landing.navDemo') },
+    { id: 'how-it-works', label: t('landing.navHowItWorks') },
+    { id: 'capabilities', label: t('landing.navCapabilities') },
+    { id: 'safety', label: t('landing.navSafety') },
+    { id: 'india-context', label: t('landing.navIndiaContext') },
+  ];
+
+  const handleNavClick = (sectionId: string, e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    setIsMobileMenuOpen(false);
+    setActiveSection(sectionId);
+
+    const target = document.getElementById(sectionId);
+    if (!target) return;
+
+    // Use Lenis smooth scroll if active
+    const lenis = (typeof window !== 'undefined' ? (window as any).__lenis : null);
+    if (lenis && typeof lenis.scrollTo === 'function') {
+      lenis.scrollTo(target, {
+        offset: -76,
+        duration: 1.25,
+        easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      });
+    } else {
+      const top = target.getBoundingClientRect().top + window.scrollY - 76;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+
+    // Luminous focal pulse feedback on target section
+    gsap.fromTo(
+      target,
+      {
+        boxShadow: 'inset 0 0 0 2px hsl(var(--primary) / 0.6), 0 0 35px -5px hsl(var(--primary) / 0.35)',
+      },
+      {
+        boxShadow: 'inset 0 0 0 2px hsl(var(--primary) / 0), 0 0 0px 0px hsl(var(--primary) / 0)',
+        duration: 1.6,
+        delay: 0.25,
+        ease: 'power2.out',
+        clearProps: 'boxShadow',
+      }
+    );
+  };
+
+  useEffect(() => {
+    const sectionIds = ['safety', 'simulator', 'how-it-works', 'capabilities', 'india-context'];
+    const handleScroll = () => {
+      const scrollPos = window.scrollY + 180;
+      for (let i = sectionIds.length - 1; i >= 0; i--) {
+        const el = document.getElementById(sectionIds[i]);
+        if (el && el.offsetTop <= scrollPos) {
+          setActiveSection(sectionIds[i]);
+          return;
+        }
+      }
+      if (window.scrollY < 300) {
+        setActiveSection('');
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -116,60 +184,124 @@ export default function PublicLandingPage() {
       >
         {/* Top Floating Glass Navigation */}
         <header className="sticky top-0 z-50 bg-background/85 dark:bg-background/80 backdrop-blur-md border-b border-border/80 shadow-xs">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-16 py-2.5 flex items-center justify-between gap-4">
-            <div className="flex items-center space-x-3 shrink-0">
-              <div className="bg-primary p-2 rounded-lg text-primary-foreground border border-primary/40 shadow-sm">
-                <HeartPulse className="w-5 h-5 text-accent" />
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-lg font-bold tracking-tight text-foreground font-mono">MedicalTriage</span>
-                <span className="text-[10px] bg-muted/80 text-primary dark:text-accent px-2.5 py-1 rounded-full font-semibold border border-border/80 leading-normal inline-flex items-center">
-                  {t('landing.prototype')}
-                </span>
-              </div>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-[68px] flex items-center justify-between gap-3 sm:gap-4">
+            {/* Brand Logo */}
+            <div className="flex items-center space-x-2.5 sm:space-x-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  setActiveSection('');
+                }}
+                className="flex items-center space-x-2 sm:space-x-2.5 group focus:outline-none text-left"
+                aria-label="Scroll to top"
+              >
+                <div className="bg-primary p-1.5 sm:p-2 rounded-lg text-primary-foreground border border-primary/40 shadow-sm transition-transform duration-300 group-hover:scale-105">
+                  <HeartPulse className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-base sm:text-lg font-bold tracking-tight text-foreground font-mono">MedicalTriage</span>
+                  <span className="text-[10px] bg-muted/80 text-primary dark:text-accent px-2 py-0.5 rounded-full font-semibold border border-border/80 leading-normal inline-flex items-center">
+                    {t('landing.prototype')}
+                  </span>
+                </div>
+              </button>
             </div>
 
-            <nav className="hidden lg:flex items-center space-x-5 text-xs font-medium text-muted-foreground">
-              <a href="#how-it-works" className="hover:text-foreground transition-colors py-1">
-                {t('landing.navHowItWorks')}
-              </a>
-              <a href="#simulator" className="hover:text-foreground transition-colors py-1">
-                {t('landing.navDemo')}
-              </a>
-              <a href="#capabilities" className="hover:text-foreground transition-colors py-1">
-                {t('landing.navCapabilities')}
-              </a>
-              <a href="#safety" className="hover:text-foreground transition-colors py-1">
-                {t('landing.navSafety')}
-              </a>
-              <a href="#india-context" className="hover:text-foreground transition-colors py-1">
-                {t('landing.navIndiaContext')}
-              </a>
+            {/* Desktop Capsule Pill Nav */}
+            <nav className="hidden lg:flex items-center p-1 bg-muted/40 dark:bg-muted/30 border border-border/60 rounded-full shadow-2xs backdrop-blur-md">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={(e) => handleNavClick(item.id, e)}
+                  className={`relative px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 whitespace-nowrap cursor-pointer ${
+                    activeSection === item.id
+                      ? 'text-primary-foreground font-semibold shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                  }`}
+                >
+                  {activeSection === item.id && (
+                    <span className="absolute inset-0 bg-primary rounded-full -z-10 transition-all duration-300 shadow-sm" />
+                  )}
+                  {item.label}
+                </button>
+              ))}
             </nav>
 
-            <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
-              <LanguageSelector variant="full" />
+            {/* Right: Controls & Portal Action */}
+            <div className="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
+              <LanguageSelector
+                className="shrink-0"
+                selectClassName="max-w-[115px] sm:max-w-[155px] truncate"
+              />
               <ThemeToggle />
               <Link href="/login">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="hidden sm:inline-flex items-center gap-1.5 border-border/80 bg-card/60 backdrop-blur-md text-foreground hover:bg-muted text-xs min-h-[32px] px-3 py-1 whitespace-nowrap"
+                  className="hidden md:inline-flex items-center gap-1.5 border-border/80 bg-card/60 backdrop-blur-md text-foreground hover:bg-muted text-xs h-8 px-3 whitespace-nowrap"
                 >
                   <LogIn className="w-3.5 h-3.5 shrink-0" />
-                  {t('common.login')}
+                  <span>{t('common.login')}</span>
                 </Button>
               </Link>
               <Link href="/patient">
                 <Button
                   size="sm"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs min-h-[32px] px-3.5 py-1 shadow-sm font-semibold border border-primary/30 whitespace-nowrap"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs h-8 px-3.5 shadow-sm font-semibold border border-primary/30 whitespace-nowrap"
                 >
                   {t('landing.patientPortal')}
                 </Button>
               </Link>
+
+              {/* Mobile Menu Toggle Button (visible < lg) */}
+              <button
+                type="button"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="lg:hidden w-8 h-8 rounded border border-border bg-card text-muted-foreground hover:text-foreground hover:border-accent/50 focus:outline-none flex items-center justify-center transition-colors cursor-pointer"
+                aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+              >
+                {isMobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+              </button>
             </div>
           </div>
+
+          {/* Mobile Glass Dropdown Menu */}
+          {isMobileMenuOpen && (
+            <div className="lg:hidden border-t border-border/70 bg-background/95 backdrop-blur-lg px-4 py-3 space-y-1 shadow-lg transition-all animate-in fade-in slide-in-from-top-2 duration-200">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={(e) => handleNavClick(item.id, e)}
+                  className={`w-full text-left px-3 py-2 rounded-md text-xs font-medium transition-colors flex items-center justify-between cursor-pointer ${
+                    activeSection === item.id
+                      ? 'bg-primary/10 text-primary font-semibold'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  <span>{item.label}</span>
+                  {activeSection === item.id && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                  )}
+                </button>
+              ))}
+              <div className="pt-2 border-t border-border/50 flex md:hidden items-center justify-between">
+                <Link href="/login" className="w-full">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-xs h-8 gap-1.5"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <LogIn className="w-3.5 h-3.5" />
+                    <span>{t('common.login')}</span>
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          )}
         </header>
 
         {/* Hero Section */}
@@ -251,7 +383,7 @@ export default function PublicLandingPage() {
         </section>
 
         {/* Strict Non-Diagnostic & Safety Boundary Banner */}
-        <section id="safety" className="reveal-section glass-panel !border-x-0 border-y border-amber-500/30 py-6 px-4 !bg-amber-500/10 dark:!bg-amber-500/5">
+        <section id="safety" className="reveal-section scroll-mt-20 glass-panel !border-x-0 border-y border-amber-500/30 py-6 px-4 !bg-amber-500/10 dark:!bg-amber-500/5">
           <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="bg-amber-500/20 text-amber-700 dark:text-amber-400 p-2.5 rounded-xl border border-amber-500/30 shrink-0">
               <ShieldAlert className="w-6 h-6" />
@@ -268,7 +400,7 @@ export default function PublicLandingPage() {
         </section>
 
         {/* Live Interactive Triage Sandbox */}
-        <section id="simulator" className="reveal-section py-24 px-4 sm:px-6 lg:px-8 border-b border-border/80 bg-muted/20">
+        <section id="simulator" className="reveal-section scroll-mt-20 py-24 px-4 sm:px-6 lg:px-8 border-b border-border/80 bg-muted/20">
           <div className="max-w-7xl mx-auto space-y-12">
             <div className="text-center max-w-2xl mx-auto space-y-3">
               <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-primary dark:text-accent uppercase tracking-wider bg-primary/10 dark:bg-accent/10 px-3 py-1 rounded-md border border-primary/20 dark:border-accent/20">
@@ -288,7 +420,7 @@ export default function PublicLandingPage() {
         </section>
 
         {/* Storytelling Pipeline: How The System Works */}
-        <section id="how-it-works" className="reveal-section py-24 px-4 sm:px-6 lg:px-8 border-b border-border/80">
+        <section id="how-it-works" className="reveal-section scroll-mt-20 py-24 px-4 sm:px-6 lg:px-8 border-b border-border/80">
           <div className="max-w-7xl mx-auto space-y-16">
             <div className="text-center max-w-2xl mx-auto space-y-3">
               <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-primary dark:text-accent uppercase tracking-wider bg-primary/10 dark:bg-accent/10 px-3 py-1 rounded-md border border-primary/20 dark:border-accent/20">
@@ -308,7 +440,7 @@ export default function PublicLandingPage() {
         </section>
 
         {/* Core Capabilities Section (Asymmetric Bento Grid) */}
-        <section id="capabilities" className="reveal-section py-24 px-4 sm:px-6 lg:px-8 border-b border-border/80 bg-muted/10">
+        <section id="capabilities" className="reveal-section scroll-mt-20 py-24 px-4 sm:px-6 lg:px-8 border-b border-border/80 bg-muted/10">
           <div className="max-w-7xl mx-auto space-y-16">
             <div className="text-center max-w-2xl mx-auto space-y-3">
               <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-primary dark:text-accent uppercase tracking-wider bg-primary/10 dark:bg-accent/10 px-3 py-1 rounded-md border border-primary/20 dark:border-accent/20">
@@ -495,7 +627,7 @@ export default function PublicLandingPage() {
         </section>
 
         {/* India Context Section */}
-        <section id="india-context" className="reveal-section py-24 px-4 sm:px-6 lg:px-8 border-b border-border/80">
+        <section id="india-context" className="reveal-section scroll-mt-20 py-24 px-4 sm:px-6 lg:px-8 border-b border-border/80">
           <div className="max-w-7xl mx-auto space-y-12">
             <div className="max-w-3xl mx-auto text-center space-y-3">
               <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-primary dark:text-accent uppercase tracking-wider bg-primary/10 dark:bg-accent/10 px-3 py-1 rounded-md border border-primary/20 dark:border-accent/20">
