@@ -6,10 +6,11 @@ This directory contains the complete, production-verified LaTeX source code for 
 
 ## 1. Document Overview
 
-- **Master File**: `main.tex`
-- **Document Class**: Standard `report` (A4 paper, 11pt)
-- **Chapters**: 18 Chapters (Comprehensive System Design, Safety Engine, Architecture, Testing, Security)
-- **Appendices**: Appendices A through E (REST API Catalog, Database JSON Schema, 22-Rule Safety Reference, Sample STN, Glossary)
+- **Master Report File**: `main.tex`
+- **Presentation Script File**: `presentation-script.tex`
+- **Document Classes**: Standard `report` for `main.tex`; `article` with `tcolorbox` for `presentation-script.tex`
+- **Chapters in Report**: 18 Chapters (Comprehensive System Design, Safety Engine, Architecture, Testing, Security)
+- **Appendices in Report**: Appendices A through E (REST API Catalog, Database JSON Schema, 22-Rule Safety Reference, Sample STN, Glossary)
 - **Bibliography**: 12 Formal Citations (ESI, CTAS, ETAT, Sepsis-3, Glasgow Coma Scale, ACEP Chest Pain, ABDM, Sarvam AI, Gemini, STRIDE, FHIR R4, REST Fielding)
 
 ---
@@ -30,16 +31,21 @@ This directory contains the complete, production-verified LaTeX source code for 
 ### Option A: Overleaf (Recommended)
 1. Open [Overleaf](https://www.overleaf.com/).
 2. Create a **New Project** $\to$ **Blank Project**.
-3. Upload or paste the contents of `main.tex`.
+3. Upload `main.tex` (for the 77-page engineering report) or `presentation-script.tex` (for the 10-minute presentation script).
 4. Ensure the compiler is set to **pdfLaTeX** or **XeLaTeX**.
 5. Click **Recompile**.
 
 ### Option B: Local Compilation via CLI
 ```bash
+# To compile the full capstone engineering report:
 pdflatex main.tex
 pdflatex main.tex  # Second run resolves TOC, List of Figures, and citation references
+
+# To compile the standalone master presentation script:
+pdflatex presentation-script.tex
 ```
 or with `latexmk`:
 ```bash
 latexmk -pdf main.tex
+latexmk -pdf presentation-script.tex
 ```
