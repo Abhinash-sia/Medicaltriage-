@@ -235,7 +235,7 @@ export function StorytellingPipeline() {
     <div ref={containerRef} className="w-full relative space-y-12">
       {/* Top Floating Glass Stepper Navigator */}
       <div className="sticky top-20 z-30 flex items-center justify-center">
-        <div className="glass-panel p-1.5 rounded-2xl flex flex-wrap items-center justify-center gap-1.5 shadow-xl border border-border backdrop-blur-xl bg-card/80 dark:bg-card/70">
+        <div className="glass-panel p-1.5 rounded-2xl flex flex-wrap items-center justify-center gap-1.5 shadow-xl border border-border bg-card/85 dark:bg-card/75">
           {STEPS.map((s, idx) => {
             const StepIcon = s.icon;
             const isActive = idx === activeStep;
@@ -345,7 +345,7 @@ export function StorytellingPipeline() {
 
         {/* Right Column: Sticky Interactive 3D Showcase Canvas */}
         <div className="lg:col-span-6 sticky top-36 z-20">
-          <div className="glass-panel w-full rounded-2xl p-6 space-y-5 transition-all duration-500 relative overflow-hidden border border-border shadow-2xl bg-card/90 dark:bg-card/75 backdrop-blur-xl">
+          <div className="glass-panel w-full rounded-2xl p-6 space-y-5 transition-all duration-500 relative overflow-hidden border border-border shadow-2xl bg-card/90 dark:bg-card/80">
             {/* Top Specular Accent Glow */}
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/60 dark:via-accent/60 to-transparent pointer-events-none" />
 

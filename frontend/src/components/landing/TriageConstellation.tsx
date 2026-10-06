@@ -147,15 +147,21 @@ export function TriageConstellation() {
 
     window.addEventListener('resize', handleResize, { passive: true });
 
-    // Animation Loop
+    // Animation Loop (Throttled to 30 FPS to preserve GPU frame budget)
     let animationFrameId: number;
     let clock = new THREE.Clock();
     let frameCount = 0;
+    let lastRenderTime = 0;
+    const targetFpsInterval = 1000 / 30; // 33.3ms
 
-    const animate = () => {
+    const animate = (timestamp: number) => {
       animationFrameId = requestAnimationFrame(animate);
 
-      if (!isVisible) return; // Skip compute when offscreen
+      if (!isVisible || document.hidden) return; // Skip compute when offscreen or tab hidden
+
+      const elapsed = timestamp - lastRenderTime;
+      if (elapsed < targetFpsInterval) return; // Limit to 30 FPS
+      lastRenderTime = timestamp - (elapsed % targetFpsInterval);
 
       frameCount++;
       const delta = clock.getDelta();
@@ -175,7 +181,7 @@ export function TriageConstellation() {
       }
       posAttr.needsUpdate = true;
 
-      // Update Connections every 2nd frame to save 50% line compute
+      // Update Connections every 2nd frame (15 FPS updates for line connections)
       if (frameCount % 2 === 0) {
         let lineIndex = 0;
         const connectionDist = 20;
@@ -241,7 +247,7 @@ export function TriageConstellation() {
       renderer.render(scene, camera);
     };
 
-    animate();
+    animationFrameId = requestAnimationFrame(animate);
 
     return () => {
       observerIntersection.disconnect();
@@ -263,7 +269,7 @@ export function TriageConstellation() {
   return (
     <div
       ref={mountRef}
-      className="absolute inset-0 pointer-events-none -z-10 opacity-25 dark:opacity-40 overflow-hidden will-change-transform"
+      className="absolute inset-0 pointer-events-none -z-10 opacity-25 dark:opacity-40 overflow-hidden"
       aria-hidden="true"
     />
   );

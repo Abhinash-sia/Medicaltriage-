@@ -157,7 +157,7 @@ export function InteractiveTriageAssistant() {
   const selected = TRIAGE_OPTIONS.find((o) => o.id === selectedId) || TRIAGE_OPTIONS[0];
 
   return (
-    <div className="glass-panel w-full rounded-2xl p-5 sm:p-6 space-y-4 border border-border shadow-xl bg-card/90 dark:bg-card/80 backdrop-blur-xl relative overflow-hidden transition-all duration-300">
+    <div className="glass-panel w-full rounded-2xl p-5 sm:p-6 space-y-4 border border-border shadow-xl bg-card/90 dark:bg-card/80 relative overflow-hidden transition-all duration-300">
       {/* Specular Top Glow */}
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-accent to-transparent pointer-events-none" />
 

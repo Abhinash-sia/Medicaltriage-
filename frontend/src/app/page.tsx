@@ -115,7 +115,7 @@ export default function PublicLandingPage() {
         className="min-h-screen bg-background text-foreground flex flex-col font-sans selection:bg-primary/20 selection:text-primary transition-colors duration-300"
       >
         {/* Top Floating Glass Navigation */}
-        <header className="sticky top-0 z-50 bg-background/70 dark:bg-background/60 backdrop-blur-2xl border-b border-border/80 shadow-xs">
+        <header className="sticky top-0 z-50 bg-background/85 dark:bg-background/80 backdrop-blur-md border-b border-border/80 shadow-xs">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="bg-primary p-2 rounded-lg text-primary-foreground border border-primary/40 shadow-sm">
@@ -181,7 +181,7 @@ export default function PublicLandingPage() {
               {/* Left Column: Mission & Actions */}
               <div className="lg:col-span-7 space-y-6 text-left">
                 {/* Status Pill */}
-                <div className="hero-badge inline-flex items-center space-x-2 bg-card/80 backdrop-blur-xl border border-border text-primary dark:text-accent px-3.5 py-1.5 rounded-full text-xs font-mono tracking-wider uppercase shadow-xs ring-1 ring-white/10">
+                <div className="hero-badge inline-flex items-center space-x-2 bg-card/90 backdrop-blur-sm border border-border text-primary dark:text-accent px-3.5 py-1.5 rounded-full text-xs font-mono tracking-wider uppercase shadow-xs ring-1 ring-white/10">
                   <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                   <span>{t('landing.badgeAssistant')}</span>
                 </div>
@@ -201,19 +201,19 @@ export default function PublicLandingPage() {
 
                 {/* Badges Grid */}
                 <div className="hero-chips flex flex-wrap gap-2 text-xs font-mono">
-                  <Badge variant="outline" className="bg-card/70 backdrop-blur-md border-border text-foreground px-3 py-1 shadow-2xs">
+                  <Badge variant="outline" className="bg-card/85 backdrop-blur-sm border-border text-foreground px-3 py-1 shadow-2xs">
                     <ShieldAlert className="w-3.5 h-3.5 mr-1.5 text-[#E8A33A]" />
                     {t('landing.badgeNonDiagnostic')}
                   </Badge>
-                  <Badge variant="outline" className="bg-card/70 backdrop-blur-md border-border text-foreground px-3 py-1 shadow-2xs">
+                  <Badge variant="outline" className="bg-card/85 backdrop-blur-sm border-border text-foreground px-3 py-1 shadow-2xs">
                     <Stethoscope className="w-3.5 h-3.5 mr-1.5 text-primary dark:text-accent" />
                     {t('landing.badgeHumanReview')}
                   </Badge>
-                  <Badge variant="outline" className="bg-card/70 backdrop-blur-md border-border text-foreground px-3 py-1 shadow-2xs">
+                  <Badge variant="outline" className="bg-card/85 backdrop-blur-sm border-border text-foreground px-3 py-1 shadow-2xs">
                     <Lock className="w-3.5 h-3.5 mr-1.5 text-[#2E9E6B]" />
                     {t('landing.badgePrivacy')}
                   </Badge>
-                  <Badge variant="outline" className="bg-card/70 backdrop-blur-md border-border text-foreground px-3 py-1 shadow-2xs">
+                  <Badge variant="outline" className="bg-card/85 backdrop-blur-sm border-border text-foreground px-3 py-1 shadow-2xs">
                     <Globe className="w-3.5 h-3.5 mr-1.5 text-primary dark:text-accent" />
                     {t('landing.badgeMultilingual')}
                   </Badge>
@@ -234,7 +234,7 @@ export default function PublicLandingPage() {
                     <Button
                       size="lg"
                       variant="outline"
-                      className="w-full sm:w-auto border-border/80 bg-card/60 backdrop-blur-xl text-foreground font-semibold px-7 py-5 text-sm hover:bg-muted/80 shadow-xs"
+                      className="w-full sm:w-auto border-border/80 bg-card/80 backdrop-blur-md text-foreground font-semibold px-7 py-5 text-sm hover:bg-muted/80 shadow-xs"
                     >
                       {t('landing.navHowItWorks')}
                     </Button>
@@ -327,7 +327,7 @@ export default function PublicLandingPage() {
             <div className="bento-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Bento Card 1: Multimodal Intake (Span 2 cols on desktop) */}
               <div className="bento-card lg:col-span-2 glass-panel p-6 sm:p-8 rounded-2xl flex flex-col justify-between group relative overflow-hidden border border-border hover:border-primary/40 transition-all duration-300">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 dark:bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 dark:bg-primary/10 rounded-full blur-xl pointer-events-none" />
                 
                 <div className="space-y-4 relative z-10">
                   <div className="flex items-center justify-between">
