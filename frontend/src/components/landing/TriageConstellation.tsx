@@ -149,7 +149,7 @@ export function TriageConstellation() {
 
     // Animation Loop (Throttled to 30 FPS to preserve GPU frame budget)
     let animationFrameId: number;
-    let clock = new THREE.Clock();
+    const timer = new THREE.Timer();
     let frameCount = 0;
     let lastRenderTime = 0;
     const targetFpsInterval = 1000 / 30; // 33.3ms
@@ -164,7 +164,8 @@ export function TriageConstellation() {
       lastRenderTime = timestamp - (elapsed % targetFpsInterval);
 
       frameCount++;
-      const delta = clock.getDelta();
+      timer.update(timestamp);
+      const delta = timer.getDelta();
       const posAttr = geometry.attributes.position as THREE.BufferAttribute;
       const posArray = posAttr.array as Float32Array;
 
