@@ -91,19 +91,12 @@ export default function PublicLandingPage() {
     }
 
     // Luminous focal pulse feedback on target section
-    gsap.fromTo(
-      target,
-      {
-        boxShadow: 'inset 0 0 0 2px hsl(var(--primary) / 0.6), 0 0 35px -5px hsl(var(--primary) / 0.35)',
-      },
-      {
-        boxShadow: 'inset 0 0 0 2px hsl(var(--primary) / 0), 0 0 0px 0px hsl(var(--primary) / 0)',
-        duration: 1.6,
-        delay: 0.25,
-        ease: 'power2.out',
-        clearProps: 'boxShadow',
-      }
-    );
+    target.classList.remove('section-highlight-active');
+    void (target as HTMLElement).offsetWidth;
+    target.classList.add('section-highlight-active');
+    setTimeout(() => {
+      target.classList.remove('section-highlight-active');
+    }, 2000);
   };
 
   useEffect(() => {

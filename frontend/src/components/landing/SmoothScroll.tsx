@@ -84,18 +84,11 @@ export function smoothScrollTo(
 
   if (options?.highlight !== false) {
     // Elegant luminous focal pulse on destination section
-    gsap.fromTo(
-      target,
-      {
-        boxShadow: 'inset 0 0 0 2px hsl(var(--primary) / 0.6), 0 0 35px -5px hsl(var(--primary) / 0.35)',
-      },
-      {
-        boxShadow: 'inset 0 0 0 2px hsl(var(--primary) / 0), 0 0 0px 0px hsl(var(--primary) / 0)',
-        duration: 1.6,
-        delay: 0.2,
-        ease: 'power2.out',
-        clearProps: 'boxShadow',
-      }
-    );
+    (target as HTMLElement).classList.remove('section-highlight-active');
+    void (target as HTMLElement).offsetWidth;
+    (target as HTMLElement).classList.add('section-highlight-active');
+    setTimeout(() => {
+      (target as HTMLElement).classList.remove('section-highlight-active');
+    }, 2000);
   }
 }
