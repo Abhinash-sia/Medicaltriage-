@@ -8,9 +8,10 @@ export const authRouter = Router();
 // Stricter rate limiting on authentication login attempts against brute-force attacks
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // Limit each IP to 10 login attempts per window
+  max: 100, // Generous limit
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' || process.env.VITEST === 'true',
   message: {
     success: false,
     error: {

@@ -55,7 +55,7 @@ export const createApp = (): Express => {
     max: 100, // Limit each IP to 100 requests per windowMs
     standardHeaders: true,
     legacyHeaders: false,
-    skip: () => env.NODE_ENV === 'test' || process.env.VITEST === 'true',
+    skip: () => env.NODE_ENV === 'test' || process.env.VITEST === 'true' || env.NODE_ENV === 'development' || process.env.NODE_ENV === 'development',
     message: {
       success: false,
       error: {

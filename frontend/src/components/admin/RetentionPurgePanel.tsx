@@ -1,6 +1,10 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { AlertTriangle, Trash2, CheckCircle2, ShieldAlert, RefreshCw, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 interface RetentionStatus {
   clinicalCaseCount: number;
@@ -22,7 +26,10 @@ export const RetentionPurgePanel: React.FC<RetentionPurgePanelProps> = ({ authTo
   const [error, setError] = useState<string | null>(null);
   const [purgeResult, setPurgeResult] = useState<any | null>(null);
   const [confirmModalOpen, setConfirmModalOpen] = useState<boolean>(false);
+  const [confirmPhraseInput, setConfirmPhraseInput] = useState<string>('');
   const [purging, setPurging] = useState<boolean>(false);
+
+  const CONFIRM_PHRASE = 'CONFIRM PURGE';
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -72,6 +79,7 @@ export const RetentionPurgePanel: React.FC<RetentionPurgePanelProps> = ({ authTo
     } finally {
       setPurging(false);
       setConfirmModalOpen(false);
+      setConfirmPhraseInput('');
     }
   };
 
@@ -89,115 +97,160 @@ export const RetentionPurgePanel: React.FC<RetentionPurgePanelProps> = ({ authTo
   };
 
   if (loading) {
-    return <div className="p-4 text-slate-400 text-sm">Loading retention status...</div>;
+    return <div className="p-4 text-muted-foreground text-xs font-mono">Loading retention status...</div>;
   }
 
   return (
-    <div className="p-6 bg-slate-900 border border-slate-800 rounded-xl space-y-6 text-sm text-slate-200">
-      <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-        <div>
-          <h2 className="text-lg font-bold text-white">Retention & Purge Management</h2>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Configurable engineering retention defaults for clinical data and media cleanup.
+    <div className="space-y-4 text-xs text-foreground">
+      {/* Disclaimer Banner */}
+      <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-950 dark:text-amber-200 rounded-[6px] flex items-start gap-2.5">
+        <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+        <div className="space-y-0.5">
+          <div className="font-semibold text-[11px] uppercase tracking-wider">Engineering Retention Policy Disclaimer</div>
+          <p className="text-[11px] text-amber-900/90 dark:text-amber-200/90 leading-relaxed">
+            {status?.disclaimer ||
+              'Data retention rules are non-authoritative engineering controls for software evaluation.'}
           </p>
         </div>
-        <span className="px-2.5 py-1 text-xs rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 font-medium">
-          ADMIN ONLY
-        </span>
       </div>
 
-      {status?.disclaimer && (
-        <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-300 rounded text-xs leading-relaxed">
-          <span className="font-semibold">Disclaimer:</span> {status.disclaimer}
+      {/* Metrics Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        <div className="p-3 bg-card border border-border rounded-[6px] shadow-2xs">
+          <div className="text-[11px] text-muted-foreground font-medium">Clinical Cases</div>
+          <div className="text-lg font-mono font-bold text-foreground mt-1 tabular-nums">
+            {status?.clinicalCaseCount || 0}
+          </div>
         </div>
-      )}
 
-      {error && <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-300 rounded text-xs">{error}</div>}
+        <div className="p-3 bg-card border border-border rounded-[6px] shadow-2xs">
+          <div className="text-[11px] text-muted-foreground font-medium">Media Blobs</div>
+          <div className="text-lg font-mono font-bold text-foreground mt-1 tabular-nums">
+            {status?.mediaBlobCount || 0}
+          </div>
+        </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="p-4 bg-slate-800/60 border border-slate-700/50 rounded-lg">
-          <div className="text-xs text-slate-400">Clinical Cases</div>
-          <div className="text-xl font-bold text-white mt-1">{status?.clinicalCaseCount || 0}</div>
+        <div className="p-3 bg-card border border-border rounded-[6px] shadow-2xs">
+          <div className="text-[11px] text-muted-foreground font-medium">AI Derived Artifacts</div>
+          <div className="text-lg font-mono font-bold text-foreground mt-1 tabular-nums">
+            {status?.aiDerivedCount || 0}
+          </div>
         </div>
-        <div className="p-4 bg-slate-800/60 border border-slate-700/50 rounded-lg">
-          <div className="text-xs text-slate-400">Media Blobs</div>
-          <div className="text-xl font-bold text-white mt-1">{status?.mediaBlobCount || 0}</div>
-        </div>
-        <div className="p-4 bg-slate-800/60 border border-slate-700/50 rounded-lg">
-          <div className="text-xs text-slate-400">AI Derived Notes</div>
-          <div className="text-xl font-bold text-white mt-1">{status?.aiDerivedCount || 0}</div>
-        </div>
-        <div className="p-4 bg-slate-800/60 border border-slate-700/50 rounded-lg">
-          <div className="text-xs text-slate-400">Purge Eligible Cases</div>
-          <div className="text-xl font-bold text-emerald-400 mt-1">{status?.eligiblePurgeCount || 0}</div>
+
+        <div className="p-3 bg-card border border-border rounded-[6px] shadow-2xs">
+          <div className="text-[11px] text-muted-foreground font-medium">Purge Eligible Cases</div>
+          <div className="text-lg font-mono font-bold text-emerald-600 dark:text-emerald-400 mt-1 tabular-nums">
+            {status?.eligiblePurgeCount || 0}
+          </div>
         </div>
       </div>
 
       {status && status.failedFileCleanupCount > 0 && (
-        <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-300 rounded text-xs flex items-center justify-between">
-          <span>Failed file cleanups detected ({status.failedFileCleanupCount} records requiring retry)</span>
-          <button
-            onClick={handleRetryFailed}
-            className="px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded font-medium text-xs"
-          >
+        <div className="p-2.5 bg-destructive/10 border border-destructive/30 text-destructive rounded-[6px] text-xs flex items-center justify-between">
+          <span>Failed file cleanups detected ({status.failedFileCleanupCount} records)</span>
+          <Button size="sm" variant="destructive" onClick={handleRetryFailed} className="h-7 text-xs">
             Retry Cleanup
-          </button>
+          </Button>
         </div>
       )}
 
-      <div className="flex items-center gap-3 pt-2">
-        <button
-          onClick={() => handleExecutePurge(true)}
-          disabled={purging}
-          className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-medium rounded-lg text-xs"
-        >
-          Execute Dry Run
-        </button>
-        <button
-          onClick={() => setConfirmModalOpen(true)}
-          disabled={purging || status?.eligiblePurgeCount === 0}
-          className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-medium rounded-lg text-xs disabled:opacity-50"
-        >
-          Execute Administrative Data Purge
-        </button>
+      {/* Danger Zone */}
+      <div className="p-4 bg-card border border-destructive/40 rounded-[6px] space-y-3">
+        <div className="flex items-center gap-2 text-destructive font-semibold text-xs">
+          <AlertTriangle className="w-4 h-4" />
+          <span>Danger Zone — Privacy & Retention Purge</span>
+        </div>
+
+        <p className="text-[11px] text-muted-foreground leading-relaxed">
+          Administrative purge irrevocably soft-deletes eligible closed/resolved clinical records and unlinks media files according to configured data retention rules.
+        </p>
+
+        <div className="flex items-center gap-2 pt-1">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => handleExecutePurge(true)}
+            disabled={purging}
+            className="text-xs h-8"
+          >
+            Execute Dry Run
+          </Button>
+
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => setConfirmModalOpen(true)}
+            disabled={purging || status?.eligiblePurgeCount === 0}
+            className="text-xs h-8 gap-1.5"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Execute Administrative Purge
+          </Button>
+        </div>
       </div>
 
       {purgeResult && (
-        <div className="p-4 bg-slate-800/80 border border-slate-700 rounded-lg text-xs space-y-2">
-          <div className="font-semibold text-white">Purge Execution Result</div>
-          <div className="grid grid-cols-3 gap-2 text-slate-300 font-mono">
-            <div>Purged Cases: {purgeResult.purgedCases}</div>
-            <div>Deleted Files: {purgeResult.deletedFiles}</div>
-            <div>Failed Files: {purgeResult.failedFiles}</div>
+        <div className="p-3 bg-muted/50 border border-border rounded-[6px] text-xs space-y-1.5 font-mono">
+          <div className="font-semibold text-foreground">Purge Execution Result</div>
+          <div className="grid grid-cols-3 gap-2 text-muted-foreground">
+            <div>Purged Cases: <span className="text-foreground">{purgeResult.purgedCases}</span></div>
+            <div>Deleted Files: <span className="text-foreground">{purgeResult.deletedFiles}</span></div>
+            <div>Failed Files: <span className="text-foreground">{purgeResult.failedFiles}</span></div>
           </div>
         </div>
       )}
 
-      {confirmModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-rose-500/40 p-6 rounded-xl max-w-md w-full space-y-4">
-            <h3 className="text-base font-bold text-rose-400">Confirm Administrative Data Purge</h3>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              This action will unlink physical media files and soft-delete/anonymize clinical cases marked RESOLVED or CLOSED older than the retention threshold.
-            </p>
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                onClick={() => setConfirmModalOpen(false)}
-                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleExecutePurge(false)}
-                disabled={purging}
-                className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-medium rounded text-xs"
-              >
-                {purging ? 'Purging...' : 'Confirm Purge'}
-              </button>
-            </div>
+      {/* Purge Confirmation Dialog requiring typed phrase */}
+      <Dialog open={confirmModalOpen} onOpenChange={setConfirmModalOpen}>
+        <DialogContent className="max-w-md space-y-4">
+          <DialogHeader>
+            <DialogTitle className="text-destructive flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              Confirm Administrative Data Purge
+            </DialogTitle>
+            <DialogDescription>
+              This action will unlink physical media files and anonymize clinical cases marked RESOLVED or CLOSED older than the retention threshold.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2 py-1">
+            <label className="text-xs font-medium text-foreground block">
+              Type <span className="font-mono font-bold text-destructive">{CONFIRM_PHRASE}</span> to confirm:
+            </label>
+            <input
+              type="text"
+              value={confirmPhraseInput}
+              onChange={(e) => setConfirmPhraseInput(e.target.value)}
+              placeholder={CONFIRM_PHRASE}
+              className="w-full h-8 px-3 text-xs border border-border bg-card rounded-[5px] text-foreground focus:ring-1 focus:ring-destructive focus:outline-none font-mono"
+            />
           </div>
-        </div>
-      )}
+
+          <DialogFooter>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setConfirmModalOpen(false);
+                setConfirmPhraseInput('');
+              }}
+              className="h-8 text-xs"
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              disabled={confirmPhraseInput !== CONFIRM_PHRASE || purging}
+              onClick={() => handleExecutePurge(false)}
+              className="h-8 text-xs gap-1.5"
+            >
+              {purging ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+              {purging ? 'Purging...' : 'Confirm & Purge Data'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

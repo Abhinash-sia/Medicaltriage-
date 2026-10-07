@@ -26,12 +26,52 @@ import {
   Globe,
   Share2,
   History,
+  Eye,
+  Sparkles,
+  Flame,
 } from 'lucide-react';
 import { ReferralHistoryView } from '@/components/reviewer/ReferralHistoryView';
 import { AuditTrailModal } from '@/components/reviewer/AuditTrailModal';
 import { DemoBanner } from '@/components/ui/DemoBanner';
+import { LanguageSelector } from '@/components/ui/LanguageSelector';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { clearAuthSession } from '@/lib/authSession';
+
+function ProvenanceChip({ provenance }: { provenance?: string }) {
+  const p = provenance || 'AI_GENERATED';
+  if (p === 'HUMAN_VERIFIED') {
+    return (
+      <Badge variant="provenance" className="text-emerald-600 dark:text-emerald-400 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/100/10 inline-flex items-center gap-1 font-mono text-[10px]">
+        <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+        <span>HUMAN VERIFIED</span>
+      </Badge>
+    );
+  }
+  if (p === 'PATIENT_PROVIDED') {
+    return (
+      <Badge variant="provenance" className="inline-flex items-center gap-1 font-mono text-[10px]">
+        <User className="w-3 h-3 text-muted-foreground" />
+        <span>PATIENT PROVIDED</span>
+      </Badge>
+    );
+  }
+  if (p === 'AI_OBSERVATION') {
+    return (
+      <Badge variant="provenance" className="inline-flex items-center gap-1 font-mono text-[10px]">
+        <Eye className="w-3 h-3 text-muted-foreground" />
+        <span>AI OBSERVATION</span>
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="provenance" className="inline-flex items-center gap-1 font-mono text-[10px]">
+      <Sparkles className="w-3 h-3 text-muted-foreground" />
+      <span>{p}</span>
+    </Badge>
+  );
+}
+
 
 interface ReviewerCaseSymptom {
   id: string;
@@ -156,7 +196,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
   const [isEvaluatingSafety, setIsEvaluatingSafety] = useState<boolean>(false);
   const [safetyError, setSafetyError] = useState<string | null>(null);
 
-  // Structured Triage Note State (Phase 16)
+  // Structured Triage Note State
   const [triageNoteData, setTriageNoteData] = useState<any | null>(null);
   const [isFetchingTriageNote, setIsFetchingTriageNote] = useState<boolean>(false);
   const [isGeneratingTriageNote, setIsGeneratingTriageNote] = useState<boolean>(false);
@@ -453,14 +493,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
     }
   };
 
-  useEffect(() => {
-    fetchCaseDetails();
-    fetchTimeline();
-    fetchMissingInformation();
-    fetchReports();
-    fetchSafetyData();
-    fetchTriageNote();
-  }, [fetchCaseDetails, fetchTimeline, fetchMissingInformation, fetchReports, fetchSafetyData, fetchTriageNote]);
+
 
   const handleVerifyReport = async (reportId: string) => {
     try {
@@ -594,15 +627,35 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
     }
   }, [caseId]);
 
+  const fetchAllCaseData = useCallback(async () => {
+    setIsLoading(true);
+    await Promise.allSettled([
+      fetchCaseDetails(),
+      fetchTimeline(),
+      fetchMissingInformation(),
+      fetchReports(),
+      fetchSafetyData(),
+      fetchTriageNote(),
+      fetchVisualInputs(),
+      fetchVoiceInputs(),
+      fetchTranslations(),
+    ]);
+    setIsLoading(false);
+  }, [
+    fetchCaseDetails,
+    fetchTimeline,
+    fetchMissingInformation,
+    fetchReports,
+    fetchSafetyData,
+    fetchTriageNote,
+    fetchVisualInputs,
+    fetchVoiceInputs,
+    fetchTranslations,
+  ]);
+
   useEffect(() => {
-    fetchCaseDetails();
-    fetchTimeline();
-    fetchMissingInformation();
-    fetchReports();
-    fetchVisualInputs();
-    fetchVoiceInputs();
-    fetchTranslations();
-  }, [fetchCaseDetails, fetchTimeline, fetchMissingInformation, fetchReports, fetchVisualInputs, fetchVoiceInputs, fetchTranslations]);
+    fetchAllCaseData();
+  }, [fetchAllCaseData]);
 
   const handleRequestTranslation = async (sourceType: string, sourceId?: string) => {
     const actionId = sourceId || sourceType;
@@ -1035,10 +1088,10 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center space-y-3">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-indigo-600" />
-          <p className="text-xs text-slate-600 font-medium">{t('common.loading')}</p>
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+          <p className="text-xs text-muted-foreground font-medium">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -1046,18 +1099,18 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
 
   if (error || !caseDetails) {
     return (
-      <div className="min-h-screen bg-slate-50 py-10 px-4">
+      <div className="min-h-screen bg-background py-10 px-4">
         <div className="max-w-2xl mx-auto space-y-4">
           <Link href="/reviewer">
             <Button variant="outline" size="sm" className="text-xs">
               <ChevronLeft className="w-4 h-4 mr-1" /> {t('common.back')}
             </Button>
           </Link>
-          <Card className="bg-white border-red-200">
+          <Card className="bg-card border-destructive/30">
             <CardHeader className="text-center">
-              <AlertCircle className="w-10 h-10 text-red-500 mx-auto mb-2" />
-              <CardTitle className="text-base text-slate-900">{t('common.error')}</CardTitle>
-              <CardDescription className="text-xs text-slate-600">
+              <AlertCircle className="w-10 h-10 text-destructive mx-auto mb-2" />
+              <CardTitle className="text-base text-foreground">{t('common.error')}</CardTitle>
+              <CardDescription className="text-xs text-muted-foreground">
                 {error || 'Unable to retrieve case details.'}
               </CardDescription>
             </CardHeader>
@@ -1071,15 +1124,15 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
   const isAdmin = currentUserRole === 'ADMIN';
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans flex flex-col">
+    <div className="min-h-screen bg-background text-foreground font-sans flex flex-col">
       <DemoBanner />
       <div className="py-8 px-4 sm:px-6 lg:px-8 flex-1">
         <div className="max-w-4xl mx-auto space-y-6">
         {/* Navigation & Case Reference */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center space-x-2">
             <Link href="/reviewer">
-              <Button variant="outline" size="sm" className="text-xs bg-white text-slate-700 border-slate-300">
+              <Button variant="outline" size="sm" className="text-xs bg-card text-foreground border-border hover:bg-muted">
                 <ChevronLeft className="w-4 h-4 mr-1" /> {t('common.back')} - {t('reviewer.queueTitle')}
               </Button>
             </Link>
@@ -1087,30 +1140,32 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
               variant="outline"
               size="sm"
               onClick={() => setIsAuditTrailOpen(true)}
-              className="text-xs bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
+              className="text-xs bg-card text-foreground border-border hover:bg-muted"
             >
-              <History className="w-4 h-4 mr-1 text-indigo-600" /> Case Audit Trail
+              <History className="w-4 h-4 mr-1 text-primary" /> Case Audit Trail
             </Button>
           </div>
           <div className="flex items-center space-x-2">
-            <Badge variant="outline" className="bg-indigo-50 text-indigo-800 border-indigo-200 font-mono text-xs">
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-mono text-xs">
               {caseDetails.caseNumber}
             </Badge>
             <Badge
               variant="outline"
               className={
                 caseDetails.status === 'OPEN'
-                  ? 'bg-blue-50 text-blue-700 border-blue-200'
-                  : 'bg-purple-50 text-purple-700 border-purple-200'
+                  ? 'bg-primary/100/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
+                  : 'bg-purple-500/100/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
               }
             >
               {caseDetails.status}
             </Badge>
+            <LanguageSelector variant="compact" />
+            <ThemeToggle />
           </div>
         </div>
 
         {/* Persistent Safety Disclaimer */}
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-900 text-xs flex items-start space-x-3 shadow-sm">
+        <div className="p-3.5 bg-amber-500/100/10 border border-amber-500/20 rounded-lg text-amber-600 dark:text-amber-400 dark:text-amber-200 text-xs flex items-start space-x-3 shadow-xs">
           <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="space-y-1">
             <p className="font-semibold">Healthcare Staff Review Disclaimer:</p>
@@ -1125,28 +1180,28 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
           {/* Main Content Column (2/3 width) */}
           <div className="md:col-span-2 space-y-6">
             {/* Safety & Urgency Engine Card */}
-            <Card className="bg-white border-emerald-200 shadow-sm">
-              <CardHeader className="bg-emerald-50/50 border-b border-emerald-100 py-3 px-4 flex flex-row items-center justify-between">
+            <Card className="bg-card border-emerald-500/30 shadow-sm">
+              <CardHeader className="bg-emerald-500/100/10 border-b border-emerald-500/20 py-3 px-4 flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle className="text-sm font-bold text-slate-900 flex items-center space-x-2">
+                  <CardTitle className="text-sm font-bold text-foreground flex items-center space-x-2">
                     <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                    <span>Safety & Urgency Engine (Phase 15)</span>
+                    <span>Safety & Urgency Engine</span>
                     {safetyData && (
                       <Badge
                         variant="outline"
                         className={
                           safetyData.effectivePriority === 'URGENT'
-                            ? 'bg-red-50 text-red-700 border-red-200 font-bold ml-2'
+                            ? 'bg-destructive/10 text-destructive border-destructive/30 font-bold ml-2'
                             : safetyData.effectivePriority === 'PRIORITY'
-                            ? 'bg-amber-50 text-amber-700 border-amber-200 font-bold ml-2'
-                            : 'bg-emerald-50 text-emerald-700 border-emerald-200 font-bold ml-2'
+                            ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 font-bold ml-2'
+                            : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-bold ml-2'
                         }
                       >
                         Priority: {safetyData.effectivePriority}
                       </Badge>
                     )}
                   </CardTitle>
-                  <CardDescription className="text-xs text-slate-600">
+                  <CardDescription className="text-xs text-muted-foreground">
                     Deterministic review priority evaluation based on structured case evidence.
                   </CardDescription>
                 </div>
@@ -1155,7 +1210,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                   variant="outline"
                   onClick={handleTriggerSafetyEvaluate}
                   disabled={isEvaluatingSafety}
-                  className="text-xs bg-white text-emerald-700 border-emerald-300 hover:bg-emerald-50"
+                  className="text-xs bg-card text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10"
                 >
                   {isEvaluatingSafety ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
@@ -1167,25 +1222,25 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
               </CardHeader>
               <CardContent className="p-4 space-y-3">
                 {safetyError && (
-                  <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-md">
+                  <div className="p-2.5 bg-destructive/10 border border-destructive/30 text-destructive text-xs rounded-md">
                     {safetyError}
                   </div>
                 )}
 
                 {isFetchingSafety && (
-                  <div className="flex items-center space-x-2 text-xs text-slate-500 p-2">
+                  <div className="flex items-center space-x-2 text-xs text-muted-foreground p-2">
                     <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />
                     <span>Loading safety evaluation state...</span>
                   </div>
                 )}
 
                 {safetyData?.hasHumanOverride && (
-                  <div className="p-2.5 bg-purple-50 border border-purple-200 rounded-md text-xs text-purple-900 flex items-center justify-between">
+                  <div className="p-2.5 bg-purple-500/10 border border-purple-500/30 rounded-md text-xs text-purple-600 dark:text-purple-400 flex items-center justify-between">
                     <span className="font-semibold flex items-center space-x-1.5">
                       <UserCheck className="w-4 h-4 text-purple-600" />
                       <span>Human Priority Override Active</span>
                     </span>
-                    <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-300 text-[10px]">
+                    <Badge variant="outline" className="bg-purple-100 text-purple-600 dark:text-purple-400 border-purple-500/30 text-[10px]">
                       Locked to {safetyData.effectivePriority}
                     </Badge>
                   </div>
@@ -1193,70 +1248,70 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
 
                 {safetyData ? (
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs text-slate-500 border-b border-slate-100 pb-1.5">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground border-b border-border/60 pb-1.5">
                       <span>Evaluated Version: #{safetyData.evaluationVersion}</span>
                       <span>Evaluated At: {new Date(safetyData.evaluatedAt).toLocaleString()}</span>
                     </div>
 
                     {safetyData.matchedSignals && safetyData.matchedSignals.length > 0 ? (
                       <div className="space-y-2 pt-1">
-                        <span className="text-xs font-bold text-slate-800 block">Matched Safety Signals ({safetyData.matchedSignals.length})</span>
+                        <span className="text-xs font-bold text-foreground block">Matched Safety Signals ({safetyData.matchedSignals.length})</span>
                         <div className="space-y-2">
                           {safetyData.matchedSignals.map((sig: any, idx: number) => (
-                            <div key={idx} className="p-3 bg-slate-50 border border-slate-200 rounded-md text-xs space-y-1">
+                            <div key={idx} className="p-3 bg-muted/40 border border-border rounded-md text-xs space-y-1">
                               <div className="flex items-center justify-between">
-                                <span className="font-bold text-slate-900">{sig.ruleName}</span>
+                                <span className="font-bold text-foreground">{sig.ruleName}</span>
                                 <Badge
                                   variant="outline"
                                   className={
                                     sig.category === 'CLINICAL_URGENT'
-                                      ? 'bg-red-50 text-red-700 border-red-200 text-[10px]'
+                                      ? 'bg-destructive/10 text-destructive border-destructive/30 text-[10px]'
                                       : sig.category === 'SYSTEM_UNCERTAINTY'
-                                      ? 'bg-amber-50 text-amber-700 border-amber-200 text-[10px]'
-                                      : 'bg-indigo-50 text-indigo-700 border-indigo-200 text-[10px]'
+                                      ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px]'
+                                      : 'bg-primary/10 text-primary border-primary/20 text-[10px]'
                                   }
                                 >
                                   {sig.category}
                                 </Badge>
                               </div>
-                              <p className="text-slate-700 text-[11px] font-medium">{sig.evidenceSnippet}</p>
-                              <p className="text-slate-500 text-[10px] italic">{sig.explanation}</p>
+                              <p className="text-muted-foreground text-[11px] font-medium">{sig.evidenceSnippet}</p>
+                              <p className="text-muted-foreground text-[10px] italic">{sig.explanation}</p>
                             </div>
                           ))}
                         </div>
                       </div>
                     ) : (
-                      <div className="p-3 bg-emerald-50/50 border border-emerald-100 rounded-md text-xs text-emerald-800">
+                      <div className="p-3 bg-emerald-500/100/10 border border-emerald-500/20 rounded-md text-xs text-emerald-600 dark:text-emerald-400">
                         No higher-priority workflow review signals detected. Case review status is ROUTINE.
                       </div>
                     )}
                   </div>
                 ) : !isFetchingSafety && (
-                  <p className="text-xs text-slate-500 italic">
+                  <p className="text-xs text-muted-foreground italic">
                     No safety evaluation recorded yet. Click &quot;Re-evaluate Safety&quot; above to run the Safety Engine.
                   </p>
                 )}
               </CardContent>
             </Card>
 
-            {/* Structured Triage Note Card (Phase 16) */}
-            <Card className="bg-white border-blue-200 shadow-sm">
-              <CardHeader className="bg-blue-50/50 border-b border-blue-100 py-3 px-4 flex flex-row items-center justify-between">
+            {/* Structured Triage Note Card */}
+            <Card className="bg-card border-primary/20 shadow-sm">
+              <CardHeader className="bg-primary/10 border-b border-primary/15 py-3 px-4 flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle className="text-sm font-bold text-slate-900 flex items-center space-x-2">
+                  <CardTitle className="text-sm font-bold text-foreground flex items-center space-x-2">
                     <FileCheck className="w-4 h-4 text-blue-600" />
-                    <span>Structured Triage Note (Phase 16)</span>
+                    <span>Structured Triage Note</span>
                     {triageNoteData && (
                       <>
-                        <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300 font-bold ml-2">
+                        <Badge variant="outline" className="bg-blue-100 text-primary border-primary/30 font-bold ml-2">
                           v{triageNoteData.noteVersion}
                         </Badge>
                         <Badge
                           variant="outline"
                           className={
                             triageNoteData.provenance === 'HUMAN_VERIFIED'
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-300 font-bold ml-1'
-                              : 'bg-amber-50 text-amber-700 border-amber-300 font-bold ml-1'
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-bold ml-1'
+                              : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 font-bold ml-1'
                           }
                         >
                           {triageNoteData.provenance}
@@ -1264,7 +1319,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                       </>
                     )}
                   </CardTitle>
-                  <CardDescription className="text-xs text-slate-500 mt-0.5">
+                  <CardDescription className="text-xs text-muted-foreground mt-0.5">
                     Versioned compiled snapshot of eligible case evidence for clinical reviewer triage review
                   </CardDescription>
                 </div>
@@ -1274,7 +1329,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                     variant="outline"
                     onClick={handleGenerateTriageNote}
                     disabled={isGeneratingTriageNote}
-                    className="h-8 text-xs bg-white border-blue-300 text-blue-700 hover:bg-blue-50"
+                    className="h-8 text-xs bg-card border-primary/30 text-primary hover:bg-primary/10"
                   >
                     {isGeneratingTriageNote ? (
                       <>
@@ -1289,19 +1344,19 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
               </CardHeader>
               <CardContent className="p-4 space-y-4">
                 {triageNoteError && (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded-md text-xs text-red-700">
+                  <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-md text-xs text-destructive">
                     {triageNoteError}
                   </div>
                 )}
                 {triageVerifySuccess && (
-                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-md text-xs text-emerald-700 flex items-center space-x-2">
+                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-md text-xs text-emerald-600 dark:text-emerald-400 flex items-center space-x-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                     <span>{triageVerifySuccess}</span>
                   </div>
                 )}
 
                 {isFetchingTriageNote ? (
-                  <div className="flex items-center space-x-2 text-xs text-slate-500 py-4">
+                  <div className="flex items-center space-x-2 text-xs text-muted-foreground py-4">
                     <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
                     <span>Loading Structured Triage Note...</span>
                   </div>
@@ -1312,59 +1367,59 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                       <div
                         className={
                           triageNoteData.reviewerAttentionSection.safetyUrgent
-                            ? 'p-3 bg-red-50 border border-red-200 rounded-lg'
-                            : 'p-3 bg-slate-50 border border-slate-200 rounded-lg'
+                            ? 'p-3 bg-destructive/10 border border-destructive/30 rounded-lg'
+                            : 'p-3 bg-muted/40 border border-border rounded-lg'
                         }
                       >
-                        <div className="flex items-center justify-between font-bold text-slate-900 mb-1">
+                        <div className="flex items-center justify-between font-bold text-foreground mb-1">
                           <span className="flex items-center space-x-1.5">
                             <AlertCircle className="w-3.5 h-3.5 text-blue-600" />
                             <span>Reviewer Attention Summary</span>
                           </span>
-                          <span className="text-[10px] uppercase font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded">
+                          <span className="text-[10px] uppercase font-bold text-primary bg-blue-100 px-2 py-0.5 rounded">
                             Action: {triageNoteData.reviewerAttentionSection.actionRequired}
                           </span>
                         </div>
                         <div className="grid grid-cols-3 gap-2 mt-2 text-center text-[11px]">
-                          <div className="p-1.5 bg-white rounded border border-slate-200">
-                            <span className="text-slate-500 block text-[9px] uppercase">Critical Signals</span>
-                            <span className="font-bold text-slate-900">{triageNoteData.reviewerAttentionSection.criticalCount}</span>
+                          <div className="p-1.5 bg-card rounded border border-border">
+                            <span className="text-muted-foreground block text-[9px] uppercase">Critical Signals</span>
+                            <span className="font-bold text-foreground">{triageNoteData.reviewerAttentionSection.criticalCount}</span>
                           </div>
-                          <div className="p-1.5 bg-white rounded border border-slate-200">
-                            <span className="text-slate-500 block text-[9px] uppercase">Unverified Inputs</span>
-                            <span className="font-bold text-slate-900">{triageNoteData.reviewerAttentionSection.unverifiedCount}</span>
+                          <div className="p-1.5 bg-card rounded border border-border">
+                            <span className="text-muted-foreground block text-[9px] uppercase">Unverified Inputs</span>
+                            <span className="font-bold text-foreground">{triageNoteData.reviewerAttentionSection.unverifiedCount}</span>
                           </div>
-                          <div className="p-1.5 bg-white rounded border border-slate-200">
-                            <span className="text-slate-500 block text-[9px] uppercase">Uncertainties</span>
-                            <span className="font-bold text-slate-900">{triageNoteData.reviewerAttentionSection.uncertaintiesCount}</span>
+                          <div className="p-1.5 bg-card rounded border border-border">
+                            <span className="text-muted-foreground block text-[9px] uppercase">Uncertainties</span>
+                            <span className="font-bold text-foreground">{triageNoteData.reviewerAttentionSection.uncertaintiesCount}</span>
                           </div>
                         </div>
                       </div>
                     )}
 
                     {/* Presenting Concern & Symptom Summary */}
-                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5">
-                      <div className="font-bold text-slate-500 uppercase text-[10px] tracking-wider">
+                    <div className="p-3 bg-muted/40 border border-border rounded-lg space-y-1.5">
+                      <div className="font-bold text-muted-foreground uppercase text-[10px] tracking-wider">
                         Presenting Concern & Summary
                       </div>
-                      <p className="font-semibold text-slate-900 text-xs">{triageNoteData.presentingConcern}</p>
-                      <p className="text-slate-700 text-xs">{triageNoteData.symptomSummary}</p>
+                      <p className="font-semibold text-foreground text-xs">{triageNoteData.presentingConcern}</p>
+                      <p className="text-muted-foreground text-xs">{triageNoteData.symptomSummary}</p>
                     </div>
 
                     {/* Structured Symptoms Section */}
                     {triageNoteData.symptomsSection && triageNoteData.symptomsSection.length > 0 && (
                       <div className="space-y-1.5">
-                        <div className="font-bold text-slate-900 text-[11px]">Compiled Structured Symptoms</div>
-                        <div className="divide-y divide-slate-100 border border-slate-200 rounded-md bg-white">
+                        <div className="font-bold text-foreground text-[11px]">Compiled Structured Symptoms</div>
+                        <div className="divide-y divide-border border border-border rounded-md bg-card">
                           {triageNoteData.symptomsSection.map((s: any, idx: number) => (
                             <div key={idx} className="p-2 flex items-center justify-between text-[11px]">
                               <div>
-                                <span className="font-medium text-slate-900">{s.name}</span>
-                                {s.severity && <span className="text-slate-500 ml-1.5 font-bold text-indigo-600">({s.severity})</span>}
-                                {s.duration && <span className="text-slate-500 ml-1.5">[{s.duration}]</span>}
-                                {s.bodySite && <span className="text-slate-500 ml-1.5">at {s.bodySite}</span>}
+                                <span className="font-medium text-foreground">{s.name}</span>
+                                {s.severity && <span className="text-muted-foreground ml-1.5 font-bold text-indigo-600">({s.severity})</span>}
+                                {s.duration && <span className="text-muted-foreground ml-1.5">[{s.duration}]</span>}
+                                {s.bodySite && <span className="text-muted-foreground ml-1.5">at {s.bodySite}</span>}
                               </div>
-                              <Badge variant="outline" className="text-[9px] bg-slate-50 text-slate-600">
+                              <Badge variant="outline" className="text-[9px] bg-muted/40 text-muted-foreground">
                                 {s.source}
                               </Badge>
                             </div>
@@ -1374,25 +1429,25 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                     )}
 
                     {/* Verification Box / Action */}
-                    <div className="p-3.5 bg-blue-50/50 border border-blue-200 rounded-lg space-y-3">
-                      <div className="text-xs text-blue-900 space-y-1">
+                    <div className="p-3.5 bg-primary/10 border border-primary/20 rounded-lg space-y-3">
+                      <div className="text-xs text-primary space-y-1">
                         <div className="font-bold flex items-center space-x-1.5">
                           <ShieldCheck className="w-4 h-4 text-blue-600" />
                           <span>Operational Information Verification</span>
                         </div>
-                        <p className="text-[11px] text-blue-800 leading-relaxed">
+                        <p className="text-[11px] text-primary leading-relaxed">
                           Verification confirms operational review of assembled triage data. It does NOT imply medical diagnosis, treatment recommendation, prescription, medical clearance, or referral.
                         </p>
                       </div>
 
                       {triageNoteData.provenance === 'HUMAN_VERIFIED' ? (
-                        <div className="p-2.5 bg-white border border-emerald-300 rounded text-xs text-emerald-800 flex items-center justify-between font-medium">
+                        <div className="p-2.5 bg-card border border-emerald-500/30 rounded text-xs text-emerald-600 dark:text-emerald-400 flex items-center justify-between font-medium">
                           <span className="flex items-center space-x-1.5">
                             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                             <span>Verified by Reviewer at {new Date(triageNoteData.reviewedAt).toLocaleString()}</span>
                           </span>
                           {triageNoteData.reviewerNotes && (
-                            <span className="text-slate-500 italic text-[11px]">&quot;{triageNoteData.reviewerNotes}&quot;</span>
+                            <span className="text-muted-foreground italic text-[11px]">&quot;{triageNoteData.reviewerNotes}&quot;</span>
                           )}
                         </div>
                       ) : (
@@ -1402,7 +1457,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                             placeholder="Optional reviewer notes for verification audit log..."
                             value={verifierNotesInput}
                             onChange={(e) => setVerifierNotesInput(e.target.value)}
-                            className="w-full text-xs p-2 bg-white border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                            className="w-full text-xs p-2 bg-card border border-border rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
                           />
                           <Button
                             size="sm"
@@ -1424,7 +1479,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                     </div>
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-500 italic">
+                  <p className="text-xs text-muted-foreground italic">
                     No active triage note compiled yet. Click &quot;Re-compile Note&quot; above to assemble the Structured Triage Note.
                   </p>
                 )}
@@ -1432,24 +1487,24 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
             </Card>
 
             {/* Patient Reported Symptoms Card */}
-            <Card className="bg-white border-slate-200 shadow-sm">
-              <CardHeader className="bg-slate-50 border-b border-slate-200 py-3 px-4">
-                <CardTitle className="text-sm font-bold text-slate-900 flex items-center space-x-2">
+            <Card className="bg-card border-border shadow-sm">
+              <CardHeader className="bg-muted/40 border-b border-border py-3 px-4">
+                <CardTitle className="text-sm font-bold text-foreground flex items-center space-x-2">
                   <HeartPulse className="w-4 h-4 text-indigo-600" />
                   <span>Patient-Reported Observations</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 space-y-4">
-                <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200 text-xs space-y-3">
+                <div className="bg-muted/40 p-3.5 rounded-lg border border-border text-xs space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-semibold block uppercase text-[10px] tracking-wider">
+                    <span className="text-muted-foreground font-semibold block uppercase text-[10px] tracking-wider">
                       Chief Complaint Narrative ({caseDetails.language ? caseDetails.language.toUpperCase() : 'UNKNOWN'})
                     </span>
                     <div className="flex items-center space-x-2">
                       <select
                         value={translationTargetLang}
                         onChange={(e) => setTranslationTargetLang(e.target.value)}
-                        className="text-[11px] bg-white border border-slate-300 rounded px-2 py-1 text-slate-700 font-medium"
+                        className="text-[11px] bg-card border border-border rounded px-2 py-1 text-muted-foreground font-medium"
                       >
                         <option value="en">Translate to English</option>
                         <option value="hi">Translate to Hindi (हिन्दी)</option>
@@ -1468,7 +1523,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                         variant="outline"
                         onClick={() => handleRequestTranslation('PATIENT_TEXT')}
                         disabled={isTranslatingId === 'PATIENT_TEXT'}
-                        className="text-[11px] h-7 px-2 bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100"
+                        className="text-[11px] h-7 px-2 bg-primary/10 border-primary/20 text-primary hover:bg-indigo-100"
                       >
                         {isTranslatingId === 'PATIENT_TEXT' ? (
                           <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
@@ -1479,11 +1534,11 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                       </Button>
                     </div>
                   </div>
-                  <p className="text-slate-900 font-medium leading-relaxed">{caseDetails.chiefComplaint}</p>
+                  <p className="text-foreground font-medium leading-relaxed">{caseDetails.chiefComplaint}</p>
                 </div>
 
                 {translationError && (
-                  <div className="p-2 bg-red-50 border border-red-200 text-red-700 text-xs rounded">
+                  <div className="p-2 bg-destructive/10 border border-destructive/30 text-destructive text-xs rounded">
                     {translationError}
                   </div>
                 )}
@@ -1492,14 +1547,14 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                 {translationsList
                   .filter((t: any) => t.sourceType === 'PATIENT_TEXT')
                   .map((t: any) => (
-                    <div key={t._id || t.id} className="p-3.5 bg-indigo-50/60 border border-indigo-200 rounded-lg text-xs space-y-2">
-                      <div className="flex justify-between items-center border-b border-indigo-100 pb-2">
-                        <span className="font-bold text-indigo-950 flex items-center space-x-1.5">
+                    <div key={t._id || t.id} className="p-3.5 bg-primary/10 border border-primary/20 rounded-lg text-xs space-y-2">
+                      <div className="flex justify-between items-center border-b border-primary/15 pb-2">
+                        <span className="font-bold text-primary flex items-center space-x-1.5">
                           <Globe className="w-3.5 h-3.5 text-indigo-600" />
                           <span>AI Translation — {t.targetLanguage.toUpperCase()}</span>
                         </span>
                         <div className="flex items-center space-x-2">
-                          <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-[10px]">
+                          <Badge variant="outline" className="bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30 text-[10px]">
                             Provenance: {t.provenance}
                           </Badge>
                           <Badge
@@ -1507,7 +1562,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                             className={
                               t.verificationStatus === 'VERIFIED'
                                 ? 'bg-green-50 text-green-700 border-green-200 text-[10px]'
-                                : 'bg-amber-50 text-amber-700 border-amber-200 text-[10px]'
+                                : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px]'
                             }
                           >
                             {t.verificationStatus === 'VERIFIED' ? 'VERIFIED' : 'VERIFICATION REQUIRED'}
@@ -1515,13 +1570,13 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                         </div>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-                        <div className="p-2 bg-white/80 rounded border border-indigo-100 space-y-1">
-                          <span className="text-[10px] font-semibold uppercase text-slate-400 block">Original ({t.sourceLanguage?.toUpperCase() || 'UNKNOWN'})</span>
-                          <p className="text-slate-800 leading-relaxed font-medium">{t.originalText}</p>
+                        <div className="p-2 bg-card/80 rounded border border-primary/15 space-y-1">
+                          <span className="text-[10px] font-semibold uppercase text-muted-foreground block">Original ({t.sourceLanguage?.toUpperCase() || 'UNKNOWN'})</span>
+                          <p className="text-foreground leading-relaxed font-medium">{t.originalText}</p>
                         </div>
-                        <div className="p-2 bg-white rounded border border-indigo-200 space-y-1 shadow-sm">
+                        <div className="p-2 bg-card rounded border border-primary/20 space-y-1 shadow-sm">
                           <span className="text-[10px] font-semibold uppercase text-indigo-600 block">Translated ({t.targetLanguage.toUpperCase()})</span>
-                          <p className="text-slate-900 leading-relaxed font-medium">{t.translatedText || t.processingError || 'No translation output.'}</p>
+                          <p className="text-foreground leading-relaxed font-medium">{t.translatedText || t.processingError || 'No translation output.'}</p>
                         </div>
                       </div>
                       {t.verificationStatus !== 'VERIFIED' && (
@@ -1530,7 +1585,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                             size="sm"
                             variant="outline"
                             onClick={() => handleVerifyTranslation(t._id || t.id)}
-                            className="text-[11px] h-6 px-2 bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100"
+                            className="text-[11px] h-6 px-2 bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100"
                           >
                             <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-600" />
                             Verify Translation
@@ -1542,19 +1597,19 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
 
                 {caseDetails.symptoms.length > 0 && (
                   <div className="space-y-3">
-                    <span className="text-xs font-semibold text-slate-700 block">Structured Symptoms Log</span>
+                    <span className="text-xs font-semibold text-muted-foreground block">Structured Symptoms Log</span>
                     {caseDetails.symptoms.map((s) => (
-                      <div key={s.id} className="p-3 border border-slate-200 rounded-md text-xs space-y-2 bg-white">
+                      <div key={s.id} className="p-3 border border-border rounded-md text-xs space-y-2 bg-card">
                         <div className="flex justify-between items-center">
-                          <span className="font-bold text-slate-900">{s.name}</span>
-                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-[10px]">
+                          <span className="font-bold text-foreground">{s.name}</span>
+                          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[10px]">
                             Source: {s.source}
                           </Badge>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 text-slate-600 text-[11px] pt-1">
-                          {s.onset && <div><span className="text-slate-400">Onset:</span> {s.onset}</div>}
-                          {s.severity && <div><span className="text-slate-400">Patient Severity:</span> {s.severity}/10</div>}
-                          {s.bodyLocation && <div><span className="text-slate-400">Location:</span> {s.bodyLocation}</div>}
+                        <div className="grid grid-cols-2 gap-2 text-muted-foreground text-[11px] pt-1">
+                          {s.onset && <div><span className="text-muted-foreground">Onset:</span> {s.onset}</div>}
+                          {s.severity && <div><span className="text-muted-foreground">Patient Severity:</span> {s.severity}/10</div>}
+                          {s.bodyLocation && <div><span className="text-muted-foreground">Location:</span> {s.bodyLocation}</div>}
                         </div>
                       </div>
                     ))}
@@ -1564,17 +1619,17 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
             </Card>
 
             {/* AI Information Extraction Card */}
-            <Card className="bg-white border-purple-200 shadow-sm">
-              <CardHeader className="bg-purple-50 border-b border-purple-100 py-3 px-4 flex flex-row items-center justify-between">
+            <Card className="bg-card border-purple-500/30 shadow-sm">
+              <CardHeader className="bg-purple-500/10 border-b border-purple-500/20 py-3 px-4 flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle className="text-sm font-bold text-purple-950 flex items-center space-x-2">
+                  <CardTitle className="text-sm font-bold text-purple-600 dark:text-purple-400 flex items-center space-x-2">
                     <HeartPulse className="w-4 h-4 text-purple-600" />
                     <span>AI Information Extraction</span>
-                    <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-300 text-[10px] ml-2">
+                    <Badge variant="outline" className="bg-purple-100 text-purple-600 dark:text-purple-400 border-purple-500/30 text-[10px] ml-2">
                       AI-assisted
                     </Badge>
                   </CardTitle>
-                  <CardDescription className="text-xs text-purple-700">
+                  <CardDescription className="text-xs text-purple-600 dark:text-purple-400">
                     Extract structured observations from narrative for human review.
                   </CardDescription>
                 </div>
@@ -1596,14 +1651,14 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
 
               <CardContent className="p-4 space-y-4">
                 {aiExtractionError && (
-                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded text-xs flex items-center space-x-2">
+                  <div className="p-3 bg-destructive/10 border border-destructive/30 text-destructive rounded text-xs flex items-center space-x-2">
                     <AlertCircle className="w-4 h-4 shrink-0" />
                     <span>{aiExtractionError}</span>
                   </div>
                 )}
 
                 {!aiExtractionData && !aiExtractionError && !isExtracting && (
-                  <p className="text-xs text-slate-500 italic">
+                  <p className="text-xs text-muted-foreground italic">
                     Click &quot;Extract Information&quot; to parse patient narrative into verified structured findings.
                   </p>
                 )}
@@ -1611,39 +1666,39 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                 {aiExtractionData && (
                   <div className="space-y-4 text-xs">
                     {/* Status & Model metadata */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-slate-50 border rounded text-[11px]">
+                    <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-muted/40 border rounded text-[11px]">
                       <div>
-                        <span className="text-slate-500">Status: </span>
+                        <span className="text-muted-foreground">Status: </span>
                         <span className="font-semibold text-green-700">{aiExtractionData.generationStatus}</span>
                       </div>
                       <div>
-                        <span className="text-slate-500">Model: </span>
-                        <span className="font-mono text-purple-900">{aiExtractionData.model || 'Gemini 2.5 Flash'}</span>
+                        <span className="text-muted-foreground">Model: </span>
+                        <span className="font-mono text-purple-600 dark:text-purple-400">{aiExtractionData.model || 'Gemini 2.5 Flash'}</span>
                       </div>
                       <div>
-                        <span className="text-slate-500">Generated: </span>
-                        <span className="text-slate-700">{new Date(aiExtractionData.generatedAt).toLocaleString()}</span>
+                        <span className="text-muted-foreground">Generated: </span>
+                        <span className="text-muted-foreground">{new Date(aiExtractionData.generatedAt).toLocaleString()}</span>
                       </div>
                     </div>
 
                     {/* Extracted Symptoms */}
                     {aiExtractionData.symptoms && aiExtractionData.symptoms.length > 0 && (
                       <div className="space-y-2">
-                        <span className="font-semibold text-slate-800 block">Extracted Symptoms</span>
+                        <span className="font-semibold text-foreground block">Extracted Symptoms</span>
                         <div className="grid grid-cols-1 gap-2">
                           {aiExtractionData.symptoms.map((s: any, idx: number) => (
-                            <div key={idx} className="p-2.5 bg-purple-50/50 border border-purple-100 rounded text-xs space-y-1">
+                            <div key={idx} className="p-2.5 bg-purple-500/100/10 border border-purple-500/20 rounded text-xs space-y-1">
                               <div className="flex justify-between items-center">
-                                <span className="font-bold text-purple-950">{s.name}</span>
-                                <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200 text-[9px]">
+                                <span className="font-bold text-purple-600 dark:text-purple-400">{s.name}</span>
+                                <Badge variant="outline" className="bg-purple-100 text-purple-600 dark:text-purple-400 border-purple-500/30 text-[9px]">
                                   Status: {s.status || 'PRESENT'}
                                 </Badge>
                               </div>
-                              <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[11px] text-slate-600 pt-1">
-                                {s.duration && <div><span className="text-slate-400">Duration:</span> {s.duration}</div>}
-                                {s.onset && <div><span className="text-slate-400">Onset:</span> {s.onset}</div>}
-                                {s.frequency && <div><span className="text-slate-400">Frequency:</span> {s.frequency}</div>}
-                                {s.severity && <div><span className="text-slate-400">Severity:</span> {s.severity}</div>}
+                              <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground pt-1">
+                                {s.duration && <div><span className="text-muted-foreground">Duration:</span> {s.duration}</div>}
+                                {s.onset && <div><span className="text-muted-foreground">Onset:</span> {s.onset}</div>}
+                                {s.frequency && <div><span className="text-muted-foreground">Frequency:</span> {s.frequency}</div>}
+                                {s.severity && <div><span className="text-muted-foreground">Severity:</span> {s.severity}</div>}
                               </div>
                             </div>
                           ))}
@@ -1654,10 +1709,10 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                     {/* Negative Findings */}
                     {aiExtractionData.negativeFindings && aiExtractionData.negativeFindings.length > 0 && (
                       <div className="space-y-1">
-                        <span className="font-semibold text-slate-800 block">Explicitly Absent Findings</span>
-                        <ul className="list-disc list-inside space-y-0.5 text-slate-700 pl-1 text-[11px]">
+                        <span className="font-semibold text-foreground block">Explicitly Absent Findings</span>
+                        <ul className="list-disc list-inside space-y-0.5 text-muted-foreground pl-1 text-[11px]">
                           {aiExtractionData.negativeFindings.map((item: string, idx: number) => (
-                            <li key={idx}><span className="text-slate-800 font-medium">{item}</span></li>
+                            <li key={idx}><span className="text-foreground font-medium">{item}</span></li>
                           ))}
                         </ul>
                       </div>
@@ -1666,8 +1721,8 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                     {/* Uncertainties */}
                     {aiExtractionData.uncertainties && aiExtractionData.uncertainties.length > 0 && (
                       <div className="space-y-1">
-                        <span className="font-semibold text-amber-900 block">Uncertainties & Ambiguities</span>
-                        <ul className="list-disc list-inside space-y-0.5 text-amber-800 pl-1 text-[11px]">
+                        <span className="font-semibold text-amber-600 dark:text-amber-400 block">Uncertainties & Ambiguities</span>
+                        <ul className="list-disc list-inside space-y-0.5 text-amber-600 dark:text-amber-400 pl-1 text-[11px]">
                           {aiExtractionData.uncertainties.map((item: string, idx: number) => (
                             <li key={idx}>{item}</li>
                           ))}
@@ -1675,7 +1730,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                       </div>
                     )}
 
-                    <div className="p-2 bg-amber-50 border border-amber-200 text-amber-900 text-[11px] rounded">
+                    <div className="p-2 bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-[11px] rounded">
                       <span className="font-semibold">Human Verification Notice:</span> AI extraction organizes patient narrative facts for human review. It does not diagnose or determine medical urgency.
                     </div>
                   </div>
@@ -1684,51 +1739,51 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
             </Card>
 
             {/* Patient Timeline Card */}
-            <Card className="bg-white border-blue-200 shadow-sm">
-              <CardHeader className="bg-blue-50 border-b border-blue-100 py-3 px-4 flex flex-row items-center justify-between">
+            <Card className="bg-card border-primary/20 shadow-sm">
+              <CardHeader className="bg-primary/10 border-b border-primary/15 py-3 px-4 flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle className="text-sm font-bold text-blue-950 flex items-center space-x-2">
+                  <CardTitle className="text-sm font-bold text-primary flex items-center space-x-2">
                     <Clock className="w-4 h-4 text-blue-600" />
                     <span>AI-Organized Patient Timeline</span>
-                    <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300 text-[10px] ml-2">
+                    <Badge variant="outline" className="bg-blue-100 text-primary border-primary/30 text-[10px] ml-2">
                       Chronological
                     </Badge>
                   </CardTitle>
-                  <CardDescription className="text-xs text-blue-700">
+                  <CardDescription className="text-xs text-primary">
                     Chronological ordering of reported symptom events, timing, and encounters.
                   </CardDescription>
                 </div>
               </CardHeader>
               <CardContent className="p-4 space-y-4">
                 {isFetchingTimeline && (
-                  <div className="flex items-center space-x-2 text-xs text-slate-500 p-2">
+                  <div className="flex items-center space-x-2 text-xs text-muted-foreground p-2">
                     <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
                     <span>Loading patient timeline...</span>
                   </div>
                 )}
 
                 {timelineEvents.length === 0 && !isFetchingTimeline && (
-                  <p className="text-xs text-slate-500 italic">
+                  <p className="text-xs text-muted-foreground italic">
                     No timeline events available yet. Click &quot;Extract Information&quot; above to generate timeline.
                   </p>
                 )}
 
                 {timelineEvents.length > 0 && (
                   <div className="space-y-3">
-                    <div className="relative border-l-2 border-blue-200 ml-3 pl-4 space-y-3">
+                    <div className="relative border-l-2 border-primary/20 ml-3 pl-4 space-y-3">
                       {timelineEvents.map((evt: any, idx: number) => (
                         <div key={idx} className="relative group">
                           {/* Timeline Node Dot */}
                           <div className="absolute -left-[23px] top-1 w-2.5 h-2.5 rounded-full bg-blue-600 border-2 border-white ring-2 ring-blue-100" />
 
-                          <div className="bg-slate-50 border border-slate-200 rounded-md p-2.5 text-xs space-y-1 hover:border-blue-300 transition-colors">
-                            <div className="flex flex-wrap items-center justify-between gap-1.5 border-b border-slate-200 pb-1.5">
+                          <div className="bg-muted/40 border border-border rounded-md p-2.5 text-xs space-y-1 hover:border-primary/30 transition-colors">
+                            <div className="flex flex-wrap items-center justify-between gap-1.5 border-b border-border pb-1.5">
                               <div className="flex items-center space-x-2">
-                                <span className="font-semibold text-blue-950">
+                                <span className="font-semibold text-primary">
                                   {evt.relativeTime || evt.date || 'Time unclear'}
                                 </span>
                                 {evt.eventType && (
-                                  <Badge variant="outline" className="bg-slate-100 text-slate-700 border-slate-300 text-[9px]">
+                                  <Badge variant="outline" className="bg-muted text-muted-foreground border-border text-[9px]">
                                     {evt.eventType}
                                   </Badge>
                                 )}
@@ -1741,21 +1796,21 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                                       evt.certainty === 'CERTAIN'
                                         ? 'bg-green-50 text-green-700 border-green-200 text-[9px]'
                                         : evt.certainty === 'APPROXIMATE'
-                                        ? 'bg-amber-50 text-amber-700 border-amber-200 text-[9px]'
-                                        : 'bg-red-50 text-red-700 border-red-200 text-[9px]'
+                                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[9px]'
+                                        : 'bg-destructive/10 text-destructive border-destructive/30 text-[9px]'
                                     }
                                   >
                                     {evt.certainty}
                                   </Badge>
                                 )}
-                                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-[9px]">
+                                <Badge variant="outline" className="bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30 text-[9px]">
                                   [AI EXTRACTED]
                                 </Badge>
                               </div>
                             </div>
-                            <p className="text-slate-900 font-medium pt-0.5">{evt.description}</p>
+                            <p className="text-foreground font-medium pt-0.5">{evt.description}</p>
                             {evt.sourceQuote && (
-                              <p className="text-[10px] text-slate-500 italic">
+                              <p className="text-[10px] text-muted-foreground italic">
                                 &quot;{evt.sourceQuote}&quot;
                               </p>
                             )}
@@ -1764,7 +1819,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                       ))}
                     </div>
 
-                    <div className="p-2 bg-blue-50 border border-blue-200 text-blue-900 text-[11px] rounded flex items-center justify-between">
+                    <div className="p-2 bg-primary/10 border border-primary/20 text-primary text-[11px] rounded flex items-center justify-between">
                       <span>
                         <span className="font-semibold">Timeline Safety Note:</span> Chronological ordering of reported observations for human verification.
                       </span>
@@ -1775,31 +1830,31 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
             </Card>
 
             {/* Missing Information Card */}
-            <Card className="bg-white border-amber-200 shadow-sm">
-              <CardHeader className="bg-amber-50/70 border-b border-amber-100 py-3 px-4 flex flex-row items-center justify-between">
+            <Card className="bg-card border-amber-500/30 shadow-sm">
+              <CardHeader className="bg-amber-500/100/10 border-b border-amber-500/20 py-3 px-4 flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle className="text-sm font-bold text-amber-950 flex items-center space-x-2">
+                  <CardTitle className="text-sm font-bold text-amber-600 dark:text-amber-400 flex items-center space-x-2">
                     <AlertCircle className="w-4 h-4 text-amber-600" />
                     <span>Identified Information Gaps</span>
-                    <Badge variant="outline" className="bg-amber-100 text-amber-900 border-amber-300 text-[10px] ml-2">
+                    <Badge variant="outline" className="bg-amber-100 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px] ml-2">
                       Informational Completeness
                     </Badge>
                   </CardTitle>
-                  <CardDescription className="text-xs text-amber-800">
+                  <CardDescription className="text-xs text-amber-600 dark:text-amber-400">
                     Important narrative details not specified in intake data.
                   </CardDescription>
                 </div>
               </CardHeader>
               <CardContent className="p-4 space-y-4">
                 {isFetchingMissingInfo && (
-                  <div className="flex items-center space-x-2 text-xs text-slate-500 p-2">
+                  <div className="flex items-center space-x-2 text-xs text-muted-foreground p-2">
                     <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-600" />
                     <span>Analyzing narrative gaps...</span>
                   </div>
                 )}
 
                 {missingInfoItems.length === 0 && !isFetchingMissingInfo && (
-                  <p className="text-xs text-slate-500 italic">
+                  <p className="text-xs text-muted-foreground italic">
                     No configured narrative information gaps identified from available structured intake data.
                   </p>
                 )}
@@ -1808,29 +1863,29 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                   <div className="space-y-3">
                     <div className="grid grid-cols-1 gap-2.5">
                       {missingInfoItems.map((item: any, idx: number) => (
-                        <div key={idx} className="p-3 bg-amber-50/40 border border-amber-200 rounded-md text-xs space-y-1">
+                        <div key={idx} className="p-3 bg-amber-500/10/40 border border-amber-500/30 rounded-md text-xs space-y-1">
                           <div className="flex justify-between items-center">
-                            <span className="font-bold text-amber-950">{item.topic || item.field || 'Information Gap'}</span>
+                            <span className="font-bold text-amber-600 dark:text-amber-400">{item.topic || item.field || 'Information Gap'}</span>
                             <Badge
                               variant="outline"
                               className={
                                 item.importance === 'CRITICAL'
-                                  ? 'bg-red-50 text-red-700 border-red-200 text-[9px]'
+                                  ? 'bg-destructive/10 text-destructive border-destructive/30 text-[9px]'
                                   : item.importance === 'IMPORTANT'
-                                  ? 'bg-amber-100 text-amber-800 border-amber-300 text-[9px]'
-                                  : 'bg-slate-100 text-slate-700 border-slate-300 text-[9px]'
+                                  ? 'bg-amber-100 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[9px]'
+                                  : 'bg-muted text-muted-foreground border-border text-[9px]'
                               }
                             >
                               {item.importance || 'IMPORTANT'}
                             </Badge>
                           </div>
-                          <p className="text-slate-800 font-medium pt-0.5">{item.description}</p>
-                          {item.reason && <p className="text-[11px] text-slate-500 pt-0.5"><span className="font-semibold text-slate-600">Reason:</span> {item.reason}</p>}
+                          <p className="text-foreground font-medium pt-0.5">{item.description}</p>
+                          {item.reason && <p className="text-[11px] text-muted-foreground pt-0.5"><span className="font-semibold text-muted-foreground">Reason:</span> {item.reason}</p>}
                         </div>
                       ))}
                     </div>
 
-                    <div className="p-2 bg-amber-50 border border-amber-200 text-amber-900 text-[11px] rounded">
+                    <div className="p-2 bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-[11px] rounded">
                       <span className="font-semibold">Completeness Safety Note:</span> Information gap labels describe data completeness only and do not indicate medical urgency.
                     </div>
                   </div>
@@ -1839,7 +1894,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
             </Card>
 
             {/* Suggested Follow-Up Questions Card */}
-            <Card className="bg-white border-teal-200 shadow-sm">
+            <Card className="bg-card border-teal-200 shadow-sm">
               <CardHeader className="bg-teal-50/70 border-b border-teal-100 py-3 px-4 flex flex-row items-center justify-between">
                 <div>
                   <CardTitle className="text-sm font-bold text-teal-950 flex items-center space-x-2">
@@ -1856,7 +1911,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
               </CardHeader>
               <CardContent className="p-4 space-y-4">
                 {followUpQuestionItems.length === 0 && !isFetchingMissingInfo && (
-                  <p className="text-xs text-slate-500 italic">
+                  <p className="text-xs text-muted-foreground italic">
                     No follow-up questions generated.
                   </p>
                 )}
@@ -1873,13 +1928,13 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                             </Badge>
                           </div>
                           {q.reason && (
-                            <p className="text-[11px] text-slate-600">
-                              <span className="font-semibold text-slate-500">Goal:</span> {q.reason}
+                            <p className="text-[11px] text-muted-foreground">
+                              <span className="font-semibold text-muted-foreground">Goal:</span> {q.reason}
                             </p>
                           )}
                           {q.linkedMissingInformationId && (
                             <div className="pt-0.5">
-                              <Badge variant="outline" className="bg-slate-100 text-slate-600 border-slate-200 text-[9px]">
+                              <Badge variant="outline" className="bg-muted text-muted-foreground border-border text-[9px]">
                                 Linked Gap: {q.linkedMissingInformationId}
                               </Badge>
                             </div>
@@ -1897,17 +1952,17 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
             </Card>
 
             {/* Reports & OCR Documents Card */}
-            <Card className="bg-white border-blue-200 shadow-sm">
-              <CardHeader className="bg-blue-50/70 border-b border-blue-100 py-3 px-4 flex flex-row items-center justify-between">
+            <Card className="bg-card border-primary/20 shadow-sm">
+              <CardHeader className="bg-primary/10 border-b border-primary/15 py-3 px-4 flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle className="text-sm font-bold text-blue-950 flex items-center space-x-2">
+                  <CardTitle className="text-sm font-bold text-primary flex items-center space-x-2">
                     <FileCheck className="w-4 h-4 text-blue-600" />
                     <span>Reports & OCR Documents</span>
-                    <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300 text-[10px] ml-2">
+                    <Badge variant="outline" className="bg-blue-100 text-primary border-primary/30 text-[10px] ml-2">
                       {reportsList.length} Attached
                     </Badge>
                   </CardTitle>
-                  <CardDescription className="text-xs text-blue-800">
+                  <CardDescription className="text-xs text-primary">
                     Uploaded lab reports, imaging notes, and document text extractions.
                   </CardDescription>
                 </div>
@@ -1927,7 +1982,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
               </CardHeader>
               <CardContent className="p-4 space-y-4">
                 {reportUploadError && (
-                  <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 rounded text-xs flex items-center space-x-2">
+                  <div className="p-2.5 bg-destructive/10 border border-destructive/30 text-destructive rounded text-xs flex items-center space-x-2">
                     <AlertCircle className="w-4 h-4 shrink-0" />
                     <span>{reportUploadError}</span>
                   </div>
@@ -1940,14 +1995,14 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                 )}
 
                 {isFetchingReports && (
-                  <div className="flex items-center space-x-2 text-xs text-slate-500 p-2">
+                  <div className="flex items-center space-x-2 text-xs text-muted-foreground p-2">
                     <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
                     <span>Loading report attachments...</span>
                   </div>
                 )}
 
                 {reportsList.length === 0 && !isFetchingReports && (
-                  <p className="text-xs text-slate-500 italic">
+                  <p className="text-xs text-muted-foreground italic">
                     No clinical reports attached to this case.
                   </p>
                 )}
@@ -1961,11 +2016,11 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                       const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
 
                       return (
-                        <div key={reportId} className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-2">
-                          <div className="flex justify-between items-center border-b border-slate-200 pb-2">
+                        <div key={reportId} className="p-3 bg-muted/40 border border-border rounded-lg text-xs space-y-2">
+                          <div className="flex justify-between items-center border-b border-border pb-2">
                             <div>
-                              <span className="font-bold text-slate-900 block">{report.originalFilename}</span>
-                              <span className="text-[10px] text-slate-500 font-mono">
+                              <span className="font-bold text-foreground block">{report.originalFilename}</span>
+                              <span className="text-[10px] text-muted-foreground font-mono">
                                 {(report.fileSize / 1024).toFixed(1)} KB • {report.mimeType} • Uploaded {new Date(report.uploadTimestamp || report.createdAt).toLocaleString()}
                               </span>
                             </div>
@@ -1976,8 +2031,8 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                                   report.processingStatus === 'PROCESSED'
                                     ? 'bg-green-50 text-green-700 border-green-200 text-[10px]'
                                     : report.processingStatus === 'FAILED'
-                                    ? 'bg-red-50 text-red-700 border-red-200 text-[10px]'
-                                    : 'bg-amber-50 text-amber-700 border-amber-200 text-[10px]'
+                                    ? 'bg-destructive/10 text-destructive border-destructive/30 text-[10px]'
+                                    : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px]'
                                 }
                               >
                                 {report.processingStatus}
@@ -1986,8 +2041,8 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                                 variant="outline"
                                 className={
                                   report.verificationStatus === 'VERIFIED'
-                                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300 text-[10px]'
-                                    : 'bg-amber-100 text-amber-800 border-amber-300 text-[10px]'
+                                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-[10px]'
+                                    : 'bg-amber-100 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px]'
                                 }
                               >
                                 {report.verificationStatus === 'VERIFIED' ? 'VERIFIED' : 'VERIFICATION REQUIRED'}
@@ -2018,7 +2073,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                                     });
                                 }
                               }}
-                              className="text-blue-600 hover:text-blue-800 underline font-medium text-[11px] inline-flex items-center"
+                              className="text-blue-600 hover:text-primary underline font-medium text-[11px] inline-flex items-center"
                             >
                               Download Original File
                             </a>
@@ -2028,7 +2083,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleVerifyReport(reportId)}
-                                className="h-7 text-[11px] border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                                className="h-7 text-[11px] border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"
                               >
                                 <CheckCircle2 className="w-3 h-3 mr-1" /> Mark OCR as Verified
                               </Button>
@@ -2037,7 +2092,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
 
                           {/* Empty OCR Warning Banner */}
                           {report.processingStatus === 'PROCESSED' && !report.ocrUsable && (
-                            <div className="p-2 bg-amber-50 border border-amber-200 text-amber-900 text-[11px] rounded flex items-center space-x-2">
+                            <div className="p-2 bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-[11px] rounded flex items-center space-x-2">
                               <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
                               <span>OCR completed but produced no usable text.</span>
                             </div>
@@ -2045,7 +2100,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
 
                           {/* OCR Processing Failure Banner */}
                           {report.processingStatus === 'FAILED' && (
-                            <div className="p-2 bg-red-50 border border-red-200 text-red-700 text-[11px] rounded flex items-center space-x-2">
+                            <div className="p-2 bg-destructive/10 border border-destructive/30 text-destructive text-[11px] rounded flex items-center space-x-2">
                               <AlertCircle className="w-4 h-4 shrink-0" />
                               <span>OCR Processing Error: {report.processingError || 'Extraction failed'}</span>
                             </div>
@@ -2055,13 +2110,13 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                           {report.ocrUsable && report.extractedText && (
                             <div className="space-y-2 pt-1">
                               <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-wider block">Extracted Document Text</span>
+                                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block">Extracted Document Text</span>
                                 <Button
                                   size="sm"
                                   variant="outline"
                                   onClick={() => handleRequestTranslation('REPORT_OCR', reportId)}
                                   disabled={isTranslatingId === reportId}
-                                  className="text-[10px] h-6 px-2 shrink-0 bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100"
+                                  className="text-[10px] h-6 px-2 shrink-0 bg-primary/10 border-primary/20 text-primary hover:bg-indigo-100"
                                 >
                                   {isTranslatingId === reportId ? (
                                     <Loader2 className="w-3 h-3 animate-spin mr-1" />
@@ -2071,7 +2126,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                                   Translate OCR
                                 </Button>
                               </div>
-                              <pre className="p-2.5 bg-slate-900 text-slate-100 font-mono text-[11px] rounded overflow-x-auto whitespace-pre-wrap max-h-48 border border-slate-700">
+                              <pre className="p-2.5 bg-muted text-foreground font-mono text-[11px] rounded overflow-x-auto whitespace-pre-wrap max-h-48 border border-border">
                                 {report.extractedText}
                               </pre>
 
@@ -2079,9 +2134,9 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                               {translationsList
                                 .filter((t: any) => t.sourceType === 'REPORT_OCR' && t.sourceId === reportId)
                                 .map((t: any) => (
-                                  <div key={t._id || t.id} className="p-2.5 bg-indigo-50/60 border border-indigo-200 rounded text-xs space-y-2">
-                                    <div className="flex justify-between items-center border-b border-indigo-100 pb-1">
-                                      <span className="font-bold text-indigo-950 text-[11px] flex items-center space-x-1">
+                                  <div key={t._id || t.id} className="p-2.5 bg-primary/10 border border-primary/20 rounded text-xs space-y-2">
+                                    <div className="flex justify-between items-center border-b border-primary/15 pb-1">
+                                      <span className="font-bold text-primary text-[11px] flex items-center space-x-1">
                                         <Globe className="w-3 h-3 text-indigo-600" />
                                         <span>Translated OCR Text — {t.targetLanguage.toUpperCase()}</span>
                                       </span>
@@ -2090,13 +2145,13 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                                         className={
                                           t.verificationStatus === 'VERIFIED'
                                             ? 'bg-green-50 text-green-700 border-green-200 text-[9px]'
-                                            : 'bg-amber-50 text-amber-700 border-amber-200 text-[9px]'
+                                            : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[9px]'
                                         }
                                       >
                                         {t.verificationStatus === 'VERIFIED' ? 'VERIFIED' : 'REQUIRED'}
                                       </Badge>
                                     </div>
-                                    <p className="text-slate-900 leading-relaxed font-medium bg-white p-2 rounded border border-indigo-100">
+                                    <p className="text-foreground leading-relaxed font-medium bg-card p-2 rounded border border-primary/15">
                                       {t.translatedText || t.processingError}
                                     </p>
                                     {t.verificationStatus !== 'VERIFIED' && (
@@ -2105,7 +2160,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                                           size="sm"
                                           variant="outline"
                                           onClick={() => handleVerifyTranslation(t._id || t.id)}
-                                          className="text-[10px] h-5 px-1.5 bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100"
+                                          className="text-[10px] h-5 px-1.5 bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100"
                                         >
                                           <CheckCircle2 className="w-2.5 h-2.5 mr-1 text-emerald-600" />
                                           Verify
@@ -2122,24 +2177,24 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                   </div>
                 )}
 
-                <div className="p-2 bg-slate-100 border border-slate-200 text-slate-700 text-[11px] rounded">
+                <div className="p-2 bg-muted border border-border text-muted-foreground text-[11px] rounded">
                   <span className="font-semibold">Storage & Retention Policy:</span> The original report is preserved according to the current prototype storage/retention policy and remains available for authorized reviewer verification.
                 </div>
               </CardContent>
             </Card>
 
             {/* Visual Inputs & Observations Card */}
-            <Card className="bg-white border-purple-200 shadow-sm">
-              <CardHeader className="bg-purple-50/70 border-b border-purple-100 py-3 px-4 flex flex-row items-center justify-between">
+            <Card className="bg-card border-purple-500/30 shadow-sm">
+              <CardHeader className="bg-purple-500/10/70 border-b border-purple-500/20 py-3 px-4 flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle className="text-sm font-bold text-purple-950 flex items-center space-x-2">
+                  <CardTitle className="text-sm font-bold text-purple-600 dark:text-purple-400 flex items-center space-x-2">
                     <HeartPulse className="w-4 h-4 text-purple-600" />
                     <span>Visual Inputs & Observations</span>
-                    <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-300 text-[10px] ml-2">
+                    <Badge variant="outline" className="bg-purple-100 text-purple-600 dark:text-purple-400 border-purple-500/30 text-[10px] ml-2">
                       {visualInputsList.length} Uploaded
                     </Badge>
                   </CardTitle>
-                  <CardDescription className="text-xs text-purple-800">
+                  <CardDescription className="text-xs text-purple-600 dark:text-purple-400">
                     Patient-provided clinical images (JPEG/PNG) and structured non-diagnostic visual observations.
                   </CardDescription>
                 </div>
@@ -2159,7 +2214,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
               </CardHeader>
               <CardContent className="p-4 space-y-4">
                 {visualInputUploadError && (
-                  <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 rounded text-xs flex items-center space-x-2">
+                  <div className="p-2.5 bg-destructive/10 border border-destructive/30 text-destructive rounded text-xs flex items-center space-x-2">
                     <AlertCircle className="w-4 h-4 shrink-0" />
                     <span>{visualInputUploadError}</span>
                   </div>
@@ -2172,14 +2227,14 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                 )}
 
                 {isFetchingVisualInputs && (
-                  <div className="flex items-center space-x-2 text-xs text-slate-500 p-2">
+                  <div className="flex items-center space-x-2 text-xs text-muted-foreground p-2">
                     <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-600" />
                     <span>Loading visual input records...</span>
                   </div>
                 )}
 
                 {visualInputsList.length === 0 && !isFetchingVisualInputs && (
-                  <p className="text-xs text-slate-500 italic">
+                  <p className="text-xs text-muted-foreground italic">
                     No visual images attached to this case.
                   </p>
                 )}
@@ -2193,11 +2248,11 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                       const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
 
                       return (
-                        <div key={inputId} className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-2">
-                          <div className="flex justify-between items-center border-b border-slate-200 pb-2">
+                        <div key={inputId} className="p-3 bg-muted/40 border border-border rounded-lg text-xs space-y-2">
+                          <div className="flex justify-between items-center border-b border-border pb-2">
                             <div>
-                              <span className="font-bold text-slate-900 block">{input.originalFilename}</span>
-                              <span className="text-[10px] text-slate-500 font-mono">
+                              <span className="font-bold text-foreground block">{input.originalFilename}</span>
+                              <span className="text-[10px] text-muted-foreground font-mono">
                                 {(input.fileSize / 1024).toFixed(1)} KB • {input.mimeType} • Uploaded {new Date(input.uploadedAt || input.createdAt).toLocaleString()}
                               </span>
                             </div>
@@ -2208,8 +2263,8 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                                   input.processingStatus === 'PROCESSED'
                                     ? 'bg-green-50 text-green-700 border-green-200 text-[10px]'
                                     : input.processingStatus === 'FAILED'
-                                    ? 'bg-red-50 text-red-700 border-red-200 text-[10px]'
-                                    : 'bg-amber-50 text-amber-700 border-amber-200 text-[10px]'
+                                    ? 'bg-destructive/10 text-destructive border-destructive/30 text-[10px]'
+                                    : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px]'
                                 }
                               >
                                 {input.processingStatus}
@@ -2218,8 +2273,8 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                                 variant="outline"
                                 className={
                                   input.verificationStatus === 'VERIFIED'
-                                    ? 'bg-purple-100 text-purple-800 border-purple-300 text-[10px]'
-                                    : 'bg-amber-100 text-amber-800 border-amber-300 text-[10px]'
+                                    ? 'bg-purple-100 text-purple-600 dark:text-purple-400 border-purple-500/30 text-[10px]'
+                                    : 'bg-amber-100 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px]'
                                 }
                               >
                                 {input.verificationStatus === 'VERIFIED' ? 'VERIFIED' : 'VERIFICATION REQUIRED'}
@@ -2249,7 +2304,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                                     });
                                 }
                               }}
-                              className="text-purple-600 hover:text-purple-800 underline font-medium text-[11px] inline-flex items-center"
+                              className="text-purple-600 hover:text-purple-600 dark:text-purple-400 underline font-medium text-[11px] inline-flex items-center"
                             >
                               View Original Image
                             </a>
@@ -2259,7 +2314,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleVerifyVisualInput(inputId)}
-                                className="h-7 text-[11px] border-purple-300 text-purple-700 hover:bg-purple-50"
+                                className="h-7 text-[11px] border-purple-500/30 text-purple-600 dark:text-purple-400 hover:bg-purple-500/10"
                               >
                                 <CheckCircle2 className="w-3 h-3 mr-1" /> Mark Observations as Verified
                               </Button>
@@ -2268,7 +2323,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
 
                           {/* Image Quality Failure Banner */}
                           {(input.qualityStatus === 'INSUFFICIENT' || input.processingStatus === 'FAILED') && (
-                            <div className="p-2 bg-red-50 border border-red-200 text-red-700 text-[11px] rounded flex items-center space-x-2">
+                            <div className="p-2 bg-destructive/10 border border-destructive/30 text-destructive text-[11px] rounded flex items-center space-x-2">
                               <AlertCircle className="w-4 h-4 shrink-0" />
                               <span>Image quality is insufficient for reliable visual observation. ({input.processingError || input.qualityNotes || 'Unreadable image'})</span>
                             </div>
@@ -2276,7 +2331,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
 
                           {/* Empty Success State */}
                           {input.processingStatus === 'PROCESSED' && input.qualityStatus === 'SUFFICIENT' && (!input.observations || input.observations.length === 0) && (
-                            <div className="p-2 bg-purple-50 border border-purple-200 text-purple-900 text-[11px] rounded flex items-center space-x-2">
+                            <div className="p-2 bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400 text-[11px] rounded flex items-center space-x-2">
                               <AlertCircle className="w-4 h-4 text-purple-600 shrink-0" />
                               <span>No configured visual observations were identified.</span>
                             </div>
@@ -2285,26 +2340,26 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                           {/* Observations Display */}
                           {input.processingStatus === 'PROCESSED' && input.observations && input.observations.length > 0 && (
                             <div className="space-y-2 pt-1">
-                              <span className="text-[10px] font-semibold text-purple-900 uppercase tracking-wider block">AI Visual Observations ({input.observations.length})</span>
+                              <span className="text-[10px] font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider block">AI Visual Observations ({input.observations.length})</span>
                               <div className="grid grid-cols-1 gap-2">
                                 {input.observations.map((obs: any, idx: number) => (
-                                  <div key={idx} className="p-2.5 bg-white border border-purple-100 rounded text-xs space-y-1 shadow-2xs">
+                                  <div key={idx} className="p-2.5 bg-card border border-purple-500/20 rounded text-xs space-y-1 shadow-2xs">
                                     <div className="flex justify-between items-center">
-                                      <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200 text-[9px] font-bold">
+                                      <Badge variant="outline" className="bg-purple-100 text-purple-600 dark:text-purple-400 border-purple-500/30 text-[9px] font-bold">
                                         {obs.type}
                                       </Badge>
                                       <div className="flex items-center space-x-1.5">
-                                        <Badge variant="outline" className="bg-slate-100 text-slate-700 border-slate-200 text-[9px]">
+                                        <Badge variant="outline" className="bg-muted text-muted-foreground border-border text-[9px]">
                                           Certainty: {obs.certainty}
                                         </Badge>
-                                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-[9px]">
+                                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[9px]">
                                           {obs.provenance}
                                         </Badge>
                                       </div>
                                     </div>
-                                    <p className="text-slate-800 font-medium pt-0.5">{obs.description}</p>
+                                    <p className="text-foreground font-medium pt-0.5">{obs.description}</p>
                                     {obs.location && (
-                                      <p className="text-[10px] text-slate-500"><span className="font-semibold text-slate-600">Location:</span> {obs.location}</p>
+                                      <p className="text-[10px] text-muted-foreground"><span className="font-semibold text-muted-foreground">Location:</span> {obs.location}</p>
                                     )}
                                   </div>
                                 ))}
@@ -2317,14 +2372,14 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                   </div>
                 )}
 
-                <div className="p-2 bg-purple-50 border border-purple-200 text-purple-900 text-[11px] rounded">
+                <div className="p-2 bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400 text-[11px] rounded">
                   <span className="font-semibold">Safety Disclaimer:</span> AI-generated visual observations for qualified staff review. These observations are descriptive and do not constitute a diagnosis or treatment recommendation.
                 </div>
               </CardContent>
             </Card>
 
             {/* Voice Inputs & Transcripts Card */}
-            <Card className="bg-white border-sky-200 shadow-sm">
+            <Card className="bg-card border-sky-200 shadow-sm">
               <CardHeader className="bg-sky-50 border-b border-sky-100 py-3 px-4 flex flex-row items-center justify-between">
                 <div>
                   <CardTitle className="text-sm font-bold text-sky-950 flex items-center space-x-2">
@@ -2363,7 +2418,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
               </CardHeader>
               <CardContent className="p-4 space-y-4">
                 {voiceInputUploadError && (
-                  <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 rounded text-xs flex items-center space-x-2">
+                  <div className="p-2.5 bg-destructive/10 border border-destructive/30 text-destructive rounded text-xs flex items-center space-x-2">
                     <AlertCircle className="w-4 h-4 shrink-0" />
                     <span>{voiceInputUploadError}</span>
                   </div>
@@ -2376,14 +2431,14 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                 )}
 
                 {isFetchingVoiceInputs && (
-                  <div className="flex items-center space-x-2 text-xs text-slate-500 p-2">
+                  <div className="flex items-center space-x-2 text-xs text-muted-foreground p-2">
                     <Loader2 className="w-3.5 h-3.5 animate-spin text-sky-600" />
                     <span>Loading voice inputs...</span>
                   </div>
                 )}
 
                 {voiceInputsList.length === 0 && !isFetchingVoiceInputs && (
-                  <p className="text-xs text-slate-500 italic">
+                  <p className="text-xs text-muted-foreground italic">
                     No voice recordings attached to this case.
                   </p>
                 )}
@@ -2396,11 +2451,11 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                       const streamUrl = `${apiBaseUrl}/voice-inputs/${inputId}/file`;
 
                       return (
-                        <div key={inputId} className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-3">
-                          <div className="flex justify-between items-center border-b border-slate-200 pb-2">
+                        <div key={inputId} className="p-3 bg-muted/40 border border-border rounded-lg text-xs space-y-3">
+                          <div className="flex justify-between items-center border-b border-border pb-2">
                             <div>
-                              <span className="font-bold text-slate-900 block">{input.originalFilename}</span>
-                              <span className="text-[10px] text-slate-500 font-mono">
+                              <span className="font-bold text-foreground block">{input.originalFilename}</span>
+                              <span className="text-[10px] text-muted-foreground font-mono">
                                 {(input.fileSize / 1024).toFixed(1)} KB • {input.mimeType} • Language: {input.detectedLanguage || input.requestedLanguage || 'UNKNOWN'}
                               </span>
                             </div>
@@ -2411,8 +2466,8 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                                   input.processingStatus === 'PROCESSED'
                                     ? 'bg-green-50 text-green-700 border-green-200 text-[10px]'
                                     : input.processingStatus === 'FAILED'
-                                    ? 'bg-red-50 text-red-700 border-red-200 text-[10px]'
-                                    : 'bg-amber-50 text-amber-700 border-amber-200 text-[10px]'
+                                    ? 'bg-destructive/10 text-destructive border-destructive/30 text-[10px]'
+                                    : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px]'
                                 }
                               >
                                 {input.processingStatus}
@@ -2422,7 +2477,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                                 className={
                                   input.verificationStatus === 'VERIFIED'
                                     ? 'bg-sky-100 text-sky-800 border-sky-300 text-[10px]'
-                                    : 'bg-amber-100 text-amber-800 border-amber-300 text-[10px]'
+                                    : 'bg-amber-100 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px]'
                                 }
                               >
                                 {input.verificationStatus === 'VERIFIED' ? 'VERIFIED' : 'VERIFICATION REQUIRED'}
@@ -2450,27 +2505,27 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                             </div>
 
                             {input.processingStatus === 'FAILED' && (
-                              <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded">
+                              <div className="p-2.5 bg-destructive/10 border border-destructive/30 text-destructive text-xs rounded">
                                 Audio transcription could not be completed. ({input.processingError || 'Provider error'})
                               </div>
                             )}
 
                             {input.processingStatus === 'PROCESSED' && input.transcriptStatus === 'EMPTY' && (
-                              <div className="p-2.5 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded italic">
+                              <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs rounded italic">
                                 No usable transcript was produced from this audio.
                               </div>
                             )}
 
                             {input.processingStatus === 'PROCESSED' && input.transcriptStatus === 'AVAILABLE' && input.transcript && (
                               <div className="space-y-2">
-                                <div className="p-3 bg-white border border-sky-100 rounded text-xs text-slate-800 space-y-1 shadow-2xs flex justify-between items-start">
+                                <div className="p-3 bg-card border border-sky-100 rounded text-xs text-foreground space-y-1 shadow-2xs flex justify-between items-start">
                                   <p className="leading-relaxed whitespace-pre-wrap font-sans">&quot;{input.transcript.text}&quot;</p>
                                   <Button
                                     size="sm"
                                     variant="outline"
                                     onClick={() => handleRequestTranslation('VOICE_TRANSCRIPT', inputId)}
                                     disabled={isTranslatingId === inputId}
-                                    className="text-[10px] h-6 px-2 shrink-0 ml-2 bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100"
+                                    className="text-[10px] h-6 px-2 shrink-0 ml-2 bg-primary/10 border-primary/20 text-primary hover:bg-indigo-100"
                                   >
                                     {isTranslatingId === inputId ? (
                                       <Loader2 className="w-3 h-3 animate-spin mr-1" />
@@ -2485,9 +2540,9 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                                 {translationsList
                                   .filter((t: any) => t.sourceType === 'VOICE_TRANSCRIPT' && t.sourceId === inputId)
                                   .map((t: any) => (
-                                    <div key={t._id || t.id} className="p-2.5 bg-indigo-50/60 border border-indigo-200 rounded text-xs space-y-2">
-                                      <div className="flex justify-between items-center border-b border-indigo-100 pb-1">
-                                        <span className="font-bold text-indigo-950 text-[11px] flex items-center space-x-1">
+                                    <div key={t._id || t.id} className="p-2.5 bg-primary/10 border border-primary/20 rounded text-xs space-y-2">
+                                      <div className="flex justify-between items-center border-b border-primary/15 pb-1">
+                                        <span className="font-bold text-primary text-[11px] flex items-center space-x-1">
                                           <Globe className="w-3 h-3 text-indigo-600" />
                                           <span>Translated Transcript — {t.targetLanguage.toUpperCase()}</span>
                                         </span>
@@ -2496,13 +2551,13 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                                           className={
                                             t.verificationStatus === 'VERIFIED'
                                               ? 'bg-green-50 text-green-700 border-green-200 text-[9px]'
-                                              : 'bg-amber-50 text-amber-700 border-amber-200 text-[9px]'
+                                              : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[9px]'
                                           }
                                         >
                                           {t.verificationStatus === 'VERIFIED' ? 'VERIFIED' : 'REQUIRED'}
                                         </Badge>
                                       </div>
-                                      <p className="text-slate-900 leading-relaxed font-medium bg-white p-2 rounded border border-indigo-100">
+                                      <p className="text-foreground leading-relaxed font-medium bg-card p-2 rounded border border-primary/15">
                                         {t.translatedText || t.processingError}
                                       </p>
                                       {t.verificationStatus !== 'VERIFIED' && (
@@ -2511,7 +2566,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                                             size="sm"
                                             variant="outline"
                                             onClick={() => handleVerifyTranslation(t._id || t.id)}
-                                            className="text-[10px] h-5 px-1.5 bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100"
+                                            className="text-[10px] h-5 px-1.5 bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100"
                                           >
                                             <CheckCircle2 className="w-2.5 h-2.5 mr-1 text-emerald-600" />
                                             Verify
@@ -2550,13 +2605,13 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
             </Card>
 
             {/* Human Review Form Card */}
-            <Card className="bg-white border-indigo-200 shadow-sm">
-              <CardHeader className="bg-indigo-50 border-b border-indigo-100 py-3 px-4">
-                <CardTitle className="text-sm font-bold text-indigo-950 flex items-center space-x-2">
+            <Card className="bg-card border-primary/20 shadow-sm">
+              <CardHeader className="bg-primary/10 border-b border-primary/15 py-3 px-4">
+                <CardTitle className="text-sm font-bold text-primary flex items-center space-x-2">
                   <MessageSquare className="w-4 h-4 text-indigo-600" />
                   <span>Submit Human Review Record</span>
                 </CardTitle>
-                <CardDescription className="text-xs text-indigo-700">
+                <CardDescription className="text-xs text-primary">
                   Record staff review observations for this case.
                 </CardDescription>
               </CardHeader>
@@ -2571,20 +2626,20 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                   )}
 
                   {submitError && (
-                    <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded text-xs flex items-center space-x-2">
+                    <div className="p-3 bg-destructive/10 border border-destructive/30 text-destructive rounded text-xs flex items-center space-x-2">
                       <AlertCircle className="w-4 h-4 shrink-0" />
                       <span>{submitError}</span>
                     </div>
                   )}
 
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-700 block">
+                    <label className="text-xs font-semibold text-muted-foreground block">
                       Review Status Outcome
                     </label>
                     <select
                       value={reviewStatus}
                       onChange={(e) => setReviewStatus(e.target.value)}
-                      className="w-full text-xs p-2 border border-slate-300 rounded bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      className="w-full text-xs p-2 border border-border rounded bg-card text-foreground focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                     >
                       <option value="COMPLETED">COMPLETED (Mark Case Resolved)</option>
                       <option value="ADDITIONAL_INFO_REQUESTED">ADDITIONAL_INFO_REQUESTED (Request Info)</option>
@@ -2594,8 +2649,8 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                   </div>
 
                   {reviewStatus === 'ESCALATED' && (
-                    <div className="p-3 bg-amber-50 border border-amber-200 rounded space-y-2">
-                      <label className="text-xs font-semibold text-amber-900 block">
+                    <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded space-y-2">
+                      <label className="text-xs font-semibold text-amber-600 dark:text-amber-400 block">
                         Target Reviewer User ID (Optional)
                       </label>
                       <input
@@ -2603,24 +2658,24 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                         placeholder="Target User ObjectId or leave blank for unassigned escalation queue"
                         value={escalationTargetUserIdInput}
                         onChange={(e) => setEscalationTargetUserIdInput(e.target.value)}
-                        className="w-full text-xs p-2 border border-amber-300 rounded bg-white text-slate-900 focus:ring-1 focus:ring-amber-500"
+                        className="w-full text-xs p-2 border border-amber-500/30 rounded bg-card text-foreground focus:ring-1 focus:ring-amber-500"
                       />
-                      <p className="text-[10px] text-amber-800 italic">
+                      <p className="text-[10px] text-amber-600 dark:text-amber-400 italic">
                         Leaving this blank transfers the case to the facility unassigned escalation queue. Preserves existing SLA timer.
                       </p>
                     </div>
                   )}
 
                   {reviewStatus === 'REFERRED' && (
-                    <div className="p-3.5 bg-indigo-50/70 border border-indigo-200 rounded-lg space-y-3">
-                      <div className="font-bold text-xs text-indigo-950 flex items-center space-x-1.5">
+                    <div className="p-3.5 bg-primary/10 border border-primary/20 rounded-lg space-y-3">
+                      <div className="font-bold text-xs text-primary flex items-center space-x-1.5">
                         <Share2 className="w-4 h-4 text-indigo-600" />
-                        <span>Facility Referral Details (Phase 18)</span>
+                        <span>Facility Referral Details</span>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <label className="text-[11px] font-semibold text-slate-700 block">
+                          <label className="text-[11px] font-semibold text-muted-foreground block">
                             Destination Facility ID <span className="text-red-500">*</span>
                           </label>
                           <input
@@ -2628,12 +2683,12 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                             placeholder="Destination facility ObjectId"
                             value={referralFacilityIdInput}
                             onChange={(e) => setReferralFacilityIdInput(e.target.value)}
-                            className="w-full text-xs p-2 border border-slate-300 rounded bg-white text-slate-900 focus:ring-1 focus:ring-indigo-500"
+                            className="w-full text-xs p-2 border border-border rounded bg-card text-foreground focus:ring-1 focus:ring-indigo-500"
                           />
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[11px] font-semibold text-slate-700 block">
+                          <label className="text-[11px] font-semibold text-muted-foreground block">
                             Destination Department (Optional)
                           </label>
                           <input
@@ -2641,13 +2696,13 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                             placeholder="e.g. Cardiology, Orthopedics, ICU"
                             value={destinationDepartmentInput}
                             onChange={(e) => setDestinationDepartmentInput(e.target.value)}
-                            className="w-full text-xs p-2 border border-slate-300 rounded bg-white text-slate-900 focus:ring-1 focus:ring-indigo-500"
+                            className="w-full text-xs p-2 border border-border rounded bg-card text-foreground focus:ring-1 focus:ring-indigo-500"
                           />
                         </div>
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[11px] font-semibold text-slate-700 block">
+                        <label className="text-[11px] font-semibold text-muted-foreground block">
                           Referral Reason <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -2655,12 +2710,12 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                           placeholder="Reason for referring case to destination facility"
                           value={referralReasonInput}
                           onChange={(e) => setReferralReasonInput(e.target.value)}
-                          className="w-full text-xs p-2 border border-slate-300 rounded bg-white text-slate-900 focus:ring-1 focus:ring-indigo-500"
+                          className="w-full text-xs p-2 border border-border rounded bg-card text-foreground focus:ring-1 focus:ring-indigo-500"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[11px] font-semibold text-slate-700 block">
+                        <label className="text-[11px] font-semibold text-muted-foreground block">
                           Referral Clinical Summary <span className="text-red-500">*</span>
                         </label>
                         <textarea
@@ -2668,18 +2723,18 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                           placeholder="Clinical handoff summary for receiving facility staff..."
                           value={referralSummaryInput}
                           onChange={(e) => setReferralSummaryInput(e.target.value)}
-                          className="w-full text-xs p-2 border border-slate-300 rounded bg-white text-slate-900 focus:ring-1 focus:ring-indigo-500"
+                          className="w-full text-xs p-2 border border-border rounded bg-card text-foreground focus:ring-1 focus:ring-indigo-500"
                         />
                       </div>
 
-                      <p className="text-[10px] text-indigo-800 italic">
+                      <p className="text-[10px] text-primary italic">
                         Creating a referral changes case status to REFERRED, unassigns current reviewer, and grants destination facility reviewers read-only handoff access.
                       </p>
                     </div>
                   )}
 
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-700 block">
+                    <label className="text-xs font-semibold text-muted-foreground block">
                       Reviewer Notes <span className="text-red-500">*</span>
                     </label>
                     <textarea
@@ -2687,12 +2742,12 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                       value={reviewerNotes}
                       onChange={(e) => setReviewerNotes(e.target.value)}
                       placeholder="Enter human review notes, observation summary, or follow-up instructions..."
-                      className="w-full text-xs p-2.5 border border-slate-300 rounded text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      className="w-full text-xs p-2.5 border border-border rounded text-foreground focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                     />
                   </div>
                 </CardContent>
 
-                <CardFooter className="bg-slate-50 px-4 py-3 border-t border-slate-200 flex justify-end">
+                <CardFooter className="bg-muted/40 px-4 py-3 border-t border-border flex justify-end">
                   <Button
                     type="submit"
                     size="sm"
@@ -2712,13 +2767,13 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
             </Card>
 
             {/* Human Priority Override Card */}
-            <Card className="bg-white border-amber-200 shadow-sm">
-              <CardHeader className="bg-amber-50 border-b border-amber-100 py-3 px-4">
-                <CardTitle className="text-sm font-bold text-amber-950 flex items-center space-x-2">
+            <Card className="bg-card border-amber-500/30 shadow-sm">
+              <CardHeader className="bg-amber-500/10 border-b border-amber-500/20 py-3 px-4">
+                <CardTitle className="text-sm font-bold text-amber-600 dark:text-amber-400 flex items-center space-x-2">
                   <AlertCircle className="w-4 h-4 text-amber-600" />
-                  <span>Human Priority Override (Phase 17)</span>
+                  <span>Human Priority Override</span>
                 </CardTitle>
-                <CardDescription className="text-xs text-amber-800">
+                <CardDescription className="text-xs text-amber-600 dark:text-amber-400">
                   Override effective workflow priority. Priority demotion requires Doctor, Medical Officer, or Admin authorization.
                 </CardDescription>
               </CardHeader>
@@ -2726,27 +2781,27 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
               <form onSubmit={handlePriorityOverride}>
                 <CardContent className="p-4 space-y-3">
                   {overrideSuccess && (
-                    <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded text-xs flex items-center space-x-2">
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 rounded text-xs flex items-center space-x-2">
                       <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
                       <span>{overrideSuccess}</span>
                     </div>
                   )}
 
                   {overrideError && (
-                    <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded text-xs flex items-center space-x-2">
+                    <div className="p-3 bg-destructive/10 border border-destructive/30 text-destructive rounded text-xs flex items-center space-x-2">
                       <AlertCircle className="w-4 h-4 shrink-0" />
                       <span>{overrideError}</span>
                     </div>
                   )}
 
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-700 block">
+                    <label className="text-xs font-semibold text-muted-foreground block">
                       Target Override Priority
                     </label>
                     <select
                       value={overridePriorityInput}
                       onChange={(e) => setOverridePriorityInput(e.target.value)}
-                      className="w-full text-xs p-2 border border-slate-300 rounded bg-white text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none font-bold"
+                      className="w-full text-xs p-2 border border-border rounded bg-card text-foreground focus:ring-2 focus:ring-amber-500 focus:outline-none font-bold"
                     >
                       <option value="URGENT">URGENT (SLA: 1 hour)</option>
                       <option value="PRIORITY">PRIORITY (SLA: 4 hours)</option>
@@ -2755,7 +2810,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-700 block">
+                    <label className="text-xs font-semibold text-muted-foreground block">
                       Override Reason <span className="text-red-500">*</span>
                     </label>
                     <textarea
@@ -2763,12 +2818,12 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                       value={overrideReasonInput}
                       onChange={(e) => setOverrideReasonInput(e.target.value)}
                       placeholder="Enter clinical rationale for human priority override..."
-                      className="w-full text-xs p-2 border border-slate-300 rounded text-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                      className="w-full text-xs p-2 border border-border rounded text-foreground focus:ring-2 focus:ring-amber-500 focus:outline-none"
                     />
                   </div>
                 </CardContent>
 
-                <CardFooter className="bg-amber-50/50 px-4 py-3 border-t border-amber-100 flex justify-end">
+                <CardFooter className="bg-amber-500/100/10 px-4 py-3 border-t border-amber-500/20 flex justify-end">
                   <Button
                     type="submit"
                     size="sm"
@@ -2789,58 +2844,58 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
 
             {/* Historical Human Reviews Log */}
             {caseDetails.reviews && caseDetails.reviews.length > 0 && (
-              <Card className="bg-white border-slate-200 shadow-sm">
-                <CardHeader className="bg-slate-50 border-b border-slate-200 py-3 px-4">
-                  <CardTitle className="text-sm font-bold text-slate-900 flex items-center space-x-2">
-                    <FileCheck className="w-4 h-4 text-slate-600" />
+              <Card className="bg-card border-border shadow-sm">
+                <CardHeader className="bg-muted/40 border-b border-border py-3 px-4">
+                  <CardTitle className="text-sm font-bold text-foreground flex items-center space-x-2">
+                    <FileCheck className="w-4 h-4 text-muted-foreground" />
                     <span>Human Review History ({caseDetails.reviews.length})</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 space-y-3">
                   {caseDetails.reviews.map((r) => (
-                    <div key={r.id} className="p-3 border border-slate-200 rounded-lg text-xs space-y-2 bg-slate-50">
-                      <div className="flex justify-between items-center border-b border-slate-200 pb-2">
-                        <span className="font-semibold text-slate-900">{r.reviewerName || 'Reviewer Staff'}</span>
+                    <div key={r.id} className="p-3 border border-border rounded-lg text-xs space-y-2 bg-muted/40">
+                      <div className="flex justify-between items-center border-b border-border pb-2">
+                        <span className="font-semibold text-foreground">{r.reviewerName || 'Reviewer Staff'}</span>
                         <div className="flex items-center space-x-2">
-                          <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200 text-[10px]">
+                          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[10px]">
                             {r.reviewStatus}
                           </Badge>
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-[10px] text-muted-foreground">
                             {new Date(r.reviewedAt).toLocaleString()}
                           </span>
                         </div>
                       </div>
-                      <p className="text-slate-800 leading-relaxed pt-1">{r.reviewerNotes}</p>
+                      <p className="text-foreground leading-relaxed pt-1">{r.reviewerNotes}</p>
                     </div>
                   ))}
                 </CardContent>
               </Card>
             )}
 
-            {/* Referral Handoff History (Phase 18) */}
+            {/* Referral Handoff History */}
             <ReferralHistoryView caseId={caseId} />
           </div>
 
           {/* Sidebar Column (1/3 width) */}
           <div className="space-y-6">
             {/* Case Assignment Card */}
-            <Card className="bg-white border-slate-200 shadow-sm">
-              <CardHeader className="bg-slate-50 border-b border-slate-200 py-3 px-4">
-                <CardTitle className="text-xs font-bold text-slate-900 flex items-center space-x-2 uppercase tracking-wider">
+            <Card className="bg-card border-border shadow-sm">
+              <CardHeader className="bg-muted/40 border-b border-border py-3 px-4">
+                <CardTitle className="text-xs font-bold text-foreground flex items-center space-x-2 uppercase tracking-wider">
                   <UserCheck className="w-4 h-4 text-indigo-600" />
                   <span>Case Ownership</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 text-xs space-y-4">
                 {assignmentError && (
-                  <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 rounded text-[11px] flex items-center space-x-1.5">
+                  <div className="p-2.5 bg-destructive/10 border border-destructive/30 text-destructive rounded text-[11px] flex items-center space-x-1.5">
                     <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                     <span>{assignmentError}</span>
                   </div>
                 )}
 
                 <div>
-                  <span className="text-slate-400 block text-[10px] mb-1">Current Owner</span>
+                  <span className="text-muted-foreground block text-[10px] mb-1">Current Owner</span>
                   {caseDetails.isAssigned ? (
                     <div className="flex items-center space-x-2">
                       <Badge className="bg-indigo-600 text-white text-xs">
@@ -2848,7 +2903,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                       </Badge>
                     </div>
                   ) : (
-                    <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200 text-xs">
+                    <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-xs">
                       Unassigned (Unclaimed)
                     </Badge>
                   )}
@@ -2877,12 +2932,12 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                       variant="outline"
                       onClick={handleRelease}
                       disabled={assignmentLoading}
-                      className="border-slate-300 text-slate-700 hover:bg-slate-100 text-xs w-full"
+                      className="border-border text-muted-foreground hover:bg-muted text-xs w-full"
                     >
                       {assignmentLoading ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
                       ) : (
-                        <UserX className="w-3.5 h-3.5 mr-1 text-slate-500" />
+                        <UserX className="w-3.5 h-3.5 mr-1 text-muted-foreground" />
                       )}
                       Release Assignment
                     </Button>
@@ -2891,8 +2946,8 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
 
                 {/* Admin Assignment Panel */}
                 {isAdmin && (
-                  <form onSubmit={handleAdminAssign} className="pt-3 border-t border-slate-100 space-y-2">
-                    <label className="text-[11px] font-semibold text-slate-700 block">
+                  <form onSubmit={handleAdminAssign} className="pt-3 border-t border-border/60 space-y-2">
+                    <label className="text-[11px] font-semibold text-muted-foreground block">
                       Admin Reassignment
                     </label>
                     <input
@@ -2900,13 +2955,13 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                       placeholder="Enter target reviewer User ID"
                       value={targetReviewerIdInput}
                       onChange={(e) => setTargetReviewerIdInput(e.target.value)}
-                      className="w-full text-xs p-2 border border-slate-300 rounded text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      className="w-full text-xs p-2 border border-border rounded text-foreground focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                     />
                     <Button
                       type="submit"
                       size="sm"
                       disabled={assignmentLoading}
-                      className="bg-slate-800 hover:bg-slate-900 text-white text-xs w-full"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs w-full"
                     >
                       {assignmentLoading ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
@@ -2921,105 +2976,105 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
             </Card>
 
             {/* Patient Contact Info */}
-            <Card className="bg-white border-slate-200 shadow-sm">
-              <CardHeader className="bg-slate-50 border-b border-slate-200 py-3 px-4">
-                <CardTitle className="text-xs font-bold text-slate-900 flex items-center space-x-2 uppercase tracking-wider">
+            <Card className="bg-card border-border shadow-sm">
+              <CardHeader className="bg-muted/40 border-b border-border py-3 px-4">
+                <CardTitle className="text-xs font-bold text-foreground flex items-center space-x-2 uppercase tracking-wider">
                   <User className="w-4 h-4 text-indigo-600" />
                   <span>Patient Identity</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 text-xs space-y-3">
                 <div>
-                  <span className="text-slate-400 block text-[10px]">Full Name</span>
-                  <span className="font-semibold text-slate-900">{caseDetails.patient.name}</span>
+                  <span className="text-muted-foreground block text-[10px]">Full Name</span>
+                  <span className="font-semibold text-foreground">{caseDetails.patient.name}</span>
                 </div>
-                <div className="grid grid-cols-2 gap-2 border-t border-slate-100 pt-2">
+                <div className="grid grid-cols-2 gap-2 border-t border-border/60 pt-2">
                   <div>
-                    <span className="text-slate-400 block text-[10px]">Age</span>
-                    <span className="font-semibold text-slate-900">
+                    <span className="text-muted-foreground block text-[10px]">Age</span>
+                    <span className="font-semibold text-foreground">
                       {caseDetails.patient.age !== undefined && caseDetails.patient.age !== null ? `${caseDetails.patient.age} yrs` : 'Not specified'}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[10px]">Biological Sex</span>
-                    <span className="font-semibold text-slate-900">
+                    <span className="text-muted-foreground block text-[10px]">Biological Sex</span>
+                    <span className="font-semibold text-foreground">
                       {caseDetails.patient.gender || 'Not specified'}
                     </span>
                   </div>
                 </div>
                 {caseDetails.patient.email && (
                   <div>
-                    <span className="text-slate-400 block text-[10px]">Email</span>
-                    <span className="text-slate-800 font-mono text-[11px]">{caseDetails.patient.email}</span>
+                    <span className="text-muted-foreground block text-[10px]">Email</span>
+                    <span className="text-foreground font-mono text-[11px]">{caseDetails.patient.email}</span>
                   </div>
                 )}
                 {caseDetails.patient.phone && (
                   <div>
-                    <span className="text-slate-400 block text-[10px]">Phone</span>
-                    <span className="text-slate-800 font-mono text-[11px]">{caseDetails.patient.phone}</span>
+                    <span className="text-muted-foreground block text-[10px]">Phone</span>
+                    <span className="text-foreground font-mono text-[11px]">{caseDetails.patient.phone}</span>
                   </div>
                 )}
               </CardContent>
             </Card>
 
             {/* Case Metadata */}
-            <Card className="bg-white border-slate-200 shadow-sm">
-              <CardHeader className="bg-slate-50 border-b border-slate-200 py-3 px-4">
-                <CardTitle className="text-xs font-bold text-slate-900 flex items-center space-x-2 uppercase tracking-wider">
+            <Card className="bg-card border-border shadow-sm">
+              <CardHeader className="bg-muted/40 border-b border-border py-3 px-4">
+                <CardTitle className="text-xs font-bold text-foreground flex items-center space-x-2 uppercase tracking-wider">
                   <Clock className="w-4 h-4 text-indigo-600" />
                   <span>Case Attributes</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 text-xs space-y-3">
                 <div className="flex justify-between border-b pb-2">
-                  <span className="text-slate-500">Case Number:</span>
-                  <span className="font-mono font-semibold text-slate-900">{caseDetails.caseNumber}</span>
+                  <span className="text-muted-foreground">Case Number:</span>
+                  <span className="font-mono font-semibold text-foreground">{caseDetails.caseNumber}</span>
                 </div>
                 <div className="flex justify-between border-b pb-2">
-                  <span className="text-slate-500">Current Status:</span>
-                  <span className="font-bold text-indigo-700">{caseDetails.status}</span>
+                  <span className="text-muted-foreground">Current Status:</span>
+                  <span className="font-bold text-primary">{caseDetails.status}</span>
                 </div>
                 <div className="flex justify-between border-b pb-2">
-                  <span className="text-slate-500">Queue Category:</span>
-                  <span className="text-slate-700">{caseDetails.priority} (Unassessed)</span>
+                  <span className="text-muted-foreground">Queue Category:</span>
+                  <span className="text-muted-foreground">{caseDetails.priority} (Unassessed)</span>
                 </div>
                 <div className="flex justify-between border-b pb-2">
-                  <span className="text-slate-500">Language:</span>
-                  <span className="uppercase font-mono text-slate-700">{caseDetails.language}</span>
+                  <span className="text-muted-foreground">Language:</span>
+                  <span className="uppercase font-mono text-muted-foreground">{caseDetails.language}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Created At:</span>
-                  <span className="text-slate-700">{new Date(caseDetails.createdAt).toLocaleDateString()}</span>
+                  <span className="text-muted-foreground">Created At:</span>
+                  <span className="text-muted-foreground">{new Date(caseDetails.createdAt).toLocaleDateString()}</span>
                 </div>
               </CardContent>
             </Card>
 
             {/* Operational SLA Card */}
             {caseDetails.sla && (
-              <Card className="bg-white border-slate-200 shadow-sm">
-                <CardHeader className="bg-slate-50 border-b border-slate-200 py-3 px-4">
-                  <CardTitle className="text-xs font-bold text-slate-900 flex items-center space-x-2 uppercase tracking-wider">
+              <Card className="bg-card border-border shadow-sm">
+                <CardHeader className="bg-muted/40 border-b border-border py-3 px-4">
+                  <CardTitle className="text-xs font-bold text-foreground flex items-center space-x-2 uppercase tracking-wider">
                     <Clock className="w-4 h-4 text-purple-600" />
                     <span>Operational SLA</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 text-xs space-y-3">
                   <div className="flex justify-between border-b pb-2">
-                    <span className="text-slate-500">SLA Status:</span>
+                    <span className="text-muted-foreground">SLA Status:</span>
                     {caseDetails.sla.status === 'ESCALATED' ? (
-                      <Badge variant="outline" className="bg-purple-100 text-purple-900 border-purple-300 font-semibold text-[10px]">
+                      <Badge variant="outline" className="bg-purple-100 text-purple-600 dark:text-purple-400 border-purple-500/30 font-semibold text-[10px]">
                         ESCALATED
                       </Badge>
                     ) : caseDetails.sla.status === 'OVERDUE' ? (
-                      <Badge variant="outline" className="bg-red-100 text-red-900 border-red-300 font-semibold text-[10px]">
+                      <Badge variant="outline" className="bg-red-100 text-destructive border-destructive/30 font-semibold text-[10px]">
                         OVERDUE
                       </Badge>
                     ) : caseDetails.sla.status === 'DUE_SOON' ? (
-                      <Badge variant="outline" className="bg-amber-100 text-amber-900 border-amber-300 font-semibold text-[10px]">
+                      <Badge variant="outline" className="bg-amber-100 text-amber-600 dark:text-amber-400 border-amber-500/30 font-semibold text-[10px]">
                         DUE SOON
                       </Badge>
                     ) : (
-                      <Badge variant="outline" className="bg-slate-100 text-slate-700 border-slate-300 text-[10px]">
+                      <Badge variant="outline" className="bg-muted text-muted-foreground border-border text-[10px]">
                         PENDING
                       </Badge>
                     )}
@@ -3027,26 +3082,26 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
 
                   {caseDetails.sla.dueAt && (
                     <div className="flex justify-between border-b pb-2">
-                      <span className="text-slate-500">SLA Due At:</span>
-                      <span className="font-mono text-slate-800">{new Date(caseDetails.sla.dueAt).toLocaleString()}</span>
+                      <span className="text-muted-foreground">SLA Due At:</span>
+                      <span className="font-mono text-foreground">{new Date(caseDetails.sla.dueAt).toLocaleString()}</span>
                     </div>
                   )}
 
                   {caseDetails.sla.escalatedAt ? (
                     <>
                       <div className="flex justify-between border-b pb-2">
-                        <span className="text-slate-500">Escalated At:</span>
-                        <span className="font-mono text-purple-900">{new Date(caseDetails.sla.escalatedAt).toLocaleString()}</span>
+                        <span className="text-muted-foreground">Escalated At:</span>
+                        <span className="font-mono text-purple-600 dark:text-purple-400">{new Date(caseDetails.sla.escalatedAt).toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">Escalation Level:</span>
-                        <span className="font-semibold text-purple-900">Level {caseDetails.sla.escalationLevel}</span>
+                        <span className="text-muted-foreground">Escalation Level:</span>
+                        <span className="font-semibold text-purple-600 dark:text-purple-400">Level {caseDetails.sla.escalationLevel}</span>
                       </div>
                     </>
                   ) : (
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Escalation:</span>
-                      <span className="text-slate-600">Not Escalated</span>
+                      <span className="text-muted-foreground">Escalation:</span>
+                      <span className="text-muted-foreground">Not Escalated</span>
                     </div>
                   )}
                 </CardContent>
@@ -3055,9 +3110,9 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
 
             {/* Patient Consent Status */}
             {caseDetails.consent && (
-              <Card className="bg-white border-slate-200 shadow-sm">
-                <CardHeader className="bg-slate-50 border-b border-slate-200 py-3 px-4">
-                  <CardTitle className="text-xs font-bold text-slate-900 flex items-center space-x-2 uppercase tracking-wider">
+              <Card className="bg-card border-border shadow-sm">
+                <CardHeader className="bg-muted/40 border-b border-border py-3 px-4">
+                  <CardTitle className="text-xs font-bold text-foreground flex items-center space-x-2 uppercase tracking-wider">
                     <ShieldCheck className="w-4 h-4 text-green-600" />
                     <span>Consent Verification</span>
                   </CardTitle>
@@ -3068,10 +3123,10 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
                     <span>Consent Status: {caseDetails.consent.status}</span>
                   </div>
                   {caseDetails.consent.version && (
-                    <p className="text-slate-500 text-[11px]">Version: {caseDetails.consent.version}</p>
+                    <p className="text-muted-foreground text-[11px]">Version: {caseDetails.consent.version}</p>
                   )}
                   {caseDetails.consent.capturedAt && (
-                    <p className="text-slate-500 text-[11px]">
+                    <p className="text-muted-foreground text-[11px]">
                       Captured: {new Date(caseDetails.consent.capturedAt).toLocaleString()}
                     </p>
                   )}
@@ -3085,7 +3140,7 @@ export default function ReviewerCaseDetailPage({ params }: { params: Promise<{ c
 
 
 
-      {/* Audit Trail Modal (Phase 18) */}
+      {/* Audit Trail Modal */}
       <AuditTrailModal
         caseId={caseId}
         isOpen={isAuditTrailOpen}

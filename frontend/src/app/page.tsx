@@ -1,7 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
   ShieldAlert,
   HeartPulse,
@@ -18,389 +21,764 @@ import {
   Workflow,
   Stethoscope,
   LogIn,
+  Activity,
+  Cpu,
+  Layers,
+  FileCheck2,
+  ShieldCheck,
+  Zap,
+  Clock,
+  Compass,
+  Menu,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { LanguageSelector } from '@/components/ui/LanguageSelector';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { TriageSimulator } from '@/components/landing/TriageSimulator';
+import { StorytellingPipeline } from '@/components/landing/StorytellingPipeline';
+import { InteractiveTriageAssistant } from '@/components/landing/InteractiveTriageAssistant';
+
+// Dynamically import smooth scroll and 3D constellation to ensure instant first paint
+const SmoothScroll = dynamic(
+  () => import('@/components/landing/SmoothScroll').then((m) => m.SmoothScroll),
+  { ssr: false }
+);
+
+const TriageConstellation = dynamic(
+  () => import('@/components/landing/TriageConstellation').then((m) => m.TriageConstellation),
+  { ssr: false }
+);
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function PublicLandingPage() {
   const { t } = useLanguage();
+  const mainContainerRef = useRef<HTMLDivElement>(null);
+  const [activeSection, setActiveSection] = useState<string>('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+
+  // Desktop nav sliding pill refs & state
+  const navRef = useRef<HTMLElement>(null);
+  const navItemRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const scrollLockTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [pillStyle, setPillStyle] = useState<{ left: number; top: number; width: number; height: number; opacity: number }>({
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 0,
+    opacity: 0,
+  });
+
+  const navItems = [
+    { id: 'how-it-works', label: t('landing.navHowItWorks') },
+    { id: 'simulator', label: t('landing.navSandbox') },
+    { id: 'capabilities', label: t('landing.navCapabilities') },
+    { id: 'india-context', label: t('landing.navIndiaContext') },
+  ];
+
+  const updatePill = useCallback(() => {
+    if (!navRef.current || !activeSection) {
+      setPillStyle((prev) => (prev.opacity === 0 ? prev : { ...prev, opacity: 0 }));
+      return;
+    }
+    const targetBtn = navItemRefs.current[activeSection];
+    if (!targetBtn) {
+      setPillStyle((prev) => (prev.opacity === 0 ? prev : { ...prev, opacity: 0 }));
+      return;
+    }
+    const navRect = navRef.current.getBoundingClientRect();
+    const btnRect = targetBtn.getBoundingClientRect();
+    setPillStyle({
+      left: btnRect.left - navRect.left,
+      top: btnRect.top - navRect.top,
+      width: btnRect.width,
+      height: btnRect.height,
+      opacity: 1,
+    });
+  }, [activeSection]);
+
+  useEffect(() => {
+    updatePill();
+  }, [activeSection, updatePill, t]);
+
+  useEffect(() => {
+    window.addEventListener('resize', updatePill);
+    return () => window.removeEventListener('resize', updatePill);
+  }, [updatePill]);
+
+  const handleNavClick = (sectionId: string, e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    setIsMobileMenuOpen(false);
+    
+    // Land on the text IMMEDIATELY the instant the user clicks
+    setActiveSection(sectionId);
+
+    if (navRef.current && navItemRefs.current[sectionId]) {
+      const navRect = navRef.current.getBoundingClientRect();
+      const btnRect = navItemRefs.current[sectionId]!.getBoundingClientRect();
+      setPillStyle({
+        left: btnRect.left - navRect.left,
+        top: btnRect.top - navRect.top,
+        width: btnRect.width,
+        height: btnRect.height,
+        opacity: 1,
+      });
+    }
+
+    // Lock scroll spy from overwriting active pill during smooth scroll animation
+    if (scrollLockTimeoutRef.current) {
+      clearTimeout(scrollLockTimeoutRef.current);
+    }
+    scrollLockTimeoutRef.current = setTimeout(() => {
+      scrollLockTimeoutRef.current = null;
+    }, 1400);
+
+    const target = document.getElementById(sectionId);
+    if (!target) return;
+
+    // Use Lenis smooth scroll if active
+    const lenis = (typeof window !== 'undefined' ? (window as any).__lenis : null);
+    if (lenis && typeof lenis.scrollTo === 'function') {
+      lenis.scrollTo(target, {
+        offset: -76,
+        duration: 1.25,
+        easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      });
+    } else {
+      const top = target.getBoundingClientRect().top + window.scrollY - 76;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+
+    // Luminous focal pulse feedback on target section
+    target.classList.remove('section-highlight-active');
+    void (target as HTMLElement).offsetWidth;
+    target.classList.add('section-highlight-active');
+    setTimeout(() => {
+      target.classList.remove('section-highlight-active');
+    }, 2000);
+  };
+
+  useEffect(() => {
+    const sectionIds = ['how-it-works', 'simulator', 'capabilities', 'india-context'];
+    const handleScroll = () => {
+      // Do not override active pill while programmatic smooth scroll is animating to clicked section
+      if (scrollLockTimeoutRef.current) return;
+
+      const scrollPos = window.scrollY + 180;
+      for (let i = sectionIds.length - 1; i >= 0; i--) {
+        const el = document.getElementById(sectionIds[i]);
+        if (el && el.offsetTop <= scrollPos) {
+          setActiveSection(sectionIds[i]);
+          return;
+        }
+      }
+      if (window.scrollY < 300) {
+        setActiveSection('');
+      }
+    };
+
+    // Release programmatic scroll lock if user manually scrolls with wheel or touch
+    const handleManualScroll = () => {
+      if (scrollLockTimeoutRef.current) {
+        clearTimeout(scrollLockTimeoutRef.current);
+        scrollLockTimeoutRef.current = null;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('wheel', handleManualScroll, { passive: true });
+    window.addEventListener('touchmove', handleManualScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('wheel', handleManualScroll);
+      window.removeEventListener('touchmove', handleManualScroll);
+      if (scrollLockTimeoutRef.current) {
+        clearTimeout(scrollLockTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion || !mainContainerRef.current) return;
+
+    const ctx = gsap.context(() => {
+      // Hero Entrance Timeline
+      const heroTl = gsap.timeline({ defaults: { ease: 'power3.out', duration: 0.8 } });
+      heroTl
+        .from('.hero-badge', { opacity: 0, y: 15, delay: 0.1 })
+        .from('.hero-headline', { opacity: 0, y: 25 }, '-=0.5')
+        .from('.hero-subtitle', { opacity: 0, y: 20 }, '-=0.6')
+        .from('.hero-chips', { opacity: 0, y: 15, stagger: 0.05 }, '-=0.5')
+        .from('.hero-cta', { opacity: 0, y: 15, stagger: 0.1 }, '-=0.5')
+        .from('.hero-cockpit', { opacity: 0, scale: 0.96, duration: 1 }, '-=0.8');
+
+      // Scroll reveals for each section
+      gsap.utils.toArray<HTMLElement>('.reveal-section').forEach((section) => {
+        gsap.from(section, {
+          scrollTrigger: {
+            trigger: section,
+            start: 'top 85%',
+            toggleActions: 'play none none none',
+          },
+          opacity: 0,
+          y: 35,
+          duration: 0.8,
+          ease: 'power3.out',
+        });
+      });
+
+      // Bento cards staggered entrance
+      gsap.utils.toArray<HTMLElement>('.bento-grid').forEach((grid) => {
+        const cards = grid.querySelectorAll('.bento-card');
+        gsap.from(cards, {
+          scrollTrigger: {
+            trigger: grid,
+            start: 'top 80%',
+            toggleActions: 'play none none none',
+          },
+          opacity: 0,
+          y: 30,
+          stagger: 0.1,
+          duration: 0.7,
+          ease: 'power3.out',
+        });
+      });
+    }, mainContainerRef);
+
+    return () => ctx.revert();
+  }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      {/* Top Navigation */}
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-2 rounded-xl text-white shadow-md">
-              <HeartPulse className="w-6 h-6" />
-            </div>
-            <div>
-              <span className="text-xl font-bold tracking-tight text-slate-900">MedicalTriage</span>
-              <span className="ml-2 text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium border border-slate-200">
-                {t('landing.prototype')}
-              </span>
-            </div>
-          </div>
-
-          <nav className="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-600">
-            <a href="#how-it-works" className="hover:text-blue-600 transition-colors">
-              {t('landing.navHowItWorks')}
-            </a>
-            <a href="#capabilities" className="hover:text-blue-600 transition-colors">
-              {t('landing.navCapabilities')}
-            </a>
-            <a href="#safety" className="hover:text-blue-600 transition-colors">
-              {t('landing.navSafety')}
-            </a>
-            <a href="#india-context" className="hover:text-blue-600 transition-colors">
-              {t('landing.navIndiaContext')}
-            </a>
-            <a href="#demo" className="hover:text-blue-600 transition-colors">
-              {t('landing.navDemo')}
-            </a>
-          </nav>
-
-          <div className="flex items-center space-x-3">
-            <LanguageSelector variant="full" />
-            <Link href="/login">
-              <Button variant="outline" size="sm" className="hidden sm:inline-flex items-center gap-1.5">
-                <LogIn className="w-4 h-4" />
-                {t('common.login')}
-              </Button>
-            </Link>
-            <Link href="/patient/intake">
-              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
-                {t('landing.patientPortal')}
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-white via-slate-50 to-blue-50/30 pt-16 pb-20 sm:pt-24 sm:pb-28">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center max-w-3xl mx-auto space-y-6">
-            <div className="inline-flex items-center space-x-2 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide uppercase shadow-xs">
-              <Sparkles className="w-4 h-4 text-blue-600" />
-              <span>{t('landing.badgeAssistant')}</span>
+    <SmoothScroll>
+      <div
+        ref={mainContainerRef}
+        className="min-h-screen bg-background text-foreground flex flex-col font-sans selection:bg-primary/20 selection:text-primary transition-colors duration-300"
+      >
+        {/* Top Floating Glass Navigation */}
+        <header className="sticky top-0 z-50 bg-background/85 dark:bg-background/80 backdrop-blur-md border-b border-border/80 shadow-xs">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-[68px] flex items-center justify-between gap-3 sm:gap-4">
+            {/* Brand Logo */}
+            <div className="flex items-center space-x-2.5 sm:space-x-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  setActiveSection('');
+                }}
+                className="flex items-center space-x-2 sm:space-x-2.5 group focus:outline-none text-left"
+                aria-label="Scroll to top"
+              >
+                <div className="bg-primary p-1.5 sm:p-2 rounded-lg text-primary-foreground border border-primary/40 shadow-sm transition-transform duration-300 group-hover:scale-105">
+                  <HeartPulse className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-base sm:text-lg font-bold tracking-tight text-foreground font-mono">MedicalTriage</span>
+                  <span className="text-[10px] bg-muted/80 text-primary dark:text-accent px-2 py-0.5 rounded-full font-semibold border border-border/80 leading-normal inline-flex items-center">
+                    {t('landing.prototype')}
+                  </span>
+                </div>
+              </button>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight">
-              {t('landing.heroTitleLine1')} <br />
-              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                {t('landing.heroTitleLine2')}
-              </span>
-            </h1>
+            {/* Desktop Capsule Pill Nav */}
+            <nav
+              ref={navRef}
+              className="relative hidden lg:flex items-center p-1 bg-muted/40 dark:bg-muted/30 border border-border/60 rounded-full shadow-2xs backdrop-blur-md"
+            >
+              {/* Dynamic Sliding Pill Indicator */}
+              <span
+                className="absolute rounded-full bg-primary transition-all duration-300 ease-out shadow-xs pointer-events-none"
+                style={{
+                  left: `${pillStyle.left}px`,
+                  top: `${pillStyle.top}px`,
+                  width: `${pillStyle.width}px`,
+                  height: `${pillStyle.height}px`,
+                  opacity: pillStyle.opacity,
+                }}
+              />
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  ref={(el) => {
+                    navItemRefs.current[item.id] = el;
+                  }}
+                  type="button"
+                  onClick={(e) => handleNavClick(item.id, e)}
+                  className={`relative z-10 px-3 py-1.5 rounded-full text-xs font-medium transition-colors duration-200 whitespace-nowrap cursor-pointer ${
+                    activeSection === item.id
+                      ? 'text-primary-foreground font-semibold'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </nav>
 
-            <p className="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-              {t('landing.heroSubtitle')}
-            </p>
-
-            {/* Non-Diagnostic Key Badges */}
-            <div className="pt-2 flex flex-wrap justify-center gap-2 text-xs font-semibold">
-              <Badge variant="outline" className="bg-white/80 border-slate-300 text-slate-700 px-3 py-1">
-                <ShieldAlert className="w-3.5 h-3.5 mr-1.5 text-amber-600" /> {t('landing.badgeNonDiagnostic')}
-              </Badge>
-              <Badge variant="outline" className="bg-white/80 border-slate-300 text-slate-700 px-3 py-1">
-                <Stethoscope className="w-3.5 h-3.5 mr-1.5 text-blue-600" /> {t('landing.badgeHumanReview')}
-              </Badge>
-              <Badge variant="outline" className="bg-white/80 border-slate-300 text-slate-700 px-3 py-1">
-                <Lock className="w-3.5 h-3.5 mr-1.5 text-emerald-600" /> {t('landing.badgePrivacy')}
-              </Badge>
-              <Badge variant="outline" className="bg-white/80 border-slate-300 text-slate-700 px-3 py-1">
-                <Globe className="w-3.5 h-3.5 mr-1.5 text-indigo-600" /> {t('landing.badgeMultilingual')}
-              </Badge>
-            </div>
-
-            <div className="pt-6 flex flex-col sm:flex-row justify-center gap-4">
-              <Link href="/patient/intake">
-                <Button size="lg" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-6 text-base shadow-md">
-                  {t('landing.getStarted')}
-                  <ArrowRight className="w-5 h-5 ml-2" />
+            {/* Right: Controls & Portal Action */}
+            <div className="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
+              <LanguageSelector
+                className="shrink-0"
+                selectClassName="max-w-[115px] sm:max-w-[155px] truncate"
+              />
+              <ThemeToggle />
+              <Link href="/login">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="hidden md:inline-flex items-center gap-1.5 border-border/80 bg-card/60 backdrop-blur-md text-foreground hover:bg-muted text-xs h-8 px-3 whitespace-nowrap"
+                >
+                  <LogIn className="w-3.5 h-3.5 shrink-0" />
+                  <span>{t('common.login')}</span>
                 </Button>
               </Link>
-              <Link href="/reviewer">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto border-slate-300 text-slate-800 font-semibold px-8 py-6 text-base hover:bg-white shadow-xs">
-                  {t('landing.reviewerQueue')}
+              <Link href="/patient">
+                <Button
+                  size="sm"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs h-8 px-3.5 shadow-sm font-semibold border border-primary/30 whitespace-nowrap"
+                >
+                  {t('landing.patientPortal')}
                 </Button>
               </Link>
+
+              {/* Mobile Menu Toggle Button (visible < lg) */}
+              <button
+                type="button"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="lg:hidden w-8 h-8 rounded border border-border bg-card text-muted-foreground hover:text-foreground hover:border-accent/50 focus:outline-none flex items-center justify-center transition-colors cursor-pointer"
+                aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+              >
+                {isMobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+              </button>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Prominent Non-Diagnostic Safety Disclaimer Banner */}
-      <section id="safety" className="bg-amber-500/10 border-y border-amber-300/60 py-6 px-4">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <div className="bg-amber-100 text-amber-800 p-2.5 rounded-xl border border-amber-300 shrink-0">
-            <ShieldAlert className="w-6 h-6" />
-          </div>
-          <div className="space-y-1 text-slate-800">
-            <h3 className="font-bold text-sm text-amber-900 tracking-wide uppercase">
-              {t('landing.disclaimerTitle')}
-            </h3>
-            <p className="text-xs sm:text-sm leading-relaxed text-slate-700">
-              {t('landing.disclaimerBody')}
-            </p>
-          </div>
-        </div>
-      </section>
+          {/* Mobile Glass Dropdown Menu */}
+          {isMobileMenuOpen && (
+            <div className="lg:hidden border-t border-border/70 bg-background/95 backdrop-blur-lg px-4 py-3 space-y-1 shadow-lg transition-all animate-in fade-in slide-in-from-top-2 duration-200">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={(e) => handleNavClick(item.id, e)}
+                  className={`w-full text-left px-3 py-2 rounded-md text-xs font-medium transition-colors flex items-center justify-between cursor-pointer ${
+                    activeSection === item.id
+                      ? 'bg-primary/10 text-primary font-semibold'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  <span>{item.label}</span>
+                  {activeSection === item.id && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                  )}
+                </button>
+              ))}
+              <div className="pt-2 border-t border-border/50 flex md:hidden items-center justify-between">
+                <Link href="/login" className="w-full">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-xs h-8 gap-1.5"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <LogIn className="w-3.5 h-3.5" />
+                    <span>{t('common.login')}</span>
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          )}
+        </header>
 
-      {/* How It Works Section */}
-      <section id="how-it-works" className="py-20 bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-          <div className="text-center max-w-2xl mx-auto space-y-4">
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900">{t('landing.howItWorksTitle')}</h2>
-            <p className="text-slate-600 text-sm sm:text-base">
-              {t('landing.howItWorksSubtitle')}
-            </p>
-          </div>
+        {/* Hero Section */}
+        <section className="relative overflow-hidden pt-12 pb-20 sm:pt-20 sm:pb-28 border-b border-border/80">
+          <TriageConstellation />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {[
-              {
-                step: '01',
-                title: t('landing.step1Title'),
-                desc: t('landing.step1Desc'),
-                icon: FileText,
-                color: 'text-blue-600 bg-blue-50 border-blue-200',
-              },
-              {
-                step: '02',
-                title: t('landing.step2Title'),
-                desc: t('landing.step2Desc'),
-                icon: Workflow,
-                color: 'text-indigo-600 bg-indigo-50 border-indigo-200',
-              },
-              {
-                step: '03',
-                title: t('landing.step3Title'),
-                desc: t('landing.step3Desc'),
-                icon: History,
-                color: 'text-purple-600 bg-purple-50 border-purple-200',
-              },
-              {
-                step: '04',
-                title: t('landing.step4Title'),
-                desc: t('landing.step4Desc'),
-                icon: ShieldAlert,
-                color: 'text-amber-600 bg-amber-50 border-amber-200',
-              },
-              {
-                step: '05',
-                title: t('landing.step5Title'),
-                desc: t('landing.step5Desc'),
-                icon: Users,
-                color: 'text-emerald-600 bg-emerald-50 border-emerald-200',
-              },
-              {
-                step: '06',
-                title: t('landing.step6Title'),
-                desc: t('landing.step6Desc'),
-                icon: CheckCircle2,
-                color: 'text-rose-600 bg-rose-50 border-rose-200',
-              },
-            ].map((s, idx) => {
-              const Icon = s.icon;
-              return (
-                <Card key={idx} className="border border-slate-200 shadow-xs relative hover:shadow-md transition-shadow">
-                  <CardHeader className="p-4 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-extrabold text-slate-400">{s.step}</span>
-                      <div className={`p-2 rounded-lg border ${s.color}`}>
-                        <Icon className="w-4 h-4" />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+              {/* Left Column: Mission & Actions */}
+              <div className="lg:col-span-7 space-y-6 text-left">
+                {/* Status Pill */}
+                <div className="hero-badge inline-flex items-center space-x-2 bg-card/90 backdrop-blur-sm border border-border text-primary dark:text-accent px-3.5 py-1.5 rounded-full text-xs font-medium leading-normal shadow-xs ring-1 ring-white/10">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                  <span>{t('landing.badgeAssistant')}</span>
+                </div>
+
+                {/* H1 Heading */}
+                <h1 className="hero-headline text-3xl sm:text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight leading-[1.25] sm:leading-[1.18]">
+                  {t('landing.heroTitleLine1')} <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-foreground">
+                    {t('landing.heroTitleLine2')}
+                  </span>
+                </h1>
+
+                {/* Subtitle */}
+                <p className="hero-subtitle text-base sm:text-lg text-muted-foreground leading-relaxed max-w-xl">
+                  {t('landing.heroSubtitle')}
+                </p>
+
+                {/* Badges Grid */}
+                <div className="hero-chips flex flex-wrap gap-2 text-xs">
+                  <Badge variant="outline" className="bg-card/85 backdrop-blur-sm border-border text-foreground px-3 py-1.5 shadow-2xs leading-normal">
+                    <ShieldAlert className="w-3.5 h-3.5 mr-1.5 text-[#E8A33A] shrink-0" />
+                    {t('landing.badgeNonDiagnostic')}
+                  </Badge>
+                  <Badge variant="outline" className="bg-card/85 backdrop-blur-sm border-border text-foreground px-3 py-1.5 shadow-2xs leading-normal">
+                    <Stethoscope className="w-3.5 h-3.5 mr-1.5 text-primary dark:text-accent shrink-0" />
+                    {t('landing.badgeHumanReview')}
+                  </Badge>
+                  <Badge variant="outline" className="bg-card/85 backdrop-blur-sm border-border text-foreground px-3 py-1.5 shadow-2xs leading-normal">
+                    <Lock className="w-3.5 h-3.5 mr-1.5 text-[#2E9E6B] shrink-0" />
+                    {t('landing.badgePrivacy')}
+                  </Badge>
+                  <Badge variant="outline" className="bg-card/85 backdrop-blur-sm border-border text-foreground px-3 py-1.5 shadow-2xs leading-normal">
+                    <Globe className="w-3.5 h-3.5 mr-1.5 text-primary dark:text-accent shrink-0" />
+                    {t('landing.badgeMultilingual')}
+                  </Badge>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="hero-cta pt-2 flex flex-col sm:flex-row gap-3.5">
+                  <Link href="/patient/intake">
+                    <Button
+                      size="lg"
+                      className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-7 py-3 min-h-[46px] text-sm shadow-lg shadow-primary/20 border border-primary/40 leading-normal"
+                    >
+                      {t('landing.getStarted')}
+                      <ArrowRight className="w-4 h-4 ml-2 shrink-0" />
+                    </Button>
+                  </Link>
+                  <a href="#how-it-works">
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="w-full sm:w-auto border-border/80 bg-card/80 backdrop-blur-md text-foreground font-semibold px-7 py-3 min-h-[46px] text-sm hover:bg-muted/80 shadow-xs leading-normal"
+                    >
+                      {t('landing.navHowItWorks')}
+                    </Button>
+                  </a>
+                </div>
+              </div>
+
+              {/* Right Column: Interactive Clinical Triage & Symptom Guide */}
+              <div className="hero-cockpit lg:col-span-5">
+                <InteractiveTriageAssistant />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Strict Non-Diagnostic & Safety Boundary Banner */}
+        <section id="safety" className="reveal-section scroll-mt-20 glass-panel !border-x-0 border-y border-amber-500/30 py-6 px-4 !bg-amber-500/10 dark:!bg-amber-500/5">
+          <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="bg-amber-500/20 text-amber-700 dark:text-amber-400 p-2.5 rounded-xl border border-amber-500/30 shrink-0">
+              <ShieldAlert className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-bold font-mono text-xs text-amber-800 dark:text-amber-400 tracking-wider uppercase">
+                {t('landing.disclaimerTitle')}
+              </h3>
+              <p className="text-xs sm:text-sm leading-relaxed text-foreground/85">
+                {t('landing.disclaimerBody')}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Storytelling Pipeline: How The System Works */}
+        <section id="how-it-works" className="reveal-section scroll-mt-20 py-24 px-4 sm:px-6 lg:px-8 border-b border-border/80">
+          <div className="max-w-7xl mx-auto space-y-16">
+            <div className="text-center max-w-2xl mx-auto space-y-3">
+              <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-primary dark:text-accent uppercase tracking-wider bg-primary/10 dark:bg-accent/10 px-3 py-1 rounded-md border border-primary/20 dark:border-accent/20">
+                <Workflow className="w-3.5 h-3.5" />
+                <span>{t('landing.navHowItWorks')}</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+                {t('landing.howItWorksTitle')}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {t('landing.howItWorksSubtitle')}
+              </p>
+            </div>
+
+            <StorytellingPipeline />
+          </div>
+        </section>
+
+        {/* Live Interactive Triage Sandbox */}
+        <section id="simulator" className="reveal-section scroll-mt-20 py-24 px-4 sm:px-6 lg:px-8 border-b border-border/80 bg-muted/20">
+          <div className="max-w-7xl mx-auto space-y-12">
+            <div className="text-center max-w-2xl mx-auto space-y-3">
+              <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-primary dark:text-accent uppercase tracking-wider bg-primary/10 dark:bg-accent/10 px-3 py-1 rounded-md border border-primary/20 dark:border-accent/20">
+                <Cpu className="w-3.5 h-3.5" />
+                <span>{t('landing.navSandbox')}</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+                {t('landing.sandboxTitle')}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {t('landing.sandboxSubtitle')}
+              </p>
+            </div>
+
+            <TriageSimulator />
+          </div>
+        </section>
+
+        {/* Core Capabilities Section (Asymmetric Bento Grid) */}
+        <section id="capabilities" className="reveal-section scroll-mt-20 py-24 px-4 sm:px-6 lg:px-8 border-b border-border/80 bg-muted/10">
+          <div className="max-w-7xl mx-auto space-y-16">
+            <div className="text-center max-w-2xl mx-auto space-y-3">
+              <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-primary dark:text-accent uppercase tracking-wider bg-primary/10 dark:bg-accent/10 px-3 py-1 rounded-md border border-primary/20 dark:border-accent/20">
+                <Layers className="w-3.5 h-3.5" />
+                <span>{t('landing.navCapabilities')}</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+                {t('landing.capabilitiesTitle')}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {t('landing.capabilitiesSubtitle')}
+              </p>
+            </div>
+
+            {/* Asymmetric Bento Grid */}
+            <div className="bento-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Bento Card 1: Multimodal Intake (Span 2 cols on desktop) */}
+              <div className="bento-card lg:col-span-2 glass-panel p-6 sm:p-8 rounded-2xl flex flex-col justify-between group relative overflow-hidden border border-border hover:border-primary/40 transition-all duration-300">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 dark:bg-primary/10 rounded-full blur-xl pointer-events-none" />
+                
+                <div className="space-y-4 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <div className="p-3 bg-primary/10 text-primary dark:text-accent rounded-xl border border-primary/20 group-hover:scale-105 transition-transform">
+                      <Mic className="w-5 h-5" />
+                    </div>
+                    <Badge variant="outline" className="font-mono text-[10px] bg-card border-border text-foreground">
+                      Voice + OCR + Tabular Ingestion
+                    </Badge>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
+                      {t('landing.cap1Title')}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mt-2 max-w-xl">
+                      {t('landing.cap1Desc')}
+                    </p>
+                  </div>
+
+                  {/* Micro Visual Ingestion Sandbox Preview */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-2">
+                      <div className="text-[10px] font-mono text-muted-foreground flex items-center justify-between">
+                        <span>Multilingual Audio Processing</span>
+                        <span className="text-emerald-500 font-semibold">16kHz PCM</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {['ଓଡ଼ିଆ (Odia)', 'हिन्दी (Hindi)', 'English', 'বাংলা (Bengali)'].map((lang, i) => (
+                          <span key={i} className="text-[10px] font-mono bg-card px-2 py-0.5 rounded border border-border text-foreground">
+                            {lang}
+                          </span>
+                        ))}
                       </div>
                     </div>
-                    <CardTitle className="text-sm font-bold text-slate-900">{s.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-0">
-                    <p className="text-xs text-slate-600 leading-normal">{s.desc}</p>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      </section>
 
-      {/* Core Capabilities Section */}
-      <section id="capabilities" className="py-20 bg-slate-50 border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-          <div className="text-center max-w-2xl mx-auto space-y-4">
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900">{t('landing.capabilitiesTitle')}</h2>
-            <p className="text-slate-600 text-sm sm:text-base">
-              {t('landing.capabilitiesSubtitle')}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                title: t('landing.cap1Title'),
-                desc: t('landing.cap1Desc'),
-                icon: Mic,
-              },
-              {
-                title: t('landing.cap2Title'),
-                desc: t('landing.cap2Desc'),
-                icon: ShieldAlert,
-              },
-              {
-                title: t('landing.cap3Title'),
-                desc: t('landing.cap3Desc'),
-                icon: Globe,
-              },
-              {
-                title: t('landing.cap4Title'),
-                desc: t('landing.cap4Desc'),
-                icon: FileText,
-              },
-              {
-                title: t('landing.cap5Title'),
-                desc: t('landing.cap5Desc'),
-                icon: History,
-              },
-              {
-                title: t('landing.cap6Title'),
-                desc: t('landing.cap6Desc'),
-                icon: Building2,
-              },
-            ].map((cap, idx) => {
-              const Icon = cap.icon;
-              return (
-                <Card key={idx} className="bg-white border border-slate-200 shadow-xs hover:border-slate-300 transition-colors">
-                  <CardHeader className="space-y-2">
-                    <div className="p-2.5 bg-blue-50 text-blue-700 w-fit rounded-xl border border-blue-100">
-                      <Icon className="w-5 h-5" />
+                    <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-2">
+                      <div className="text-[10px] font-mono text-muted-foreground flex items-center justify-between">
+                        <span>Document Lab OCR</span>
+                        <span className="text-primary dark:text-accent font-semibold">High Precision</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] font-mono text-foreground">
+                        <span className="p-1 bg-card rounded border border-border">Hb: 11.2</span>
+                        <span className="p-1 bg-card rounded border border-border">Plt: 240k</span>
+                        <span className="p-1 bg-card rounded border border-border">TLC: 7.8k</span>
+                      </div>
                     </div>
-                    <CardTitle className="text-base font-bold text-slate-900">{cap.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">{cap.desc}</p>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* India Context Section */}
-      <section id="india-context" className="py-20 bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-          <div className="max-w-3xl mx-auto text-center space-y-4">
-            <Badge variant="outline" className="bg-indigo-50 border-indigo-200 text-indigo-800">
-              {t('landing.indiaBadge')}
-            </Badge>
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900">
-              {t('landing.indiaTitle')}
-            </h2>
-            <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
-              {t('landing.indiaSubtitle')}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-            {[
-              t('landing.facilityGovtHospitals'),
-              t('landing.facilityPhcs'),
-              t('landing.facilityCamps'),
-              t('landing.facilityClinics'),
-              t('landing.facilityOccupational'),
-              t('landing.facilityReferrals'),
-              t('landing.facilityMultilingual'),
-              t('landing.facilityHumanReview'),
-            ].map((item, idx) => (
-              <div key={idx} className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center font-medium text-xs text-slate-800 flex items-center justify-center space-x-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>{item}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Synthetic Demo Access CTA */}
-      <section id="demo" className="py-20 bg-slate-900 text-white relative overflow-hidden">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8 relative z-10">
-          <div className="inline-flex items-center space-x-2 bg-slate-800 border border-slate-700 text-emerald-400 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider">
-            <Sparkles className="w-4 h-4" />
-            <span>{t('landing.demoBadge')}</span>
-          </div>
-
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
-            {t('landing.demoTitle')}
-          </h2>
-
-          <p className="text-slate-300 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
-            {t('landing.demoSubtitle')}
-          </p>
-
-          {/* Persona 1-Click Launch Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto text-left pt-4">
-            <Link href="/patient/intake">
-              <div className="p-4 bg-slate-800/90 border border-slate-700 rounded-xl hover:border-blue-500 transition-colors cursor-pointer space-y-2">
-                <div className="flex items-center justify-between text-blue-400 font-bold text-sm">
-                  <span>{t('landing.demoPatientTitle')}</span>
-                  <ArrowRight className="w-4 h-4" />
+                  </div>
                 </div>
-                <p className="text-xs text-slate-400">{t('landing.demoPatientDesc')}</p>
               </div>
-            </Link>
 
-            <Link href="/reviewer">
-              <div className="p-4 bg-slate-800/90 border border-slate-700 rounded-xl hover:border-emerald-500 transition-colors cursor-pointer space-y-2">
-                <div className="flex items-center justify-between text-emerald-400 font-bold text-sm">
-                  <span>{t('landing.demoReviewerTitle')}</span>
-                  <ArrowRight className="w-4 h-4" />
+              {/* Bento Card 2: 22 Deterministic Safety Rules (Span 1 col, Tall) */}
+              <div className="bento-card glass-panel p-6 sm:p-8 rounded-2xl flex flex-col justify-between group relative overflow-hidden border border-border hover:border-primary/40 transition-all duration-300">
+                <div className="space-y-4 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <div className="p-3 bg-primary/10 text-primary dark:text-accent rounded-xl border border-primary/20 group-hover:scale-105 transition-transform">
+                      <ShieldCheck className="w-5 h-5" />
+                    </div>
+                    <Badge variant="outline" className="font-mono text-[10px] bg-rose-500/10 text-rose-500 border-rose-500/30">
+                      Zero Hallucination
+                    </Badge>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xl font-bold text-foreground tracking-tight">
+                      {t('landing.cap2Title')}
+                    </h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed mt-2">
+                      {t('landing.cap2Desc')}
+                    </p>
+                  </div>
+
+                  {/* Rules checklist snippet */}
+                  <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-2 font-mono text-[11px]">
+                    <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400">
+                      <span>✓ Rule 104 (Cardiac ACS)</span>
+                      <span className="text-[9px] bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/30">PASSED</span>
+                    </div>
+                    <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400">
+                      <span>✓ Rule 208 (Pediatric Wheeze)</span>
+                      <span className="text-[9px] bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/30">PASSED</span>
+                    </div>
+                    <div className="flex items-center justify-between text-muted-foreground">
+                      <span>✓ Rule 301 (Outpatient Path)</span>
+                      <span className="text-[9px] bg-muted px-1.5 py-0.2 rounded border border-border">ACTIVE</span>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-xs text-slate-400">{t('landing.demoReviewerDesc')}</p>
               </div>
-            </Link>
 
-            <Link href="/admin">
-              <div className="p-4 bg-slate-800/90 border border-slate-700 rounded-xl hover:border-purple-500 transition-colors cursor-pointer space-y-2">
-                <div className="flex items-center justify-between text-purple-400 font-bold text-sm">
-                  <span>{t('landing.demoAdminTitle')}</span>
-                  <ArrowRight className="w-4 h-4" />
+              {/* Bento Card 3: 100% Grounded Citations (Span 1 col) */}
+              <div className="bento-card glass-panel p-6 sm:p-8 rounded-2xl flex flex-col justify-between group relative overflow-hidden border border-border hover:border-primary/40 transition-all duration-300">
+                <div className="space-y-4 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <div className="p-3 bg-primary/10 text-primary dark:text-accent rounded-xl border border-primary/20 group-hover:scale-105 transition-transform">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <Badge variant="outline" className="font-mono text-[10px] bg-card border-border text-foreground">
+                      100% Grounded
+                    </Badge>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xl font-bold text-foreground tracking-tight">
+                      {t('landing.cap4Title')}
+                    </h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed mt-2">
+                      {t('landing.cap4Desc')}
+                    </p>
+                  </div>
+
+                  <div className="p-3 bg-muted/40 rounded-xl border border-border/70 text-xs font-mono space-y-1.5">
+                    <div className="text-[10px] text-muted-foreground">Grounding Metadata:</div>
+                    <div className="text-[11px] text-primary dark:text-accent font-semibold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span>Audio Span #01 ➔ Line 4 OCR</span>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-xs text-slate-400">{t('landing.demoAdminDesc')}</p>
               </div>
-            </Link>
-          </div>
 
-          <div className="pt-4 text-xs text-slate-400">
-            <span className="font-semibold text-slate-300">Seed Command:</span> Execute <code>npm run seed:test-data</code> in the backend to populate standard synthetic demo records.
-          </div>
-        </div>
-      </section>
+              {/* Bento Card 4: Verified Physician Authorization & Emergency Referral (Span 2 cols on desktop) */}
+              <div className="bento-card lg:col-span-2 glass-panel p-6 sm:p-8 rounded-2xl flex flex-col justify-between group relative overflow-hidden border border-border hover:border-primary/40 transition-all duration-300">
+                <div className="space-y-4 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <div className="p-3 bg-primary/10 text-primary dark:text-accent rounded-xl border border-primary/20 group-hover:scale-105 transition-transform">
+                      <Building2 className="w-5 h-5" />
+                    </div>
+                    <Badge variant="outline" className="font-mono text-[10px] bg-card border-border text-foreground">
+                      Clinician Sign-off • QR Referral
+                    </Badge>
+                  </div>
 
-      {/* Footer */}
-      <footer className="bg-slate-950 text-slate-400 border-t border-slate-800 py-12 px-4">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left text-xs">
-          <div className="space-y-2">
-            <div className="flex items-center justify-center md:justify-start space-x-2 text-white font-bold text-sm">
-              <HeartPulse className="w-4 h-4 text-blue-500" />
-              <span>MedicalTriage</span>
+                  <div>
+                    <h3 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
+                      {t('landing.cap6Title')}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mt-2 max-w-xl">
+                      {t('landing.cap6Desc')}
+                    </p>
+                  </div>
+
+                  {/* Dispatch preview */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1 text-xs">
+                      <div className="text-[10px] font-mono text-muted-foreground">Emergency Facility Escalation:</div>
+                      <div className="font-semibold text-foreground">District Cardiology Center, Cuttack</div>
+                      <div className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400">SLA Response: &lt; 60 Minutes</div>
+                    </div>
+
+                    <div className="p-3 bg-muted/40 rounded-xl border border-border/70 flex items-center justify-between text-xs">
+                      <div className="space-y-0.5">
+                        <div className="text-[10px] font-mono text-muted-foreground">Tamper-Evident Token</div>
+                        <div className="font-mono font-bold text-primary dark:text-accent">REF-2026-OD-8812</div>
+                      </div>
+                      <div className="font-mono text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-1 rounded border border-emerald-500/30">
+                        VERIFIED
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <p className="max-w-md text-slate-500">
-              {t('landing.footerDisclaimer')}
-            </p>
           </div>
+        </section>
 
-          <div className="flex flex-wrap justify-center gap-6 text-slate-400 font-medium">
-            <a href="#how-it-works" className="hover:text-white transition-colors">{t('landing.navHowItWorks')}</a>
-            <a href="#capabilities" className="hover:text-white transition-colors">{t('landing.navCapabilities')}</a>
-            <a href="#safety" className="hover:text-white transition-colors">{t('landing.navSafety')}</a>
-            <Link href="/patient/intake" className="hover:text-white transition-colors">{t('landing.patientPortal')}</Link>
-            <Link href="/reviewer" className="hover:text-white transition-colors">{t('landing.reviewerPortal')}</Link>
+        {/* India Context Section */}
+        <section id="india-context" className="reveal-section scroll-mt-20 py-24 px-4 sm:px-6 lg:px-8 border-b border-border/80">
+          <div className="max-w-7xl mx-auto space-y-12">
+            <div className="max-w-3xl mx-auto text-center space-y-3">
+              <div className="inline-flex items-center space-x-1.5 font-mono text-xs text-primary dark:text-accent uppercase tracking-wider bg-primary/10 dark:bg-accent/10 px-3 py-1 rounded-md border border-primary/20 dark:border-accent/20">
+                <Globe className="w-3.5 h-3.5" />
+                <span>{t('landing.indiaBadge')}</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+                {t('landing.indiaTitle')}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {t('landing.indiaSubtitle')}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="glass-card p-6 rounded-2xl space-y-3">
+                <div className="font-mono text-xs text-primary dark:text-accent font-bold">01 / ACCESS RATIO</div>
+                <h3 className="text-lg font-bold text-foreground">{t('landing.stat1Title')}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{t('landing.stat1Desc')}</p>
+              </div>
+
+              <div className="glass-card p-6 rounded-2xl space-y-3">
+                <div className="font-mono text-xs text-primary dark:text-accent font-bold">02 / MULTILINGUAL</div>
+                <h3 className="text-lg font-bold text-foreground">{t('landing.stat2Title')}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{t('landing.stat2Desc')}</p>
+              </div>
+
+              <div className="glass-card p-6 rounded-2xl space-y-3">
+                <div className="font-mono text-xs text-primary dark:text-accent font-bold">03 / TIMEFRAMES</div>
+                <h3 className="text-lg font-bold text-foreground">{t('landing.stat3Title')}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{t('landing.stat3Desc')}</p>
+              </div>
+            </div>
           </div>
-        </div>
-      </footer>
-    </div>
+        </section>
+
+        {/* Global Footer */}
+        <footer className="bg-card/40 border-t border-border/80 py-12 px-4 sm:px-6 lg:px-8 text-xs text-muted-foreground">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="flex items-center space-x-2">
+              <HeartPulse className="w-4 h-4 text-primary dark:text-accent" />
+              <span className="font-mono font-semibold text-foreground">MedicalTriage Clinical Decision Support</span>
+            </div>
+
+            <div className="flex items-center space-x-6 font-mono text-[11px]">
+              <a href="tel:108" className="text-rose-600 dark:text-rose-400 font-bold hover:underline">
+                Emergency: 108
+              </a>
+              <span>•</span>
+              <a href="tel:112" className="hover:text-foreground transition-colors">
+                National Helpline: 112
+              </a>
+              <span>•</span>
+              <a href="tel:104" className="hover:text-foreground transition-colors">
+                Health Info: 104
+              </a>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </SmoothScroll>
   );
 }

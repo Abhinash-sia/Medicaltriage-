@@ -3,16 +3,19 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const badgeVariants = cva(
-  'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+  'inline-flex items-center gap-1.5 rounded-[4px] border px-2.5 py-1 text-[11px] font-medium leading-normal transition-colors select-none',
   {
     variants: {
       variant: {
-        default: 'border-transparent bg-primary text-primary-foreground hover:bg-primary/80',
-        secondary:
-          'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80',
-        destructive:
-          'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80',
-        outline: 'text-foreground',
+        default: 'border-transparent bg-primary text-primary-foreground',
+        secondary: 'border-border bg-secondary text-secondary-foreground',
+        destructive: 'border-destructive/30 bg-destructive/10 text-destructive',
+        outline: 'border-border bg-card text-foreground',
+        urgent: 'border-[hsl(var(--urgency-urgent)/0.3)] bg-[hsl(var(--urgency-urgent)/0.1)] text-[hsl(var(--urgency-urgent))] font-semibold',
+        priority: 'border-[hsl(var(--urgency-priority)/0.3)] bg-[hsl(var(--urgency-priority)/0.12)] text-[hsl(var(--urgency-priority))] font-semibold',
+        routine: 'border-[hsl(var(--urgency-routine)/0.3)] bg-[hsl(var(--urgency-routine)/0.12)] text-[hsl(var(--urgency-routine))] font-semibold',
+        provenance: 'border-border bg-muted/60 text-muted-foreground font-mono text-[10px] uppercase tracking-wider',
+        accent: 'border-accent/30 bg-accent/10 text-accent font-medium',
       },
     },
     defaultVariants: {
