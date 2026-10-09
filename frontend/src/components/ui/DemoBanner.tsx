@@ -1,9 +1,12 @@
-import React from 'react';
-import { Info, ShieldAlert } from 'lucide-react';
+import React, { useState } from 'react';
+import { Info, ShieldAlert, X } from 'lucide-react';
 import { useLanguage } from '../../i18n/LanguageContext';
 
 export function DemoBanner() {
   const { t } = useLanguage();
+  const [isDismissed, setIsDismissed] = useState(false);
+
+  if (isDismissed) return null;
 
   return (
     <div className="bg-amber-500/10 border-b border-amber-500/20 text-amber-950 dark:text-amber-200 py-1.5 px-4 text-[11px] font-medium tracking-tight">
@@ -22,8 +25,18 @@ export function DemoBanner() {
             <ShieldAlert className="w-3 h-3 text-amber-600 dark:text-amber-400" />
             {t('common.nonDiagnostic')}
           </span>
+          <button
+            type="button"
+            onClick={() => setIsDismissed(true)}
+            className="p-0.5 rounded hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 transition-colors ml-1"
+            title="Dismiss notice"
+            aria-label="Dismiss demo notice"
+          >
+            <X className="w-3 h-3" />
+          </button>
         </div>
       </div>
     </div>
   );
 }
+

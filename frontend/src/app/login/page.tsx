@@ -89,9 +89,9 @@ export default function LoginPage() {
   const router = useRouter();
   const { t } = useLanguage();
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
-  const [selectedRole, setSelectedRole] = useState<string>('doctor');
-  const [email, setEmail] = useState<string>('doctor.demo.001@example.test');
-  const [password, setPassword] = useState<string>('Password123!');
+  const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -359,6 +359,10 @@ export default function LoginPage() {
               type="button"
               onClick={() => {
                 setAuthMode('signin');
+                if (regEmail.trim() && !email) {
+                  setEmail(regEmail.trim());
+                  setSelectedRole(null);
+                }
                 setError(null);
               }}
               className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
@@ -447,6 +451,27 @@ export default function LoginPage() {
                     );
                   })}
                 </div>
+
+                {selectedRole && (
+                  <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-primary/10 border border-primary/20 text-xs animate-in fade-in duration-200">
+                    <span className="text-[11px] text-primary font-medium flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                      Auto-filled demo persona
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedRole(null);
+                        setEmail('');
+                        setPassword('');
+                        setLoginTouched({});
+                      }}
+                      className="text-[11px] text-muted-foreground hover:text-foreground font-semibold underline cursor-pointer"
+                    >
+                      Clear (Use my own account)
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Login Form */}
@@ -471,6 +496,7 @@ export default function LoginPage() {
                       value={email}
                       onChange={(e) => {
                         setEmail(e.target.value);
+                        setSelectedRole(null);
                         setLoginTouched((prev) => ({ ...prev, email: true }));
                       }}
                       onBlur={() => setLoginTouched((prev) => ({ ...prev, email: true }))}
@@ -515,6 +541,7 @@ export default function LoginPage() {
                       value={password}
                       onChange={(e) => {
                         setPassword(e.target.value);
+                        setSelectedRole(null);
                         setLoginTouched((prev) => ({ ...prev, password: true }));
                       }}
                       onBlur={() => setLoginTouched((prev) => ({ ...prev, password: true }))}
