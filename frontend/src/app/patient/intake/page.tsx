@@ -285,7 +285,7 @@ export default function PatientIntakePage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans flex flex-col">
-      <DemoBanner />
+      <DemoBanner user={currentUser} />
 
       {/* Progress Line */}
       {!submittedCase && (

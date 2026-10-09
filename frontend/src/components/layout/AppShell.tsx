@@ -88,7 +88,7 @@ export function AppShell({ children, user: initialUser }: AppShellProps) {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
-      <DemoBanner />
+      <DemoBanner user={user} />
 
       {/* Top Header */}
       <header className="sticky top-0 z-40 bg-card/95 border-b border-border h-12 px-4 flex items-center justify-between">

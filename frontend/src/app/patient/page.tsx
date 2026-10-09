@@ -299,7 +299,7 @@ export default function PatientDashboardPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans selection:bg-accent/20">
-      <DemoBanner />
+      <DemoBanner user={user} />
 
       {/* Top Navigation Bar */}
       <header className="sticky top-0 z-30 bg-card/85 backdrop-blur-md border-b border-border shadow-xs">
@@ -333,7 +333,7 @@ export default function PatientDashboardPage() {
               </div>
               <div className="text-left">
                 <div className="font-medium text-foreground text-xs leading-tight">{user?.name || 'Patient'}</div>
-                <div className="text-[10px] text-muted-foreground font-mono">{user?.email || 'patient@example.com'}</div>
+                <div className="text-[10px] text-muted-foreground font-mono">{user?.email || (user as any)?.phone || 'Patient Account'}</div>
               </div>
             </div>
 
