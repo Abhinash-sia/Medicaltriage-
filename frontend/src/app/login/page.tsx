@@ -23,6 +23,7 @@ import {
   UserPlus,
   Phone,
   Mail,
+  AlertCircle,
 } from 'lucide-react';
 import { LanguageSelector } from '@/components/ui/LanguageSelector';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
@@ -103,6 +104,56 @@ export default function LoginPage() {
   const [regPassword, setRegPassword] = useState<string>('');
   const [showRegPassword, setShowRegPassword] = useState<boolean>(false);
 
+  // Touch tracking for real-time validation highlights before submit
+  const [loginTouched, setLoginTouched] = useState<{ email?: boolean; password?: boolean }>({});
+  const [regTouched, setRegTouched] = useState<{ name?: boolean; email?: boolean; phone?: boolean; password?: boolean }>({});
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  // Real-time login validation errors (computed live)
+  const loginErrors = {
+    email: loginTouched.email
+      ? !email.trim()
+        ? 'Email address is required'
+        : !emailRegex.test(email.trim())
+        ? 'Please enter a valid email address (e.g. name@domain.com)'
+        : null
+      : null,
+    password: loginTouched.password
+      ? !password
+        ? 'Password is required'
+        : null
+      : null,
+  };
+
+  // Real-time registration validation errors (computed live)
+  const regErrors = {
+    name: regTouched.name
+      ? !regName.trim()
+        ? 'Full name is required'
+        : regName.trim().length < 2
+        ? 'Name must be at least 2 characters long'
+        : null
+      : null,
+    email: regTouched.email && regEmail.trim() && !emailRegex.test(regEmail.trim())
+      ? 'Please enter a valid email address (e.g. you@example.com)'
+      : null,
+    phone: regTouched.phone && regPhone.trim() && regPhone.replace(/\D/g, '').length < 8
+      ? 'Phone number must have at least 8 digits'
+      : null,
+    identifier:
+      (regTouched.email || regTouched.phone) && !regEmail.trim() && !regPhone.trim()
+        ? 'Please provide either an email address or a phone number'
+        : null,
+    password: regTouched.password
+      ? !regPassword
+        ? 'Password is required'
+        : regPassword.length < 8
+        ? 'Password must be at least 8 characters long'
+        : null
+      : null,
+  };
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -117,10 +168,20 @@ export default function LoginPage() {
 
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    setIsLoading(true);
     setError(null);
     setSessionExpiredNotice(false);
 
+    // Validate before submitting
+    const emailErr = !email.trim() ? 'Email address is required' : !emailRegex.test(email.trim()) ? 'Please enter a valid email address' : null;
+    const passwordErr = !password ? 'Password is required' : null;
+
+    if (emailErr || passwordErr) {
+      setLoginTouched({ email: true, password: true });
+      setError('Please fix the highlighted errors before submitting.');
+      return;
+    }
+
+    setIsLoading(true);
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '/api';
 
     try {
@@ -171,16 +232,15 @@ export default function LoginPage() {
     if (e) e.preventDefault();
     setError(null);
 
-    if (!regName.trim() || regName.trim().length < 2) {
-      setError('Please enter your full name (minimum 2 characters).');
-      return;
-    }
-    if (!regEmail.trim() && !regPhone.trim()) {
-      setError('Please provide at least an email address or a phone number.');
-      return;
-    }
-    if (regPassword.length < 8) {
-      setError('Password must be at least 8 characters long.');
+    const nameErr = !regName.trim() || regName.trim().length < 2;
+    const identifierErr = !regEmail.trim() && !regPhone.trim();
+    const emailErr = regEmail.trim() && !emailRegex.test(regEmail.trim());
+    const phoneErr = regPhone.trim() && regPhone.replace(/\D/g, '').length < 8;
+    const passwordErr = !regPassword || regPassword.length < 8;
+
+    if (nameErr || identifierErr || emailErr || phoneErr || passwordErr) {
+      setRegTouched({ name: true, email: true, phone: true, password: true });
+      setError('Please fix the highlighted errors before submitting.');
       return;
     }
 
@@ -230,6 +290,8 @@ export default function LoginPage() {
     setSelectedRole(account.roleKey);
     setEmail(account.email);
     setPassword(account.password);
+    setLoginTouched({});
+    setError(null);
   };
 
   return (
@@ -388,36 +450,81 @@ export default function LoginPage() {
               </div>
 
               {/* Login Form */}
-              <form onSubmit={handleLogin} className="space-y-4 pt-1">
+              <form onSubmit={handleLogin} className="space-y-4 pt-1" noValidate>
+                {/* Email Field */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-foreground flex items-center justify-between">
-                    <span>{t('auth.email')}</span>
-                  </label>
+                  <div className="flex items-center justify-between text-xs">
+                    <label className="font-semibold text-foreground flex items-center gap-1">
+                      <span>{t('auth.email')}</span>
+                      <span className="text-destructive">*</span>
+                    </label>
+                    {loginTouched.email && !loginErrors.email && email.trim() && (
+                      <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1 animate-in fade-in">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Valid
+                      </span>
+                    )}
+                  </div>
                   <div className="relative">
-                    <User className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <User className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="email"
-                      required
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-10 pr-3.5 py-2.5 text-xs sm:text-sm border border-border bg-card/90 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent text-foreground transition-all placeholder:text-muted-foreground"
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setLoginTouched((prev) => ({ ...prev, email: true }));
+                      }}
+                      onBlur={() => setLoginTouched((prev) => ({ ...prev, email: true }))}
+                      className={`w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm rounded-xl focus:outline-none transition-all placeholder:text-muted-foreground ${
+                        loginErrors.email
+                          ? 'border-2 border-destructive bg-destructive/5 text-foreground focus:ring-2 focus:ring-destructive/30'
+                          : loginTouched.email && email.trim()
+                          ? 'border border-emerald-500/60 bg-card/90 focus:ring-2 focus:ring-emerald-500/20'
+                          : 'border border-border bg-card/90 focus:ring-2 focus:ring-accent/40 focus:border-accent'
+                      }`}
                       placeholder="email@example.test"
                     />
+                    {loginErrors.email && (
+                      <AlertCircle className="w-4 h-4 text-destructive absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    )}
                   </div>
+                  {loginErrors.email && (
+                    <p className="text-[11px] text-destructive flex items-center gap-1.5 font-medium mt-1 animate-in fade-in slide-in-from-top-1 duration-150">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{loginErrors.email}</span>
+                    </p>
+                  )}
                 </div>
 
+                {/* Password Field */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-foreground flex items-center justify-between">
-                    <span>{t('auth.password')}</span>
-                  </label>
+                  <div className="flex items-center justify-between text-xs">
+                    <label className="font-semibold text-foreground flex items-center gap-1">
+                      <span>{t('auth.password')}</span>
+                      <span className="text-destructive">*</span>
+                    </label>
+                    {loginTouched.password && !loginErrors.password && password && (
+                      <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1 animate-in fade-in">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Entered
+                      </span>
+                    )}
+                  </div>
                   <div className="relative">
-                    <Lock className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <Lock className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type={showPassword ? 'text' : 'password'}
-                      required
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm border border-border bg-card/90 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent text-foreground transition-all placeholder:text-muted-foreground font-mono"
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        setLoginTouched((prev) => ({ ...prev, password: true }));
+                      }}
+                      onBlur={() => setLoginTouched((prev) => ({ ...prev, password: true }))}
+                      className={`w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm rounded-xl focus:outline-none transition-all placeholder:text-muted-foreground font-mono ${
+                        loginErrors.password
+                          ? 'border-2 border-destructive bg-destructive/5 text-foreground focus:ring-2 focus:ring-destructive/30'
+                          : loginTouched.password && password
+                          ? 'border border-emerald-500/60 bg-card/90 focus:ring-2 focus:ring-emerald-500/20'
+                          : 'border border-border bg-card/90 focus:ring-2 focus:ring-accent/40 focus:border-accent'
+                      }`}
                       placeholder="••••••••"
                     />
                     <button
@@ -429,6 +536,12 @@ export default function LoginPage() {
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+                  {loginErrors.password && (
+                    <p className="text-[11px] text-destructive flex items-center gap-1.5 font-medium mt-1 animate-in fade-in slide-in-from-top-1 duration-150">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{loginErrors.password}</span>
+                    </p>
+                  )}
                 </div>
 
                 <Button
@@ -465,7 +578,7 @@ export default function LoginPage() {
             </>
           ) : (
             /* Patient Self-Registration Form */
-            <form onSubmit={handleRegister} className="space-y-3.5 pt-1">
+            <form onSubmit={handleRegister} className="space-y-3.5 pt-1" noValidate>
               <div className="p-2.5 bg-primary/10 border border-primary/25 rounded-xl text-xs text-foreground flex items-start gap-2">
                 <ShieldCheck className="w-4 h-4 text-accent shrink-0 mt-0.5" />
                 <span className="text-[11px] text-muted-foreground leading-relaxed">
@@ -475,70 +588,172 @@ export default function LoginPage() {
 
               {/* Full Name */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">
-                  Full Name <span className="text-destructive">*</span>
-                </label>
+                <div className="flex items-center justify-between text-xs">
+                  <label className="font-semibold text-foreground flex items-center gap-1">
+                    <span>Full Name</span>
+                    <span className="text-destructive">*</span>
+                  </label>
+                  {regTouched.name && !regErrors.name && regName.trim().length >= 2 && (
+                    <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1 animate-in fade-in">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Looks good
+                    </span>
+                  )}
+                </div>
                 <div className="relative">
-                  <User className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <User className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type="text"
-                    required
                     value={regName}
-                    onChange={(e) => setRegName(e.target.value)}
-                    className="w-full pl-10 pr-3.5 py-2.5 text-xs sm:text-sm border border-border bg-card/90 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent text-foreground transition-all placeholder:text-muted-foreground"
-                    placeholder="Enter your name"
+                    onChange={(e) => {
+                      setRegName(e.target.value);
+                      setRegTouched((prev) => ({ ...prev, name: true }));
+                    }}
+                    onBlur={() => setRegTouched((prev) => ({ ...prev, name: true }))}
+                    className={`w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm rounded-xl focus:outline-none transition-all placeholder:text-muted-foreground ${
+                      regErrors.name
+                        ? 'border-2 border-destructive bg-destructive/5 text-foreground focus:ring-2 focus:ring-destructive/30'
+                        : regTouched.name && regName.trim().length >= 2
+                        ? 'border border-emerald-500/60 bg-card/90 focus:ring-2 focus:ring-emerald-500/20'
+                        : 'border border-border bg-card/90 focus:ring-2 focus:ring-accent/40 focus:border-accent'
+                    }`}
+                    placeholder="Enter your full name"
                   />
+                  {regErrors.name && (
+                    <AlertCircle className="w-4 h-4 text-destructive absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  )}
                 </div>
+                {regErrors.name && (
+                  <p className="text-[11px] text-destructive flex items-center gap-1.5 font-medium mt-1 animate-in fade-in slide-in-from-top-1 duration-150">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{regErrors.name}</span>
+                  </p>
+                )}
               </div>
 
               {/* Email Address */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">
-                  Email Address
-                </label>
+                <div className="flex items-center justify-between text-xs">
+                  <label className="font-semibold text-foreground flex items-center gap-1">
+                    <span>Email Address</span>
+                    <span className="text-[10px] text-muted-foreground font-normal">(or phone below)</span>
+                  </label>
+                  {regTouched.email && !regErrors.email && regEmail.trim() && (
+                    <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1 animate-in fade-in">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Valid email
+                    </span>
+                  )}
+                </div>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Mail className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type="email"
                     value={regEmail}
-                    onChange={(e) => setRegEmail(e.target.value)}
-                    className="w-full pl-10 pr-3.5 py-2.5 text-xs sm:text-sm border border-border bg-card/90 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent text-foreground transition-all placeholder:text-muted-foreground"
+                    onChange={(e) => {
+                      setRegEmail(e.target.value);
+                      setRegTouched((prev) => ({ ...prev, email: true }));
+                    }}
+                    onBlur={() => setRegTouched((prev) => ({ ...prev, email: true }))}
+                    className={`w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm rounded-xl focus:outline-none transition-all placeholder:text-muted-foreground ${
+                      regErrors.email
+                        ? 'border-2 border-destructive bg-destructive/5 text-foreground focus:ring-2 focus:ring-destructive/30'
+                        : regTouched.email && regEmail.trim()
+                        ? 'border border-emerald-500/60 bg-card/90 focus:ring-2 focus:ring-emerald-500/20'
+                        : 'border border-border bg-card/90 focus:ring-2 focus:ring-accent/40 focus:border-accent'
+                    }`}
                     placeholder="you@example.com"
                   />
+                  {regErrors.email && (
+                    <AlertCircle className="w-4 h-4 text-destructive absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  )}
                 </div>
+                {regErrors.email && (
+                  <p className="text-[11px] text-destructive flex items-center gap-1.5 font-medium mt-1 animate-in fade-in slide-in-from-top-1 duration-150">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{regErrors.email}</span>
+                  </p>
+                )}
               </div>
 
               {/* Phone Number */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">
-                  Phone Number
-                </label>
+                <div className="flex items-center justify-between text-xs">
+                  <label className="font-semibold text-foreground flex items-center gap-1">
+                    <span>Phone Number</span>
+                    <span className="text-[10px] text-muted-foreground font-normal">(optional)</span>
+                  </label>
+                  {regTouched.phone && !regErrors.phone && regPhone.trim() && (
+                    <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1 animate-in fade-in">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Valid phone
+                    </span>
+                  )}
+                </div>
                 <div className="relative">
-                  <Phone className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Phone className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type="tel"
                     value={regPhone}
-                    onChange={(e) => setRegPhone(e.target.value)}
-                    className="w-full pl-10 pr-3.5 py-2.5 text-xs sm:text-sm border border-border bg-card/90 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent text-foreground transition-all placeholder:text-muted-foreground font-mono"
+                    onChange={(e) => {
+                      setRegPhone(e.target.value);
+                      setRegTouched((prev) => ({ ...prev, phone: true }));
+                    }}
+                    onBlur={() => setRegTouched((prev) => ({ ...prev, phone: true }))}
+                    className={`w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm rounded-xl focus:outline-none transition-all placeholder:text-muted-foreground font-mono ${
+                      regErrors.phone
+                        ? 'border-2 border-destructive bg-destructive/5 text-foreground focus:ring-2 focus:ring-destructive/30'
+                        : regTouched.phone && regPhone.trim()
+                        ? 'border border-emerald-500/60 bg-card/90 focus:ring-2 focus:ring-emerald-500/20'
+                        : 'border border-border bg-card/90 focus:ring-2 focus:ring-accent/40 focus:border-accent'
+                    }`}
                     placeholder="+91 98765 43210"
                   />
+                  {regErrors.phone && (
+                    <AlertCircle className="w-4 h-4 text-destructive absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  )}
                 </div>
+                {regErrors.phone && (
+                  <p className="text-[11px] text-destructive flex items-center gap-1.5 font-medium mt-1 animate-in fade-in slide-in-from-top-1 duration-150">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{regErrors.phone}</span>
+                  </p>
+                )}
+                {regErrors.identifier && (
+                  <p className="text-[11px] text-destructive flex items-center gap-1.5 font-medium mt-1 animate-in fade-in slide-in-from-top-1 duration-150">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{regErrors.identifier}</span>
+                  </p>
+                )}
               </div>
 
-              {/* Password */}
+              {/* Password with Live Strength / Length Requirements */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">
-                  Password <span className="text-muted-foreground text-[10px] font-normal">(min 8 characters)</span> <span className="text-destructive">*</span>
-                </label>
+                <div className="flex items-center justify-between text-xs">
+                  <label className="font-semibold text-foreground flex items-center gap-1">
+                    <span>Password</span>
+                    <span className="text-destructive">*</span>
+                  </label>
+                  {regPassword.length >= 8 && (
+                    <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1 animate-in fade-in">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Meets requirements
+                    </span>
+                  )}
+                </div>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Lock className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type={showRegPassword ? 'text' : 'password'}
-                    required
-                    minLength={8}
                     value={regPassword}
-                    onChange={(e) => setRegPassword(e.target.value)}
-                    className="w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm border border-border bg-card/90 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent text-foreground transition-all placeholder:text-muted-foreground font-mono"
+                    onChange={(e) => {
+                      setRegPassword(e.target.value);
+                      setRegTouched((prev) => ({ ...prev, password: true }));
+                    }}
+                    onBlur={() => setRegTouched((prev) => ({ ...prev, password: true }))}
+                    className={`w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm rounded-xl focus:outline-none transition-all placeholder:text-muted-foreground font-mono ${
+                      regErrors.password
+                        ? 'border-2 border-destructive bg-destructive/5 text-foreground focus:ring-2 focus:ring-destructive/30'
+                        : regPassword.length >= 8
+                        ? 'border border-emerald-500/60 bg-card/90 focus:ring-2 focus:ring-emerald-500/20'
+                        : 'border border-border bg-card/90 focus:ring-2 focus:ring-accent/40 focus:border-accent'
+                    }`}
                     placeholder="••••••••"
                   />
                   <button
@@ -550,6 +765,46 @@ export default function LoginPage() {
                     {showRegPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+
+                {/* Live Password Strength / Length Indicator */}
+                <div className="pt-1 space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="flex items-center gap-1">
+                      {regPassword.length >= 8 ? (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      ) : (
+                        <AlertCircle className={`w-3.5 h-3.5 shrink-0 ${regTouched.password && regPassword.length < 8 ? 'text-destructive' : 'text-muted-foreground'}`} />
+                      )}
+                      <span className={regPassword.length >= 8 ? 'text-emerald-600 dark:text-emerald-400 font-medium' : regTouched.password && regPassword.length < 8 ? 'text-destructive font-medium' : 'text-muted-foreground'}>
+                        At least 8 characters
+                      </span>
+                    </span>
+                    <span className="font-mono text-[10px] text-muted-foreground">
+                      {regPassword.length} / 8
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-300 ${
+                        regPassword.length >= 8
+                          ? 'bg-emerald-500'
+                          : regPassword.length > 4
+                          ? 'bg-amber-500'
+                          : regPassword.length > 0
+                          ? 'bg-destructive'
+                          : 'bg-transparent'
+                      }`}
+                      style={{ width: `${Math.min(100, (regPassword.length / 8) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+
+                {regErrors.password && (
+                  <p className="text-[11px] text-destructive flex items-center gap-1.5 font-medium mt-1 animate-in fade-in slide-in-from-top-1 duration-150">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{regErrors.password}</span>
+                  </p>
+                )}
               </div>
 
               <Button
