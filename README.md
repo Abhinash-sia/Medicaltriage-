@@ -1,4 +1,4 @@
-# MedicalTriage
+# Sevansh
 
 > **Human-in-the-Loop Healthcare Triage Assistant for Resource-Constrained Environments**
 > 
@@ -11,7 +11,7 @@
 ```text
 PROTOTYPE / HACKATHON IMPLEMENTATION FOR RESEARCH AND EVALUATION PURPOSES ONLY.
 
-MedicalTriage is a human-in-the-loop information organization system.
+Sevansh is a human-in-the-loop information organization system.
 It DOES NOT independently diagnose medical conditions, prescribe treatment,
 recommend clinical therapies, or make autonomous medical decisions.
 
@@ -24,11 +24,11 @@ medical-device conformity assessment, or regulatory certification.
 
 ---
 
-## 1. What is MedicalTriage?
+## 1. What is Sevansh?
 
 In high-volume healthcare environments — such as Primary Health Centres (PHCs) and government hospital outpatient departments (OPDs) in India — medical officers and triage nurses process large numbers of patients presenting with diverse symptoms, regional languages, hand-written or scanned paper lab reports, and verbal complaints.
 
-**MedicalTriage** organizes patient-reported narratives, speech recordings, lab reports (OCR), visual observations, and regional language translations into structured, prioritized reviewer artifacts. It applies a **deterministic safety engine** to highlight potential red flags while enforcing **mandatory qualified human review** for every case.
+**Sevansh** organizes patient-reported narratives, speech recordings, lab reports (OCR), visual observations, and regional language translations into structured, prioritized reviewer artifacts. It applies a **deterministic safety engine** to highlight potential red flags while enforcing **mandatory qualified human review** for every case.
 
 ---
 
@@ -44,7 +44,7 @@ In high-volume healthcare environments — such as Primary Health Centres (PHCs)
 
 ## 3. Solution Pipeline
 
-MedicalTriage solves these challenges through a strict human-in-the-loop operational architecture:
+Sevansh solves these challenges through a strict human-in-the-loop operational architecture:
 
 ```text
 Patient Self-Intake / Speech / Uploads
@@ -340,4 +340,4 @@ Detailed architectural and technical documentation is maintained in the [`docs/`
 
 ## 12. License & Legal Disclaimer
 
-MedicalTriage is created as a non-diagnostic prototype for hackathon evaluation and healthcare research purposes. See [docs/safety.md](./docs/safety.md) for full clinical boundary disclosures.
+Sevansh is created as a non-diagnostic prototype for hackathon evaluation and healthcare research purposes. See [docs/safety.md](./docs/safety.md) for full clinical boundary disclosures.

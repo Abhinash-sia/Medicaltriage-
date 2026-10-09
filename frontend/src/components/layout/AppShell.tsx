@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { DemoBanner } from '../ui/DemoBanner';
 import { ThemeToggle } from '../ui/ThemeToggle';
+import { TextSizeToggle } from '../ui/TextSizeToggle';
 import { CommandPalette } from '../ui/CommandPalette';
 import { LanguageSelector } from '../ui/LanguageSelector';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -88,7 +89,7 @@ export function AppShell({ children, user: initialUser }: AppShellProps) {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
-      <DemoBanner />
+      <DemoBanner user={user} />
 
       {/* Top Header */}
       <header className="sticky top-0 z-40 bg-card/95 border-b border-border h-12 px-4 flex items-center justify-between">
@@ -106,7 +107,7 @@ export function AppShell({ children, user: initialUser }: AppShellProps) {
             <div className="w-6 h-6 rounded-[4px] bg-primary text-primary-foreground flex items-center justify-center">
               <HeartPulse className="w-3.5 h-3.5" />
             </div>
-            <span className="hidden sm:inline">MedicalTriage</span>
+            <span className="hidden sm:inline">Sevansh</span>
           </Link>
 
           <div className="hidden md:flex items-center text-xs text-muted-foreground">
@@ -128,6 +129,7 @@ export function AppShell({ children, user: initialUser }: AppShellProps) {
         <div className="flex items-center gap-2">
           <CommandPalette />
           <LanguageSelector variant="compact" />
+          <TextSizeToggle />
           <ThemeToggle />
 
           {user && (

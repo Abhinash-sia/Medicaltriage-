@@ -232,7 +232,7 @@ export function UserManagementPanel() {
 
   const handleCopyCredentials = () => {
     if (!createdStaff) return;
-    const text = `MedicalTriage Staff Credentials:
+    const text = `Sevansh Staff Credentials:
 Name: ${createdStaff.name}
 Role: ${createdStaff.role}
 Login: ${createdStaff.email || createdStaff.phone}

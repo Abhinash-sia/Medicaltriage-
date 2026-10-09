@@ -31,6 +31,7 @@ import {
   Compass,
   Menu,
   X,
+  UserPlus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -277,7 +278,7 @@ export default function PublicLandingPage() {
                   <HeartPulse className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-base sm:text-lg font-bold tracking-tight text-foreground font-mono">MedicalTriage</span>
+                  <span className="text-base sm:text-lg font-bold tracking-tight text-foreground font-mono">Sevansh</span>
                   <span className="text-[10px] bg-muted/80 text-primary dark:text-accent px-2 py-0.5 rounded-full font-semibold border border-border/80 leading-normal inline-flex items-center">
                     {t('landing.prototype')}
                   </span>
@@ -337,6 +338,16 @@ export default function PublicLandingPage() {
                   <span>{t('common.login')}</span>
                 </Button>
               </Link>
+              <Link href="/login?tab=signup">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hidden md:inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 text-xs h-8 px-2.5 whitespace-nowrap"
+                >
+                  <UserPlus className="w-3.5 h-3.5 shrink-0 text-accent" />
+                  <span>{t('auth.register')}</span>
+                </Button>
+              </Link>
               <Link href="/patient">
                 <Button
                   size="sm"
@@ -378,7 +389,7 @@ export default function PublicLandingPage() {
                   )}
                 </button>
               ))}
-              <div className="pt-2 border-t border-border/50 flex md:hidden items-center justify-between">
+              <div className="pt-2 border-t border-border/50 grid grid-cols-2 gap-2">
                 <Link href="/login" className="w-full">
                   <Button
                     variant="outline"
@@ -388,6 +399,17 @@ export default function PublicLandingPage() {
                   >
                     <LogIn className="w-3.5 h-3.5" />
                     <span>{t('common.login')}</span>
+                  </Button>
+                </Link>
+                <Link href="/login?tab=signup" className="w-full">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="w-full text-xs h-8 gap-1.5"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    <span>{t('auth.register')}</span>
                   </Button>
                 </Link>
               </div>
@@ -760,7 +782,7 @@ export default function PublicLandingPage() {
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="flex items-center space-x-2">
               <HeartPulse className="w-4 h-4 text-primary dark:text-accent" />
-              <span className="font-mono font-semibold text-foreground">MedicalTriage Clinical Decision Support</span>
+              <span className="font-mono font-semibold text-foreground">Sevansh Clinical Decision Support</span>
             </div>
 
             <div className="flex items-center space-x-6 font-mono text-[11px]">

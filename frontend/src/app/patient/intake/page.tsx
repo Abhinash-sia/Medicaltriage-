@@ -22,10 +22,12 @@ import {
   Lock,
   LogIn,
   LogOut,
+  Volume2,
 } from 'lucide-react';
 import { DemoBanner } from '@/components/ui/DemoBanner';
 import { LanguageSelector } from '@/components/ui/LanguageSelector';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { TextSizeToggle } from '@/components/ui/TextSizeToggle';
 import { AudioWaveformRecorder } from '@/components/intake/AudioWaveformRecorder';
 import { DocumentDropzone } from '@/components/intake/DocumentDropzone';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -70,6 +72,19 @@ export default function PatientIntakePage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [attachedVoiceFile, setAttachedVoiceFile] = useState<File | null>(null);
+  const [voicePreviewUrl, setVoicePreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (attachedVoiceFile) {
+      const url = URL.createObjectURL(attachedVoiceFile);
+      setVoicePreviewUrl(url);
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    } else {
+      setVoicePreviewUrl(null);
+    }
+  }, [attachedVoiceFile]);
   const [currentUser, setCurrentUser] = useState<{ id?: string; name?: string; email?: string; role?: string } | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
   const [isDemoLoggingIn, setIsDemoLoggingIn] = useState<boolean>(false);
@@ -285,7 +300,7 @@ export default function PatientIntakePage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans flex flex-col">
-      <DemoBanner />
+      <DemoBanner user={currentUser} />
 
       {/* Progress Line */}
       {!submittedCase && (
@@ -310,6 +325,7 @@ export default function PatientIntakePage() {
             </Link>
             <div className="flex items-center gap-2">
               <LanguageSelector />
+              <TextSizeToggle />
               <ThemeToggle />
             </div>
           </div>
@@ -636,7 +652,11 @@ export default function PatientIntakePage() {
                         </div>
 
                         {/* Audio Waveform Recorder Option */}
-                        <AudioWaveformRecorder onRecordingComplete={(f) => setAttachedVoiceFile(f)} />
+                        <AudioWaveformRecorder
+                          initialFile={attachedVoiceFile}
+                          onRecordingComplete={(f) => setAttachedVoiceFile(f)}
+                          onRemove={() => setAttachedVoiceFile(null)}
+                        />
                       </div>
                     </div>
                   )}
@@ -771,6 +791,50 @@ export default function PatientIntakePage() {
                             <span className="font-mono tabular-nums">{formData.severity} / 10</span>
                           </div>
                         </div>
+
+                        {/* Attached Voice Preview */}
+                        {attachedVoiceFile && (
+                          <div className="pt-2 border-t border-border/60 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-muted-foreground font-medium flex items-center gap-1.5">
+                                <Volume2 className="w-3.5 h-3.5 text-primary" /> Attached Voice Recording:
+                              </span>
+                              <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/30">
+                                Voice Note Ready
+                              </Badge>
+                            </div>
+                            <div className="p-2.5 bg-card border border-border/80 rounded-[6px] space-y-2">
+                              <div className="flex items-center justify-between text-[11px]">
+                                <span className="font-semibold text-foreground truncate max-w-[200px]">
+                                  {attachedVoiceFile.name}
+                                </span>
+                                <span className="text-muted-foreground font-mono">
+                                  {(attachedVoiceFile.size / 1024).toFixed(1)} KB
+                                </span>
+                              </div>
+                              <audio
+                                controls
+                                controlsList="nodownload noplaybackrate"
+                                src={voicePreviewUrl || undefined}
+                                className="w-full h-8 rounded"
+                              >
+                                Your browser does not support audio playback.
+                              </audio>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Attached Document Preview */}
+                        {attachedFile && (
+                          <div className="pt-2 border-t border-border/60 flex items-center justify-between">
+                            <span className="text-muted-foreground font-medium flex items-center gap-1.5">
+                              <FileText className="w-3.5 h-3.5 text-primary" /> Attached Document:
+                            </span>
+                            <span className="font-medium text-foreground text-[11px] truncate max-w-[200px]">
+                              {attachedFile.name} ({(attachedFile.size / 1024).toFixed(1)} KB)
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}

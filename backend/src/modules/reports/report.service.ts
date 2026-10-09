@@ -44,6 +44,10 @@ export class ReportService {
     const userFacilityStr = user.facilityId?.toString();
 
     if (caseFacilityStr && userFacilityStr && caseFacilityStr !== userFacilityStr) {
+      // Unassigned/general public intake cases are accessible to authorized clinical staff
+      if (userFacilityStr === 'FAC-DH-CUTTACK' && caseFacilityStr === 'GOVERNMENT_HOSPITAL') {
+        return;
+      }
       // Check if user is directly assigned to the case
       const assignedIdStr = existingCase.assignedReviewerId?.toString();
       if (assignedIdStr !== userIdStr) {

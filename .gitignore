@@ -24,8 +24,9 @@ build/
 *.log
 logs/
 
-# Coverage
+# Coverage & Tests
 coverage/
+.vitest/
 
 # OS
 .DS_Store

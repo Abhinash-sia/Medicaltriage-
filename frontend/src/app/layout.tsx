@@ -36,8 +36,11 @@ const notoSansDevanagari = Noto_Sans_Devanagari({
 });
 
 export const metadata: Metadata = {
-  title: 'MedicalTriage — Frontline AI-Assisted Clinical Triage',
+  title: 'Sevansh — Frontline AI-Assisted Clinical Triage',
   description: 'AI-assisted, strictly non-diagnostic clinical triage decision support for frontline health workers in rural Odisha.',
+  other: {
+    'text-scale': 'scale',
+  },
 };
 
 export default function RootLayout({

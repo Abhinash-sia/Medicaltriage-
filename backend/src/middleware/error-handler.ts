@@ -13,12 +13,19 @@ export const errorHandler = (
   res: Response,
   _next: NextFunction
 ): void => {
-  const statusCode = err.statusCode || 500;
-  const errorCode = err.code || (statusCode === 404 ? 'NOT_FOUND' : 'INTERNAL_SERVER_ERROR');
-  const message =
+  let statusCode = err.statusCode || 500;
+  let errorCode = err.code || (statusCode === 404 ? 'NOT_FOUND' : 'INTERNAL_SERVER_ERROR');
+  let message =
     env.NODE_ENV === 'production' && statusCode === 500
       ? 'An unexpected error occurred.'
       : err.message || 'An unexpected error occurred.';
+
+  // Map Mongoose buffering timeouts or disconnection errors to clean 503 errors
+  if (err.message && (err.message.includes('buffering timed out') || err.message.includes('topology was closed'))) {
+    statusCode = 503;
+    errorCode = 'DATABASE_UNAVAILABLE';
+    message = 'Database service is temporarily unavailable. Please check MongoDB connection or try again shortly.';
+  }
 
   if (statusCode >= 500) {
     logger.error(

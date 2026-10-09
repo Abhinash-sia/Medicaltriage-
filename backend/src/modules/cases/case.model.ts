@@ -25,7 +25,7 @@ const CaseSchema = new Schema<ICaseDocument>(
     facilityId: {
       type: String,
       trim: true,
-      default: 'GOVERNMENT_HOSPITAL',
+      default: 'FAC-DH-CUTTACK',
       index: true,
     },
     status: {

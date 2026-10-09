@@ -34,6 +34,7 @@ import { DemoBanner } from '@/components/ui/DemoBanner';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { LanguageSelector } from '@/components/ui/LanguageSelector';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { TextSizeToggle } from '@/components/ui/TextSizeToggle';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { clearAuthSession, authFetch } from '@/lib/authSession';
 
@@ -299,7 +300,7 @@ export default function PatientDashboardPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans selection:bg-accent/20">
-      <DemoBanner />
+      <DemoBanner user={user} />
 
       {/* Top Navigation Bar */}
       <header className="sticky top-0 z-30 bg-card/85 backdrop-blur-md border-b border-border shadow-xs">
@@ -311,7 +312,7 @@ export default function PatientDashboardPage() {
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="text-sm sm:text-base font-bold text-foreground tracking-tight">MedicalTriage</span>
+                <span className="text-sm sm:text-base font-bold text-foreground tracking-tight">Sevansh</span>
                 <Badge variant="outline" className="bg-primary/10 text-primary border-primary/25 text-[10px] px-1.5 py-0 font-mono">
                   PATIENT PORTAL
                 </Badge>
@@ -323,6 +324,7 @@ export default function PatientDashboardPage() {
           {/* Right Action Bar */}
           <div className="flex items-center space-x-2 sm:space-x-3">
             <LanguageSelector />
+            <TextSizeToggle />
             <ThemeToggle />
             <NotificationBell />
 
@@ -333,7 +335,7 @@ export default function PatientDashboardPage() {
               </div>
               <div className="text-left">
                 <div className="font-medium text-foreground text-xs leading-tight">{user?.name || 'Patient'}</div>
-                <div className="text-[10px] text-muted-foreground font-mono">{user?.email || 'patient@example.com'}</div>
+                <div className="text-[10px] text-muted-foreground font-mono">{user?.email || (user as any)?.phone || 'Patient Account'}</div>
               </div>
             </div>
 

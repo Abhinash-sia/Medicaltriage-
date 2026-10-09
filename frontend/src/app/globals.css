@@ -70,10 +70,64 @@
   * {
     border-color: hsl(var(--border));
   }
+
+  /* Accessibility & High-Legibility Typography Base for Elderly & Tech-Weak Users */
+  html {
+    font-size: 17.5px; /* Boosted base font size from default 16px */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  @media (min-width: 640px) {
+    html {
+      font-size: 18px; /* 18px base root scale on desktop & tablet screens */
+    }
+  }
+
+  /* User-selectable Accessibility Text Scaler Levels */
+  html[data-text-size="large"] {
+    font-size: 19.5px;
+  }
+  @media (min-width: 640px) {
+    html[data-text-size="large"] {
+      font-size: 20px;
+    }
+  }
+
+  html[data-text-size="xlarge"] {
+    font-size: 21.5px;
+  }
+  @media (min-width: 640px) {
+    html[data-text-size="xlarge"] {
+      font-size: 22px;
+    }
+  }
+
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    line-height: 1.55;
+    letter-spacing: -0.01em;
+  }
+
+  /* Accessibility Floor: Elevate sub-12px micro-text so elderly users can comfortably read badges and captions */
+  .text-\[9px\] {
+    font-size: 0.72rem !important; /* ~13px */
+    line-height: 1.25 !important;
+  }
+  .text-\[10px\] {
+    font-size: 0.78rem !important; /* ~14px */
+    line-height: 1.25 !important;
+  }
+  .text-\[11px\] {
+    font-size: 0.84rem !important; /* ~15.1px */
+    line-height: 1.35 !important;
+  }
+
+  /* Form controls: Ensure crisp sizing and prevent mobile auto-zoom */
+  input, select, textarea, button {
+    font-family: inherit;
   }
 
   /* Indic Script Breathing Room & Ligature Protection */
@@ -100,7 +154,7 @@
   html[lang="kn"] body,
   html[lang="pa"] body,
   html[lang="gu"] body {
-    line-height: 1.6;
+    line-height: 1.65;
   }
 }
 

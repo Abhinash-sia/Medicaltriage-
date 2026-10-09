@@ -33,7 +33,10 @@ const REVIEWER_ROLES = [
 async function checkFacilityAccess(caseDoc: ICase, userId: string): Promise<void> {
   const user = await User.findById(userId);
   if (user && user.role !== UserRole.ADMIN && user.facilityId && caseDoc.facilityId) {
-    if (caseDoc.facilityId !== user.facilityId) {
+    const isMatch =
+      caseDoc.facilityId === user.facilityId ||
+      (user.facilityId === 'FAC-DH-CUTTACK' && caseDoc.facilityId === 'GOVERNMENT_HOSPITAL');
+    if (!isMatch) {
       if (caseDoc.status === CaseStatus.REFERRED || caseDoc.status === CaseStatus.IN_REVIEW) {
         await ReferralService.checkReferralFacilityAccess(caseDoc, userId);
       } else {
@@ -58,10 +61,15 @@ export class ReviewerService {
     const filter: Record<string, unknown> = { isDeleted: false };
     const now = new Date();
 
-    // Enforce facility authorization scope on queue queries
+    // Enforce facility authorization scope on queue queries:
+    // Staff see cases belonging to their facility; for primary triage hospital FAC-DH-CUTTACK, also include GOVERNMENT_HOSPITAL alias cases
     const requestingUser = await User.findById(requestingUserId);
     if (requestingUser && requestingUser.role !== UserRole.ADMIN && requestingUser.facilityId) {
-      filter.facilityId = requestingUser.facilityId;
+      if (requestingUser.facilityId === 'FAC-DH-CUTTACK') {
+        filter.facilityId = { $in: ['FAC-DH-CUTTACK', 'GOVERNMENT_HOSPITAL'] };
+      } else {
+        filter.facilityId = requestingUser.facilityId;
+      }
     } else if (query.facilityId) {
       filter.facilityId = query.facilityId;
     }
@@ -299,8 +307,11 @@ export class ReviewerService {
 
     if (caseDoc.status === 'OPEN') {
       caseDoc.status = 'IN_REVIEW' as any;
-      await caseDoc.save();
     }
+    if ((caseDoc.facilityId === 'GOVERNMENT_HOSPITAL' || !caseDoc.facilityId) && reviewerUser.facilityId) {
+      caseDoc.facilityId = reviewerUser.facilityId;
+    }
+    await caseDoc.save();
 
     const newAudit = new AuditLog({
       actorId: reviewerUserId,
@@ -360,11 +371,18 @@ export class ReviewerService {
     }
 
     const reviewerObjectId = new mongoose.Types.ObjectId(reviewerUserId);
+    const reviewerUser = await User.findById(reviewerUserId);
+
+    // If an unassigned public portal case is claimed, route it to the reviewer's facility
+    const updatePayload: Record<string, unknown> = { assignedReviewerId: reviewerObjectId };
+    if ((caseDoc.facilityId === 'GOVERNMENT_HOSPITAL' || !caseDoc.facilityId) && reviewerUser?.facilityId) {
+      updatePayload.facilityId = reviewerUser.facilityId;
+    }
 
     // Atomic claim mutation using findOneAndUpdate to prevent race conditions
     const updatedCase = await Case.findOneAndUpdate(
       { _id: caseId, assignedReviewerId: null, isDeleted: false },
-      { $set: { assignedReviewerId: reviewerObjectId } },
+      { $set: updatePayload },
       { new: true }
     );
 
@@ -374,8 +392,6 @@ export class ReviewerService {
       error.code = 'ASSIGNMENT_CONFLICT';
       throw error;
     }
-
-    const reviewerUser = await User.findById(reviewerUserId);
 
     const newAudit = new AuditLog({
       actorId: reviewerUserId,
