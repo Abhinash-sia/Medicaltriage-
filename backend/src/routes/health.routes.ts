@@ -12,7 +12,7 @@ healthRouter.get('/health', (_req: Request, res: Response) => {
   };
 
   const dbStatus = dbStateMap[mongoose.connection.readyState] || 'unknown';
-  const isHealthy = mongoose.connection.readyState === 1 || mongoose.connection.readyState === 0;
+  const isHealthy = mongoose.connection.readyState === 1;
 
   res.status(isHealthy ? 200 : 503).json({
     success: isHealthy,
