@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { LanguageSelector } from '@/components/ui/LanguageSelector';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { TextSizeToggle } from '@/components/ui/TextSizeToggle';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { setAuthSession } from '@/lib/authSession';
 import { TriageConstellation } from '@/components/landing/TriageConstellation';
@@ -315,6 +316,7 @@ export default function LoginPage() {
 
         <div className="flex items-center gap-2">
           <LanguageSelector variant="compact" />
+          <TextSizeToggle />
           <ThemeToggle />
         </div>
       </header>

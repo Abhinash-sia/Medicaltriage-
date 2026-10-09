@@ -26,6 +26,7 @@ import {
 import { DemoBanner } from '@/components/ui/DemoBanner';
 import { LanguageSelector } from '@/components/ui/LanguageSelector';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { TextSizeToggle } from '@/components/ui/TextSizeToggle';
 import { AudioWaveformRecorder } from '@/components/intake/AudioWaveformRecorder';
 import { DocumentDropzone } from '@/components/intake/DocumentDropzone';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -310,6 +311,7 @@ export default function PatientIntakePage() {
             </Link>
             <div className="flex items-center gap-2">
               <LanguageSelector />
+              <TextSizeToggle />
               <ThemeToggle />
             </div>
           </div>

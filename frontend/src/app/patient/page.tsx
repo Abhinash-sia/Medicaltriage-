@@ -34,6 +34,7 @@ import { DemoBanner } from '@/components/ui/DemoBanner';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { LanguageSelector } from '@/components/ui/LanguageSelector';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { TextSizeToggle } from '@/components/ui/TextSizeToggle';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { clearAuthSession, authFetch } from '@/lib/authSession';
 
@@ -323,6 +324,7 @@ export default function PatientDashboardPage() {
           {/* Right Action Bar */}
           <div className="flex items-center space-x-2 sm:space-x-3">
             <LanguageSelector />
+            <TextSizeToggle />
             <ThemeToggle />
             <NotificationBell />
 

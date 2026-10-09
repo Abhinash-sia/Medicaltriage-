@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { DemoBanner } from '../ui/DemoBanner';
 import { ThemeToggle } from '../ui/ThemeToggle';
+import { TextSizeToggle } from '../ui/TextSizeToggle';
 import { CommandPalette } from '../ui/CommandPalette';
 import { LanguageSelector } from '../ui/LanguageSelector';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -128,6 +129,7 @@ export function AppShell({ children, user: initialUser }: AppShellProps) {
         <div className="flex items-center gap-2">
           <CommandPalette />
           <LanguageSelector variant="compact" />
+          <TextSizeToggle />
           <ThemeToggle />
 
           {user && (
