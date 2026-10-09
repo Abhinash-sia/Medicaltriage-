@@ -31,6 +31,7 @@ import {
   Compass,
   Menu,
   X,
+  UserPlus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -337,6 +338,16 @@ export default function PublicLandingPage() {
                   <span>{t('common.login')}</span>
                 </Button>
               </Link>
+              <Link href="/login?tab=signup">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hidden md:inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 text-xs h-8 px-2.5 whitespace-nowrap"
+                >
+                  <UserPlus className="w-3.5 h-3.5 shrink-0 text-accent" />
+                  <span>{t('auth.register')}</span>
+                </Button>
+              </Link>
               <Link href="/patient">
                 <Button
                   size="sm"
@@ -378,7 +389,7 @@ export default function PublicLandingPage() {
                   )}
                 </button>
               ))}
-              <div className="pt-2 border-t border-border/50 flex md:hidden items-center justify-between">
+              <div className="pt-2 border-t border-border/50 grid grid-cols-2 gap-2">
                 <Link href="/login" className="w-full">
                   <Button
                     variant="outline"
@@ -388,6 +399,17 @@ export default function PublicLandingPage() {
                   >
                     <LogIn className="w-3.5 h-3.5" />
                     <span>{t('common.login')}</span>
+                  </Button>
+                </Link>
+                <Link href="/login?tab=signup" className="w-full">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="w-full text-xs h-8 gap-1.5"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    <span>{t('auth.register')}</span>
                   </Button>
                 </Link>
               </div>
