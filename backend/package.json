@@ -9,7 +9,8 @@
     "start": "node dist/server.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "seed:test-data": "tsx src/seed/seed-runner.ts"
+    "seed:test-data": "tsx src/seed/seed-runner.ts",
+    "seed:accounts": "tsx src/scripts/seed-essential-accounts.ts"
   },
   "keywords": [
     "healthcare",

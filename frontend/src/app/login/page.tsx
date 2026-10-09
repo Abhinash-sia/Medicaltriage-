@@ -35,54 +35,76 @@ import { TriageConstellation } from '@/components/landing/TriageConstellation';
 interface DemoAccount {
   roleKey: string;
   roleLabel: string;
+  name: string;
   email: string;
   password: string;
   role: string;
   targetRoute: string;
   icon: React.ComponentType<{ className?: string }>;
   tag: string;
+  description?: string;
 }
 
 const SYNTHETIC_DEMO_ACCOUNTS: DemoAccount[] = [
   {
     roleKey: 'doctor',
     roleLabel: 'Doctor',
+    name: 'Dr. Arun Sharma',
     email: 'doctor.demo.001@example.test',
     password: 'Password123!',
     role: 'DOCTOR',
     targetRoute: '/reviewer',
     icon: Stethoscope,
-    tag: 'District Hospital',
+    tag: 'Clinical Reviewer',
+    description: 'Review queue & clinical triage',
   },
   {
     roleKey: 'nurse',
     roleLabel: 'Nurse',
+    name: 'Priya Das',
     email: 'nurse.demo.001@example.test',
     password: 'Password123!',
     role: 'NURSE',
     targetRoute: '/reviewer',
     icon: Activity,
-    tag: 'Secondary Care',
+    tag: 'Triage Nurse',
+    description: 'Secondary care & intake review',
   },
   {
-    roleKey: 'patient',
-    roleLabel: 'Patient',
+    roleKey: 'patient1',
+    roleLabel: 'Patient 1',
+    name: 'Anita Verma',
     email: 'patient.demo.001@example.test',
     password: 'Password123!',
     role: 'PATIENT',
     targetRoute: '/patient',
     icon: User,
-    tag: 'Self Intake',
+    tag: 'Self-Intake (Hindi)',
+    description: 'Multimodal symptom intake',
+  },
+  {
+    roleKey: 'patient2',
+    roleLabel: 'Patient 2',
+    name: 'Biren Mohapatra',
+    email: 'patient.demo.002@example.test',
+    password: 'Password123!',
+    role: 'PATIENT',
+    targetRoute: '/patient',
+    icon: User,
+    tag: 'Self-Intake (Odia)',
+    description: 'Multimodal symptom intake',
   },
   {
     roleKey: 'admin',
     roleLabel: 'Admin',
+    name: 'System Admin',
     email: 'admin@hospital.org',
     password: 'HospitalAdmin2026!',
     role: 'ADMIN',
     targetRoute: '/admin',
     icon: ShieldCheck,
-    tag: 'Sys Admin',
+    tag: 'Governance',
+    description: 'Hospital & facility administration',
   },
 ];
 
@@ -91,6 +113,7 @@ export default function LoginPage() {
   const { t } = useLanguage();
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const [loggingInAccountKey, setLoggingInAccountKey] = useState<string | null>(null);
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -295,6 +318,64 @@ export default function LoginPage() {
     setError(null);
   };
 
+  const handleDirectDemoLogin = async (account: DemoAccount) => {
+    if (isLoading || loggingInAccountKey) return;
+    setSelectedRole(account.roleKey);
+    setEmail(account.email);
+    setPassword(account.password);
+    setError(null);
+    setSessionExpiredNotice(false);
+    setLoggingInAccountKey(account.roleKey);
+    setIsLoading(true);
+
+    try {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '/api';
+      const res = await fetch(`${apiBaseUrl}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: account.email, password: account.password }),
+      });
+
+      const contentType = res.headers.get('content-type');
+      let json: any = null;
+      if (contentType && contentType.includes('application/json')) {
+        json = await res.json();
+      } else {
+        const text = await res.text();
+        throw new Error(text || 'Received non-JSON response from server.');
+      }
+
+      if (!res.ok || !json.success) {
+        throw new Error(json.error?.message || 'Authentication failed');
+      }
+
+      const accessToken = json.data.accessToken || json.data.token;
+      const refreshToken = json.data.refreshToken;
+      const user = json.data.user;
+      setAuthSession({ accessToken, refreshToken, user });
+
+      const params = new URLSearchParams(window.location.search);
+      const redirectUrl = params.get('redirect');
+
+      if (redirectUrl) {
+        router.push(redirectUrl);
+      } else if (account.targetRoute) {
+        router.push(account.targetRoute);
+      } else if (user.role === 'PATIENT') {
+        router.push('/patient');
+      } else if (user.role === 'ADMIN') {
+        router.push('/admin');
+      } else {
+        router.push('/reviewer');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Direct login failed. Please ensure the backend is running and accounts are seeded.');
+    } finally {
+      setIsLoading(false);
+      setLoggingInAccountKey(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col justify-between relative overflow-hidden font-sans selection:bg-accent/20">
       {/* Dynamic 3D Constellation Mesh in Background */}
@@ -395,67 +476,90 @@ export default function LoginPage() {
 
           {authMode === 'signin' ? (
             <>
-              {/* Quick Persona Switcher Segment */}
-              <div className="space-y-2">
+              {/* Quick Persona 1-Click Direct Login Segment */}
+              <div className="space-y-2.5">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-mono text-[10px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-accent" />
-                    {t('auth.quickRoles')}
+                  <span className="font-mono text-[10px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-accent" />
+                    1-Click Direct Demo Logins
                   </span>
-                  <span className="text-[10px] text-muted-foreground">Select to auto-fill</span>
+                  <span className="text-[10px] text-muted-foreground">Click card to enter immediately</span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                  {SYNTHETIC_DEMO_ACCOUNTS.map((acc) => {
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {SYNTHETIC_DEMO_ACCOUNTS.map((acc, index) => {
                     const Icon = acc.icon;
+                    const isLoggingIn = loggingInAccountKey === acc.roleKey;
                     const isSelected = selectedRole === acc.roleKey;
-                    const localizedLabel =
-                      acc.role === 'DOCTOR'
-                        ? t('auth.doctorRole')
-                        : acc.role === 'NURSE'
-                        ? t('auth.nurseRole')
-                        : acc.role === 'PATIENT'
-                        ? t('auth.patientRole')
-                        : t('auth.adminRole');
+                    const isFullWidth = index === SYNTHETIC_DEMO_ACCOUNTS.length - 1 && SYNTHETIC_DEMO_ACCOUNTS.length % 2 === 1;
 
                     return (
                       <button
                         key={acc.roleKey}
                         type="button"
-                        onClick={() => selectDemoAccount(acc)}
-                        className={`relative p-2.5 rounded-xl text-left flex flex-col justify-between transition-all cursor-pointer border ${
-                          isSelected
-                            ? 'bg-primary/10 border-primary text-foreground shadow-xs ring-1 ring-primary/40'
-                            : 'bg-card/70 border-border text-muted-foreground hover:text-foreground hover:bg-card hover:border-accent/40'
-                        }`}
+                        disabled={isLoading}
+                        onClick={() => handleDirectDemoLogin(acc)}
+                        className={`group relative p-2.5 rounded-xl text-left flex flex-col justify-between transition-all cursor-pointer border ${
+                          isFullWidth ? 'sm:col-span-2' : ''
+                        } ${
+                          isLoggingIn
+                            ? 'bg-primary/15 border-primary shadow-md ring-2 ring-primary/40'
+                            : isSelected
+                            ? 'bg-primary/10 border-primary text-foreground shadow-xs ring-1 ring-primary/30'
+                            : 'bg-card/75 border-border text-muted-foreground hover:text-foreground hover:bg-card hover:border-accent/50 hover:shadow-xs'
+                        } ${isLoading && !isLoggingIn ? 'opacity-60 cursor-not-allowed' : ''}`}
                       >
                         <div className="flex items-center justify-between w-full mb-1">
-                          <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}>
-                            <Icon className="w-3.5 h-3.5" />
+                          <div className="flex items-center gap-2">
+                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
+                              isLoggingIn
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-muted group-hover:bg-primary/10 group-hover:text-primary text-foreground'
+                            }`}>
+                              {isLoggingIn ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin text-primary-foreground" />
+                              ) : (
+                                <Icon className="w-3.5 h-3.5" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="font-bold text-xs text-foreground flex items-center gap-1.5">
+                                {acc.name}
+                                <span className="text-[9px] font-mono text-muted-foreground bg-muted px-1.5 py-0.2 rounded border border-border">
+                                  {acc.roleLabel}
+                                </span>
+                              </div>
+                              <div className="text-[10px] text-muted-foreground truncate font-mono">
+                                {acc.email}
+                              </div>
+                            </div>
                           </div>
-                          {isSelected ? (
-                            <CheckCircle2 className="w-4 h-4 text-accent" />
-                          ) : (
-                            <span className="text-[9px] font-mono text-muted-foreground bg-muted px-1.5 py-0.2 rounded border border-border">
-                              {acc.tag}
-                            </span>
-                          )}
+
+                          <div className="flex items-center gap-1 shrink-0 text-[10px] font-semibold text-primary group-hover:translate-x-0.5 transition-transform">
+                            {isLoggingIn ? (
+                              <span className="text-primary font-medium">Entering...</span>
+                            ) : (
+                              <>
+                                <span className="hidden sm:inline">1-Click</span>
+                                <ArrowRight className="w-3 h-3" />
+                              </>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <div className={`font-bold text-xs ${isSelected ? 'text-primary' : 'text-foreground'}`}>
-                            {localizedLabel}
+
+                        {acc.description && (
+                          <div className="text-[10px] text-muted-foreground/80 pt-1 border-t border-border/40 mt-1 flex items-center justify-between">
+                            <span>{acc.description}</span>
+                            <span className="font-mono text-[9px] text-muted-foreground bg-muted/60 px-1 rounded">{acc.tag}</span>
                           </div>
-                          <div className="text-[10px] text-muted-foreground truncate font-mono mt-0.5">
-                            {acc.email}
-                          </div>
-                        </div>
+                        )}
                       </button>
                     );
                   })}
                 </div>
 
                 {selectedRole && (
-                  <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-primary/10 border border-primary/20 text-xs animate-in fade-in duration-200">
+                  <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-primary/10 border border-primary/20 text-xs animate-in fade-in duration-200">
                     <span className="text-[11px] text-primary font-medium flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5 shrink-0" />
                       Auto-filled demo persona
@@ -470,10 +574,22 @@ export default function LoginPage() {
                       }}
                       className="text-[11px] text-muted-foreground hover:text-foreground font-semibold underline cursor-pointer"
                     >
-                      Clear (Use my own account)
+                      Clear form
                     </button>
                   </div>
                 )}
+
+                {/* Divider between 1-Click Demo and Manual Login */}
+                <div className="relative my-3">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-[10px] font-mono text-muted-foreground">
+                      Or sign in with custom credentials
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {/* Login Form */}

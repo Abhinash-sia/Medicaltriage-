@@ -7,6 +7,7 @@ import { Consent } from '../consent/consent.model.js';
 import { ConsentStatus, ConsentType } from '../consent/consent.types.js';
 import { AuditLog } from '../audit/audit-log.model.js';
 import { AuditEventType } from '../audit/audit-log.types.js';
+import { User } from '../users/user.model.js';
 import { UserRole } from '../users/user.types.js';
 import { SlaService } from '../sla/sla.service.js';
 import { IntakeSubmitInput, IntakeResponseData } from './intake.types.js';
@@ -58,10 +59,14 @@ export class IntakeService {
       priority: CasePriority.ROUTINE,
     });
 
+    const patientUser = await User.findById(patientObjectId);
+    const facilityId = patientUser?.facilityId || 'FAC-DH-CUTTACK';
+
     // 1. Create Case Document
     const newCase = new Case({
       caseNumber,
       patientId: patientObjectId,
+      facilityId,
       status: CaseStatus.OPEN,
       priority: CasePriority.ROUTINE, // Default initial workflow category awaiting safety evaluation
       intakeSource: IntakeSource.TEXT,
