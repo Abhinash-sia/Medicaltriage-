@@ -1,6 +1,6 @@
-# MedicalTriage — Design System & Visual Specification
+# Sevansh — Design System & Visual Specification
 
-This document details the redesigned visual, typographic, and motion system for the **MedicalTriage** clinical triage platform.
+This document details the redesigned visual, typographic, and motion system for the **Sevansh** clinical triage platform.
 
 ---
 

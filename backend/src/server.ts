@@ -13,7 +13,7 @@ const startServer = async () => {
 
   const app = createApp();
   const server = app.listen(env.PORT, () => {
-    logger.info(`Healthcare Triage Backend listening on port ${env.PORT} [${env.NODE_ENV}]`);
+    logger.info(`Sevansh Backend listening on port ${env.PORT} [${env.NODE_ENV}]`);
   });
 
   const gracefulShutdown = async (signal: string) => {

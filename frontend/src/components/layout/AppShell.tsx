@@ -106,7 +106,7 @@ export function AppShell({ children, user: initialUser }: AppShellProps) {
             <div className="w-6 h-6 rounded-[4px] bg-primary text-primary-foreground flex items-center justify-center">
               <HeartPulse className="w-3.5 h-3.5" />
             </div>
-            <span className="hidden sm:inline">MedicalTriage</span>
+            <span className="hidden sm:inline">Sevansh</span>
           </Link>
 
           <div className="hidden md:flex items-center text-xs text-muted-foreground">

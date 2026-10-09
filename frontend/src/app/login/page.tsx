@@ -353,7 +353,7 @@ export default function LoginPage() {
 
       {/* Bottom Subtle Footer */}
       <footer className="relative z-20 text-center py-3 text-[11px] text-muted-foreground/70">
-        MedicalTriage Clinical Decision Support • Human-in-the-Loop Architecture
+        Sevansh Clinical Decision Support • Human-in-the-Loop Architecture
       </footer>
     </div>
   );

@@ -59,7 +59,7 @@ export const en = {
     reviewerQueue: "Reviewer Workspace Queue",
 
     disclaimerTitle: "Strict Non-Diagnostic & Human-in-the-Loop Safety Boundary",
-    disclaimerBody: "MedicalTriage is built to assist — not replace — qualified healthcare professionals. It organizes and surfaces structured patient information, timelines, and safety signals. It does not diagnose medical conditions, prescribe treatment, or independently make clinical decisions.",
+    disclaimerBody: "Sevansh is built to assist — not replace — qualified healthcare professionals. It organizes and surfaces structured patient information, timelines, and safety signals. It does not diagnose medical conditions, prescribe treatment, or independently make clinical decisions.",
 
     howItWorksTitle: "How The System Works",
     howItWorksSubtitle: "A continuous, transparent workflow connecting patient intake to clinician decision-support and referral escalation.",

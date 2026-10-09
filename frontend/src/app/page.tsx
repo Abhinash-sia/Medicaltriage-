@@ -277,7 +277,7 @@ export default function PublicLandingPage() {
                   <HeartPulse className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-base sm:text-lg font-bold tracking-tight text-foreground font-mono">MedicalTriage</span>
+                  <span className="text-base sm:text-lg font-bold tracking-tight text-foreground font-mono">Sevansh</span>
                   <span className="text-[10px] bg-muted/80 text-primary dark:text-accent px-2 py-0.5 rounded-full font-semibold border border-border/80 leading-normal inline-flex items-center">
                     {t('landing.prototype')}
                   </span>
@@ -760,7 +760,7 @@ export default function PublicLandingPage() {
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="flex items-center space-x-2">
               <HeartPulse className="w-4 h-4 text-primary dark:text-accent" />
-              <span className="font-mono font-semibold text-foreground">MedicalTriage Clinical Decision Support</span>
+              <span className="font-mono font-semibold text-foreground">Sevansh Clinical Decision Support</span>
             </div>
 
             <div className="flex items-center space-x-6 font-mono text-[11px]">

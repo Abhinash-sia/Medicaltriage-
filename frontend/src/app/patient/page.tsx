@@ -311,7 +311,7 @@ export default function PatientDashboardPage() {
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="text-sm sm:text-base font-bold text-foreground tracking-tight">MedicalTriage</span>
+                <span className="text-sm sm:text-base font-bold text-foreground tracking-tight">Sevansh</span>
                 <Badge variant="outline" className="bg-primary/10 text-primary border-primary/25 text-[10px] px-1.5 py-0 font-mono">
                   PATIENT PORTAL
                 </Badge>
